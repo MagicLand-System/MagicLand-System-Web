@@ -27,6 +27,7 @@ const router = createBrowserRouter([
       element: <AuthRoutes />,
       children: [] //các route phải đăng nhập
     },
+    
     // các route không cần đăng nhập
     // {
     //   path: '/...',

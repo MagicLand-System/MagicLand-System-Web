@@ -7,12 +7,12 @@ import Footer from "./components/footer/Footer";
 export default function App() {
 
   return (
-    <>
+    <div>
       <Header />
       <div className="body">
         <Outlet />
       </div>
       <Footer />
-    </>
+    </div>
   );
 }
