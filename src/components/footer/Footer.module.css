@@ -2,8 +2,7 @@
 .container {
     background-color: #3A0CA3;
     width: 100%;
-    padding: 20px;
-    min-height: 280px;
+    min-height: 240px;
 }
 .logo {
     margin-top: 60px;
