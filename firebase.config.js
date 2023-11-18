@@ -1,0 +1,21 @@
+// Import the functions you need from the SDKs you need
+import { initializeApp } from "firebase/app";
+import { getAuth } from "firebase/auth";
+// TODO: Add SDKs for Firebase products that you want to use
+// https://firebase.google.com/docs/web/setup#available-libraries
+
+// Your web app's Firebase configuration
+// For Firebase JS SDK v7.20.0 and later, measurementId is optional
+const firebaseConfig = {
+  apiKey: "AIzaSyBUgSjomYIYipiDkM5n5PMqqn-cwpux0Bk",
+  authDomain: "magic-2e5fc.firebaseapp.com",
+  projectId: "magic-2e5fc",
+  storageBucket: "magic-2e5fc.appspot.com",
+  messagingSenderId: "146280314024",
+  appId: "1:146280314024:web:6416b5cc9165b4073d3e9d",
+  measurementId: "G-J3R8GP6RP5"
+};
+
+// Initialize Firebase
+const app = initializeApp(firebaseConfig);
+export const auth = getAuth(app);

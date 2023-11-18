@@ -1,7 +1,7 @@
 import axios from "axios";
 import Swal from "sweetalert2";
 
-const URL = "";
+const URL = "https://magic-land-system.azurewebsites.net";
 
 const instance = axios.create({
   baseURL: URL,
@@ -9,20 +9,6 @@ const instance = axios.create({
     "Content-Type": "application/json",
   },
 });
-
-instance.interceptors.request.use(
-  (config) => {
-    const user = JSON.parse(localStorage.getItem("user"));
-    const refreshToken = user?.refreshToken;
-    if (refreshToken) {
-      config.headers["Refresh-Token"] = refreshToken;
-    }
-    return config;
-  },
-  (error) => {
-    return Promise.reject(error);
-  }
-);
 
 instance.interceptors.response.use(
   (res) => {
@@ -33,7 +19,7 @@ instance.interceptors.response.use(
       if (err.response.status === 401) {
         Swal.fire({
           icon: 'error',
-          title: 'Please login to continue!',
+          title: 'Hãy đăng nhập để tiếp tục!',
         }).then(() => {
           localStorage.clear();
           window.location.replace("/login")
@@ -44,4 +30,7 @@ instance.interceptors.response.use(
   }
 );
 
-export default instance;
+export const refresh = async (oldToken) => {
+  const response = await instance.post("/api/v1/auth/register", oldToken);
+  return response.data;
+};

@@ -1,7 +1,7 @@
 import axios from "axios";
-import refresh from "./refresh";
+import { refresh } from "./refresh";
 
-const url = "";
+const url = "https://magic-land-system.azurewebsites.net";
 const instance = axios.create({
   baseURL: url,
   headers: {
@@ -11,8 +11,7 @@ const instance = axios.create({
 
 instance.interceptors.request.use(
   (config) => {
-    const user = JSON.parse(localStorage.getItem("user"));
-    const accessToken = user?.accessToken;
+    const accessToken = localStorage.getItem("accessToken");
     if (accessToken) {
       config.headers["Authorization"] = `Bearer ${accessToken}`;
     }
@@ -30,19 +29,16 @@ instance.interceptors.response.use(
   async (err) => {
     const originalConfig = err.config;
 
-    if (originalConfig.url !== "/api/auth/login" && err.response) {
+    if (originalConfig.url !== "/api/v1/auth" && err.response) {
       // Access Token was expired
       if (err.response.status === 401 && !originalConfig._retry) {
         originalConfig._retry = true;
 
         try {
-          const rs = await refresh.get("/api/auth/refresh");
-          const accessToken = rs.data.accessToken;
-          const refreshToken = rs.data.refreshToken;
-          let user = JSON.parse(localStorage.getItem("user"));
-          user.accessToken = accessToken;
-          user.refreshToken = refreshToken;
-          localStorage.setItem("user", JSON.stringify(user));
+          const oldToken = localStorage.getItem("accessToken");
+          const data = await refresh(oldToken)
+          const accessToken = data.token;
+          localStorage.setItem("accessToken", accessToken);
 
           return instance(originalConfig);
         } catch (_error) {
