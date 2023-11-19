@@ -8,16 +8,21 @@ import { store } from './store'
 import Login from './pages/login/Login.jsx'
 import AuthRoutes from './routes/AuthRoutes.jsx'
 import Register from './pages/register/Register.jsx'
+import UnLoginRoutes from './routes/UnLoginRoutes.jsx'
 
 const router = createBrowserRouter([
-  //router không có header, footer:
+  //Router đã đăng nhập thì k vào được, k có header, footer
   {
-    path: '/login',
-    element: <Login />
-  },
-  {
-    path: '/register',
-    element: <Register />
+    element: <UnLoginRoutes />, children: [
+      {
+        path: '/login',
+        element: <Login />
+      },
+      {
+        path: '/register',
+        element: <Register />
+      },
+    ]
   },
   //router có header, footer:
   {
@@ -25,17 +30,17 @@ const router = createBrowserRouter([
     element: <App />,
     children: [{
       element: <AuthRoutes />,
-      children: [] //các route phải đăng nhập
+      children: [] //các route phải đăng nhập mới vào được
     },
-    
-    // các route không cần đăng nhập
-    // {
-    //   path: '/...',
-    //   element: </>
-    // }
+      // các route đăng nhập hay không vẫn vào được
+      // {
+      //   path: '/...',
+      //   element: </>
+      // }
     ]
   }
-])
+]
+)
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>

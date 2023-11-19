@@ -1,27 +1,20 @@
 import { useLocation, Outlet, Navigate } from 'react-router-dom';
-import { jwtDecode } from 'jwt-decode';
-import { setUser, removeUser } from '../store/features/userSlice';
+import { fetchUser } from '../store/features/authSlice';
 import { useDispatch, useSelector } from 'react-redux';
 import { userSelector } from '../store/selectors';
 
 const AuthRoutes = () => {
     const location = useLocation();
     const dispatch = useDispatch();
-    let role = useSelector(userSelector).role;
+    let user = useSelector(userSelector);
 
-    const user = JSON.parse(localStorage.getItem('user'));
-    if (user?.accessToken) {
-        if (!role) {
-            const auth = jwtDecode(user.accessToken);
-            const role = auth.role;
-            dispatch(setUser({ role }));
+    const accessToken = localStorage.getItem('accessToken');
+    if (accessToken) {
+        if (!user) {
+            dispatch(fetchUser());
         }
-        else {
-            return <Outlet />;
-        }
+        return <Outlet />;
     } else {
-        localStorage.clear();
-        dispatch(removeUser({ role }));
         return <Navigate to="/login" state={{ from: location }} replace />;
     }
 
