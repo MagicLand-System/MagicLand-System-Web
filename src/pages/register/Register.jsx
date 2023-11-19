@@ -44,6 +44,7 @@ export default function Register() {
       const response = await checkExist({ phone: `+${phone}` })
       if (response.status === 200) {
         setErrorMessage("Số điện thoại đã tồn tại, hãy đăng nhập để tiếp tục");
+        setLoading(false)
       }
     }
     catch (error) {

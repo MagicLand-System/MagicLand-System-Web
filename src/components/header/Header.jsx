@@ -148,6 +148,14 @@ export default function Header() {
           children: [
             {
               label: (
+                <Link style={{ fontWeight: 'normal' }} to={'/'}>
+                  Ví
+                </Link>
+              ),
+              key: 'wallet',
+            },
+            {
+              label: (
                 <Button style={{ border: 'none', width: '100%' }} onClick={async () => {
                   await signOut(auth);
                   dispatch(removeUser());

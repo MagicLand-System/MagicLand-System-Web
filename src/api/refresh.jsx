@@ -21,7 +21,7 @@ instance.interceptors.response.use(
           icon: 'error',
           title: 'Hãy đăng nhập để tiếp tục!',
         }).then(() => {
-          localStorage.clear();
+          localStorage.removeItem('accessToken');
           window.location.replace("/login")
         })
       }
@@ -31,6 +31,6 @@ instance.interceptors.response.use(
 );
 
 export const refresh = async (oldToken) => {
-  const response = await instance.post("/api/v1/auth/register", oldToken);
+  const response = await instance.post("/api/v1/auth/refreshToken", { oldToken: oldToken });
   return response.data;
 };

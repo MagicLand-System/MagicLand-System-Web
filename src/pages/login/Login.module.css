@@ -134,3 +134,32 @@
   border-radius: 5px;
   color: black !important;
 }
+@media only screen and (max-width: 1100px) {
+  .left {
+    width: 100%;
+  }
+  .logo {
+    margin-top: 20px;
+  }
+  .title {
+    margin: 20px 0;
+  }
+  .right {
+    width: 0;
+  }
+  .rightImage {
+    width: 0;
+  }
+  .rightLink {
+    position: absolute;
+    bottom: 60px;
+    left: 0;
+  }
+  .link {
+    height: 30px;
+    color: white;
+  }
+  .linkActive {
+    color: #f2c955;
+  }
+}

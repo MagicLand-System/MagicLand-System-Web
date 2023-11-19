@@ -10,8 +10,11 @@ import { auth } from '../../../firebase.config';
 import { RecaptchaVerifier, signInWithPhoneNumber } from 'firebase/auth';
 import Swal from 'sweetalert2';
 import { authUser, checkExist } from '../../api/auth';
+import { useDispatch } from 'react-redux';
+import { fetchUser } from "../../store/features/authSlice";
 
 export default function Login() {
+  const dispatch = useDispatch();
   const navigate = useNavigate()
   const [errorMessage, setErrorMessage] = useState('')
   const [otp, setOtp] = useState('')
@@ -21,13 +24,12 @@ export default function Login() {
 
   function onCaptchVerify() {
     if (!window.recaptchaVerifier) {
-      window.recaptchaVerifier = new RecaptchaVerifier('recaptcha-container', {
+      window.recaptchaVerifier = new RecaptchaVerifier(auth, 'recaptcha-container', {
         'size': 'invisible',
         'callback': (response) => {
           onLogin()
         },
-        'expired-callback': () => { }
-      }, auth);
+      });
     }
   }
   async function onLogin() {
@@ -62,6 +64,7 @@ export default function Login() {
       const data = await authUser({ phone: formatPhone })
       const accessToken = data.accessToken;
       localStorage.setItem('accessToken', accessToken)
+      dispatch(fetchUser())
       Swal.fire({
         position: "center",
         icon: "success",

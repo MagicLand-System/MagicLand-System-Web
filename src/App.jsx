@@ -10,7 +10,6 @@ export default function App() {
   const dispatch = useDispatch();
   const accessToken = localStorage.getItem('accessToken');
   useEffect(() => {
-    console.log("render")
     if (accessToken) {
       dispatch(fetchUser())
     }
