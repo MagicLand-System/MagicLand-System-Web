@@ -69,8 +69,8 @@ export default function Register() {
       setLoading(false)
       setShowOtp(false)
       setShowFillInfo(true)
-    }).className(err => {
-      console.log(err)
+    }).catch(err => {
+      setErrorMessage("Xác thực OTP không thành công")
       setLoading(false)
     })
   }

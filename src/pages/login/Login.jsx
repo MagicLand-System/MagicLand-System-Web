@@ -72,8 +72,8 @@ export default function Login() {
         navigate('/')
       })
       setLoading(false)
-    }).className(err => {
-      console.log(err)
+    }).catch(err => {
+      setErrorMessage("Xác thực OTP không thành công")
       setLoading(false)
     })
   }
