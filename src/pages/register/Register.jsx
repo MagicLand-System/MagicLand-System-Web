@@ -7,7 +7,7 @@ import OtpInput from 'otp-input-react';
 import PhoneInput from 'react-phone-input-2';
 import "react-phone-input-2/lib/style.css"
 import { auth } from '../../../firebase.config';
-import { RecaptchaVerifier, signInWithPhoneNumber } from 'firebase/auth';
+import { RecaptchaVerifier, signInWithPhoneNumber, signOut } from 'firebase/auth';
 import Swal from 'sweetalert2';
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
@@ -41,6 +41,7 @@ export default function Register() {
   async function onSignup() {
     setLoading(true)
     try {
+      setErrorMessage('')
       const response = await checkExist({ phone: `+${phone}` })
       if (response.status === 200) {
         setErrorMessage("Số điện thoại đã tồn tại, hãy đăng nhập để tiếp tục");
@@ -48,7 +49,8 @@ export default function Register() {
       }
     }
     catch (error) {
-      if (error.response.status === 404) {
+      if (error.response?.status === 404) {
+        setErrorMessage('')
         onCaptchVerify()
         const appVerifier = window.recaptchaVerifier;
         const formatPhone = '+' + phone;
@@ -65,8 +67,10 @@ export default function Register() {
   }
 
   function onOtpVerify() {
+    setErrorMessage('')
     setLoading(true)
     window.confirmationResult.confirm(otp).then(async (result) => {
+      setErrorMessage('')
       setLoading(false)
       setShowOtp(false)
       setShowFillInfo(true)
@@ -87,25 +91,24 @@ export default function Register() {
       if (dateOfBirth === null) {
         setDateOfBirthError("Vui lòng nhập ngày tháng năm sinh")
       } else {
-        navigate('/login')
         const stringDateOfBirth = dateOfBirth.toISOString()
-        await register({ ...values, phone: `+${phone}`, gender, dateOfBirth: stringDateOfBirth })
-          .then(
-            Swal.fire({
-              position: "center",
-              icon: "success",
-              title: "Register successfully",
-              showConfirmButton: false,
-              timer: 2000
-            })
-          )
-          .then(() => {
+        const data = await register({ ...values, phone: `+${phone}`, gender, dateOfBirth: stringDateOfBirth })
+        if (data) {
+          await signOut(auth)
+          Swal.fire({
+            position: "center",
+            icon: "success",
+            title: "Đăng kí thành công",
+            showConfirmButton: false,
+            timer: 2000
+          }).then(() => {
             navigate('/login')
           })
+        }
       }
     },
     validationSchema: Yup.object({
-      fullName: Yup.string().required("Vui lòng nhập họ và tên"),
+      fullName: Yup.string().required("Vui lòng nhập họ và tên").matches(/(\w.+\s).+/, 'Vui lòng nhập ít nhất 2 từ'),
       email: Yup.string().email("Vui lòng nhập đúng email").required("Vui lòng nhập email"),
       city: Yup.string().required("Vui lòng nhập địa chỉ"),
       district: Yup.string().required("Vui lòng nhập địa chỉ"),
@@ -137,6 +140,8 @@ export default function Register() {
               <PhoneInput country={'vn'} className={styles.phoneInput} value={phone} onChange={setPhone} />
               {loading ? (
                 <Button loading className={styles.button}>Gửi OTP</Button>
+              ) : phone === '' ? (
+                <Button disabled className={styles.button}>Gửi OTP</Button>
               ) : (
                 <Button onClick={onSignup} className={styles.button}>Gửi OTP</Button>
               )}
@@ -160,6 +165,8 @@ export default function Register() {
               </OtpInput>
               {loading ? (
                 <Button loading className={styles.button}>Xác thực</Button>
+              ) : otp.length < 6 ? (
+                <Button disabled className={styles.button}>Xác thực</Button>
               ) : (
                 <Button onClick={onOtpVerify} className={styles.button}>Xác thực</Button>
               )}
@@ -193,17 +200,20 @@ export default function Register() {
               <div style={{ height: '24px', paddingLeft: '10px' }}>
                 {formik.errors.email && formik.touched.email && (<p style={{ color: 'red', fontSize: '14px', margin: '0' }}>{formik.errors.email}</p>)}
               </div>
+              <p style={{ color: '#c0c0c0', fontSize: 16, marginBottom: 5, marginTop: 0 }}>Ngày sinh</p>
               <DatePicker
-                style={{ width: '100%' }}
+                style={{ width: '100%', height: '40px' }}
                 disabledDate={(current) => {
                   return (current > dayjs().subtract(3, 'year'))
                 }}
                 onChange={(date) => setDateOfBirth(date)}
                 defaultValue={dateOfBirth}
-                format={'DD/MM/YYYY'} />
+                format={'DD/MM/YYYY'}
+                placeholder="Chọn ngày sinh" />
               <div style={{ height: '24px', paddingLeft: '10px' }}>
                 {dateOfBirthError && (<p style={{ color: 'red', fontSize: '14px', margin: '0' }}>{dateOfBirthError}</p>)}
               </div>
+              <p style={{ color: '#c0c0c0', fontSize: 16, marginBottom: 5, marginTop: 0 }}>Giới tính</p>
               <div style={{ margin: '10px' }}>
                 <Radio.Group onChange={(e) => { setGender(e.target.value) }} value={gender}>
                   <ConfigProvider
@@ -259,7 +269,7 @@ export default function Register() {
               <div style={{ height: '24px', paddingLeft: '10px' }}>
                 {formik.errors.street && formik.touched.street && (<p style={{ color: 'red', fontSize: '14  px', margin: '0' }}>{formik.errors.street}</p>)}
               </div>
-              <Button htmlType='submit' className={styles.button}>
+              <Button htmlType='submit' className={styles.button} disabled={!formik.isValid}>
                 Xác nhận
               </Button>
             </form>

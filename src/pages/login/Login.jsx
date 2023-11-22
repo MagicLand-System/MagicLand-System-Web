@@ -24,16 +24,18 @@ export default function Login() {
 
   function onCaptchVerify() {
     if (!window.recaptchaVerifier) {
-      window.recaptchaVerifier = new RecaptchaVerifier(auth, 'recaptcha-container', {
+      window.recaptchaVerifier = new RecaptchaVerifier('recaptcha-container', {
         'size': 'invisible',
         'callback': (response) => {
           onLogin()
         },
-      });
+        'expired-callback': () => { }
+      }, auth);
     }
   }
   async function onLogin() {
     try {
+      setErrorMessage('')
       setLoading(true)
       const formatPhone = '+' + phone;
       const response = await checkExist({ phone: formatPhone })
@@ -44,13 +46,15 @@ export default function Login() {
           .then((confirmationResult) => {
             window.confirmationResult = confirmationResult;
             setLoading(false)
+            setErrorMessage('')
             setShowOtp(true)
           }).catch((error) => {
             console.log(error)
           })
       }
     } catch (error) {
-      if (error.response.status === 404) {
+      console.log(error)
+      if (error.response?.status === 404) {
         setLoading(false)
         setErrorMessage("Tài khoản của bạn không tồn tại, hãy đăng kí để tiếp tục");
       }
@@ -58,6 +62,7 @@ export default function Login() {
   }
 
   function onOtpVerify() {
+    setErrorMessage('')
     setLoading(true)
     const formatPhone = '+' + phone;
     window.confirmationResult.confirm(otp).then(async (result) => {
@@ -68,10 +73,11 @@ export default function Login() {
       Swal.fire({
         position: "center",
         icon: "success",
-        title: "Login successfully",
+        title: "Đăng nhập thành công",
         showConfirmButton: false,
         timer: 2000
       }).then(() => {
+        setErrorMessage('')
         navigate('/')
       })
       setLoading(false)
@@ -105,6 +111,8 @@ export default function Login() {
               <PhoneInput country={'vn'} className={styles.input} value={phone} onChange={setPhone} />
               {loading ? (
                 <Button loading className={styles.button}>Gửi OTP</Button>
+              ) : phone === '' ? (
+                <Button disabled className={styles.button}>Gửi OTP</Button>
               ) : (
                 <Button onClick={onLogin} className={styles.button}>Gửi OTP</Button>
               )}
@@ -128,6 +136,8 @@ export default function Login() {
               </OtpInput>
               {loading ? (
                 <Button loading className={styles.button}>Xác thực</Button>
+              ) : otp.length < 6 ? (
+                <Button disabled className={styles.button}>Xác thực</Button>
               ) : (
                 <Button onClick={onOtpVerify} className={styles.button}>Xác thực</Button>
               )}

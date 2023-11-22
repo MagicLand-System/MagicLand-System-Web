@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react'
 import { HomeOutlined } from '@ant-design/icons';
 import { Button, ConfigProvider, Menu } from 'antd';
 import styles from './Header.module.css'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { userSelector } from '../../store/selectors';
 import { useDispatch, useSelector } from 'react-redux';
 import { signOut } from 'firebase/auth';
@@ -16,7 +16,7 @@ const itemsNotLogin = [
         Trang chủ
       </Link>
     ),
-    key: 'home',
+    key: '/',
     icon: <HomeOutlined />,
   },
   {
@@ -25,7 +25,7 @@ const itemsNotLogin = [
         Khóa học
       </Link>
     ),
-    key: 'courses',
+    key: '/courses',
   },
   {
     label: (
@@ -33,7 +33,7 @@ const itemsNotLogin = [
         Sự kiện
       </Link>
     ),
-    key: 'events',
+    key: '/events',
   },
   {
     label: (
@@ -41,7 +41,7 @@ const itemsNotLogin = [
         Về chúng tôi
       </Link>
     ),
-    key: 'about-us',
+    key: '/about-us',
   },
   // {
   //   label: 'Học viên',
@@ -61,16 +61,19 @@ const itemsNotLogin = [
         </Link>
       </Button>
     ),
-    key: 'login',
+    key: '/login',
   },
 ];
 
 export default function Header() {
-  const [current, setCurrent] = useState('home');
+  const location = useLocation();
+  const currentPath = location.pathname;
+  const user = useSelector(userSelector);
+  const [current, setCurrent] = useState(currentPath);
   const dispatch = useDispatch()
   const navigate = useNavigate()
   const [items, setItems] = useState(itemsNotLogin)
-  const user = useSelector(userSelector);
+  console.log(user)
   useEffect(() => {
     if (user?.role.name === 'PARENT') {
       setItems([
@@ -80,7 +83,7 @@ export default function Header() {
               Trang chủ
             </Link>
           ),
-          key: 'home',
+          key: '/',
           icon: <HomeOutlined />,
         },
         {
@@ -89,7 +92,7 @@ export default function Header() {
               Khóa học
             </Link>
           ),
-          key: 'courses',
+          key: '/courses',
         },
         {
           label: (
@@ -97,7 +100,7 @@ export default function Header() {
               Sự kiện
             </Link>
           ),
-          key: 'events',
+          key: '/events',
         },
         {
           label: (
@@ -105,46 +108,42 @@ export default function Header() {
               Về chúng tôi
             </Link>
           ),
-          key: 'about-us',
+          key: '/about-us',
         },
         {
           label: 'Học viên',
-          key: 'students',
+          key: '/students',
           children: [
+            user.students.length > 0 &&
             {
               type: 'group',
-              label: 'Students',
+              label: 'Học viên',
               children: user?.students.map((student) => {
                 return {
-                  label: `${student?.label}`,
-                  key: `${student?.key}`,
+                  label: (
+                    <Link style={{ fontWeight: 'normal' }} to={`/students/${student?.id}`}>
+                      {student.fullName}
+                    </Link>
+                  ),
+                  key: `/students/${student?.id}`,
                 }
               })
             }, {
-              type: 'group',
-              label: 'Add',
-              children: [
-                {
-                  label: (
-                    <Link style={{ fontWeight: 'normal' }} to={'/'}>
-                      Thêm học viên
-                    </Link>
-                  ),
-                  key: 'add-student',
-                }
-              ]
+              label: (
+                <Link style={{ fontWeight: 'normal' }} to={'/add-student'}>
+                  Thêm học viên
+                </Link>
+              ),
+              key: '/add-student',
             }
           ]
         },
         {
           label: (
             <Button style={{ paddingBottom: '5px' }}>
-              <Link to={'/'}>
-                &nbsp;{user?.fullName}
-              </Link>
+              &nbsp;{user?.fullName}
             </Button>
           ),
-          key: 'login',
           children: [
             {
               label: (
@@ -152,7 +151,15 @@ export default function Header() {
                   Ví
                 </Link>
               ),
-              key: 'wallet',
+              key: '/wallet',
+            },
+            {
+              label: (
+                <Link style={{ fontWeight: 'normal' }} to={'/'}>
+                  Thông tin tài khoản
+                </Link>
+              ),
+              key: '/account',
             },
             {
               label: (

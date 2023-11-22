@@ -123,6 +123,10 @@
 .button:focus-visible {
   outline: none !important;
 }
+.button:disabled{
+  background-color: #f9e4aa !important;
+  color: #808080 !important;
+}
 .otpInput {
   display: flex;
   justify-content: space-between;
