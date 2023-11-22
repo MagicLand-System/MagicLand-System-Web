@@ -165,7 +165,7 @@ export default function Register() {
               </OtpInput>
               {loading ? (
                 <Button loading className={styles.button}>Xác thực</Button>
-              ) : otp === '' ? (
+              ) : otp.length < 6 ? (
                 <Button disabled className={styles.button}>Xác thực</Button>
               ) : (
                 <Button onClick={onOtpVerify} className={styles.button}>Xác thực</Button>
@@ -200,8 +200,9 @@ export default function Register() {
               <div style={{ height: '24px', paddingLeft: '10px' }}>
                 {formik.errors.email && formik.touched.email && (<p style={{ color: 'red', fontSize: '14px', margin: '0' }}>{formik.errors.email}</p>)}
               </div>
+              <p style={{ color: '#c0c0c0', fontSize: 16, marginBottom: 5, marginTop: 0 }}>Ngày sinh</p>
               <DatePicker
-                style={{ width: '100%' }}
+                style={{ width: '100%', height: '40px' }}
                 disabledDate={(current) => {
                   return (current > dayjs().subtract(3, 'year'))
                 }}
@@ -212,6 +213,7 @@ export default function Register() {
               <div style={{ height: '24px', paddingLeft: '10px' }}>
                 {dateOfBirthError && (<p style={{ color: 'red', fontSize: '14px', margin: '0' }}>{dateOfBirthError}</p>)}
               </div>
+              <p style={{ color: '#c0c0c0', fontSize: 16, marginBottom: 5, marginTop: 0 }}>Giới tính</p>
               <div style={{ margin: '10px' }}>
                 <Radio.Group onChange={(e) => { setGender(e.target.value) }} value={gender}>
                   <ConfigProvider
@@ -267,7 +269,7 @@ export default function Register() {
               <div style={{ height: '24px', paddingLeft: '10px' }}>
                 {formik.errors.street && formik.touched.street && (<p style={{ color: 'red', fontSize: '14  px', margin: '0' }}>{formik.errors.street}</p>)}
               </div>
-              <Button htmlType='submit' className={styles.button}>
+              <Button htmlType='submit' className={styles.button} disabled={!formik.isValid}>
                 Xác nhận
               </Button>
             </form>

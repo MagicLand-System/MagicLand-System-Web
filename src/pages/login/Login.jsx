@@ -136,7 +136,7 @@ export default function Login() {
               </OtpInput>
               {loading ? (
                 <Button loading className={styles.button}>Xác thực</Button>
-              ) : otp === '' ? (
+              ) : otp.length < 6 ? (
                 <Button disabled className={styles.button}>Xác thực</Button>
               ) : (
                 <Button onClick={onOtpVerify} className={styles.button}>Xác thực</Button>
