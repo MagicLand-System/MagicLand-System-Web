@@ -51,7 +51,10 @@ export default function AddStudent() {
                         console.log(error.message, "error getting image url")
                     })
                     setImage(null);
+                    setImageUrl(null)
                     formik.resetForm()
+                    setDateOfBirth(dayjs().subtract(3, 'year'))
+                    setGender('Khác')
                     dispatch(fetchUser())
                 }).catch(error => {
                     console.log(error.message)
@@ -136,7 +139,7 @@ export default function AddStudent() {
                                 </ConfigProvider>
                             </Radio.Group>
                         </div>
-                        <Button htmlType='submit' className={styles.button} disabled={!formik.isValid}>
+                        <Button htmlType='submit' className={styles.button}>
                             Xác nhận
                         </Button>
                     </form>

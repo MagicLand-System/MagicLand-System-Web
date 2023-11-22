@@ -35,7 +35,7 @@ const router = createBrowserRouter([
         {
           path: '/add-student',
           element: <AddStudent />
-        }
+        },
       ] //các route phải đăng nhập mới vào được
     },
       // các route đăng nhập hay không vẫn vào được
@@ -49,7 +49,7 @@ const router = createBrowserRouter([
 )
 
 ReactDOM.createRoot(document.getElementById('root')).render(
-    <Provider store={store}>
-      <RouterProvider router={router} />
-    </Provider>
+  <Provider store={store}>
+    <RouterProvider router={router} />
+  </Provider>
 )

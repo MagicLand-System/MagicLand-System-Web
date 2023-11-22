@@ -43,16 +43,6 @@ const itemsNotLogin = [
     ),
     key: '/about-us',
   },
-  // {
-  //   label: 'Học viên',
-  //   key: 'students',
-  //   children: students.map((student) => {
-  //     return {
-  //       label: `${student.label}`,
-  //       key: `${student.key}`,
-  //     }
-  //   })
-  // },
   {
     label: (
       <Button style={{ paddingBottom: '5px' }}>

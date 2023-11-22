@@ -269,7 +269,7 @@ export default function Register() {
               <div style={{ height: '24px', paddingLeft: '10px' }}>
                 {formik.errors.street && formik.touched.street && (<p style={{ color: 'red', fontSize: '14  px', margin: '0' }}>{formik.errors.street}</p>)}
               </div>
-              <Button htmlType='submit' className={styles.button} disabled={!formik.isValid}>
+              <Button htmlType='submit' className={styles.button}>
                 Xác nhận
               </Button>
             </form>
