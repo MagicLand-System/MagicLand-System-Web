@@ -12,8 +12,9 @@ const AuthRoutes = () => {
     if (accessToken) {
         if (!user) {
             dispatch(fetchUser());
+        } else {
+            return <Outlet />;
         }
-        return <Outlet />;
     } else {
         return <Navigate to="/login" state={{ from: location }} replace />;
     }

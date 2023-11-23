@@ -2,12 +2,13 @@ import React from 'react'
 import styles from './Footer.module.css'
 import { Col, Row } from 'antd';
 import { Link } from 'react-router-dom';
+import logo from '../../assets/images/logo.png';
 
 export default function Footer() {
   return (
     <Row className={styles.container}>
       <Col md={7} className={styles.logo}>
-        <img src='./src/assets/images/logo.png' alt="logo" />
+        <img src={logo} alt="logo" />
         <p style={{ margin: '30px 0' }}>&ensp;
           <span className={`${styles.m} ${styles.logoSpan}`}>m</span>
           <span className={`${styles.a} ${styles.logoSpan}`}>a</span>
