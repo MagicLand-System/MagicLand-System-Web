@@ -4,6 +4,7 @@ import { Link, Navigate, Outlet, useLocation, useParams } from 'react-router-dom
 import { userSelector } from '../../store/selectors';
 import { useSelector } from 'react-redux';
 import { Avatar, Menu } from 'antd';
+import { UserOutlined, StarOutlined, BookOutlined, CalendarOutlined } from '@ant-design/icons';
 
 export default function Student() {
     const location = useLocation()
@@ -18,11 +19,13 @@ export default function Student() {
                     Lịch học
                 </Link>
             ),
-            key: 'schedule'
+            key: 'schedule',
+            icon: <CalendarOutlined />,
         },
         {
             label: 'Lớp học',
             key: 'classes',
+            icon: <BookOutlined />,
             children: [
                 {
                     label: (
@@ -53,6 +56,7 @@ export default function Student() {
         {
             label: 'Sự kiện',
             key: 'events',
+            icon: <StarOutlined />,
             children: [
                 {
                     label: (
@@ -87,6 +91,7 @@ export default function Student() {
                     Thay đổi thông tin
                 </Link>
             ),
+            icon: <UserOutlined />,
             key: 'edit'
         },
 
