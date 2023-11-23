@@ -33,7 +33,7 @@ export default function Student() {
                             Sắp tới
                         </Link>
                     ),
-                    key: 'classes/waiting',
+                    key: 'classes/upcoming',
                 },
                 {
                     label: (
@@ -64,7 +64,7 @@ export default function Student() {
                             Đang chờ
                         </Link>
                     ),
-                    key: 'events/waiting',
+                    key: 'events/upcoming',
                 },
                 {
                     label: (
