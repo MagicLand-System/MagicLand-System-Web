@@ -26,19 +26,19 @@ export default function Student() {
             children: [
                 {
                     label: (
+                        <Link to={'classes/upcoming'}>
+                            Sắp tới
+                        </Link>
+                    ),
+                    key: 'classes/waiting',
+                },
+                {
+                    label: (
                         <Link to={'classes/on-going'}>
                             Đang diễn ra
                         </Link>
                     ),
                     key: 'classes/on-going',
-                },
-                {
-                    label: (
-                        <Link to={'classes/waiting'}>
-                            Đang chờ
-                        </Link>
-                    ),
-                    key: 'classes/waiting',
                 },
                 {
                     label: (
@@ -48,20 +48,20 @@ export default function Student() {
                     ),
                     key: 'classes/completed',
                 },
-                {
-                    label: (
-                        <Link to={'classes/cancelled'}>
-                            Đã hủy
-                        </Link>
-                    ),
-                    key: 'classes/cancel',
-                }
             ],
         },
         {
             label: 'Sự kiện',
             key: 'events',
             children: [
+                {
+                    label: (
+                        <Link to={'events/upcoming'}>
+                            Đang chờ
+                        </Link>
+                    ),
+                    key: 'events/waiting',
+                },
                 {
                     label: (
                         <Link to={'events/on-going'}>
@@ -72,28 +72,12 @@ export default function Student() {
                 },
                 {
                     label: (
-                        <Link to={'events/waiting'}>
-                            Đang chờ
-                        </Link>
-                    ),
-                    key: 'events/waiting',
-                },
-                {
-                    label: (
                         <Link to={'events/completed'}>
                             Đã hoàn thành
                         </Link>
                     ),
                     key: 'events/completed',
                 },
-                {
-                    label: (
-                        <Link to={'events/cancel'}>
-                            Đã hủy
-                        </Link>
-                    ),
-                    key: 'events/cancel',
-                }
             ],
         },
         { type: 'divider' },
@@ -118,7 +102,7 @@ export default function Student() {
                     </div>
                     <Menu
                         style={{ width: 320 }}
-                        defaultSelectedKeys={'classes/waiting'}
+                        defaultSelectedKeys={'classes/upcoming'}
                         defaultOpenKeys={['classes']}
                         mode="inline"
                         items={items}

@@ -16,7 +16,6 @@ export default function StudentClasses() {
         try {
             const data = await getClasses({ status, id });
             setClasses(data)
-            console.log(classes)
         } catch (error) {
             if (error.response?.status === 400) {
                 setMessage("Danh sách lớp học trống")
@@ -24,42 +23,41 @@ export default function StudentClasses() {
         }
     }
     useEffect(() => {
+        getClassesByStatus(status, id)
         if (status === 'completed') {
             setTitle('đã hoàn thành');
         } else if (status === 'on-going') {
             setTitle('đang diễn ra')
-        } else if (status === 'cancelled') {
-            setTitle('đã hủy')
-        } else if (status === 'waiting') {
-            setTitle('đang chờ')
+        } else if (status === 'upcoming') {
+            setTitle('sắp tới')
         }
-        getClassesByStatus(status, id)
     }, [status, id])
+    console.log(classes)
     return (
         <div>
             <h2 className={styles.title}>Các lớp học {title}</h2>
             {classes.length > 0 ? (
                 <Row>
-                    {classes.map((oneClass, index) => {
+                    {classes.map((item, index) => (
                         <Col key={index} md={8} style={{ padding: 20 }}>
                             <Card
-                                style={{ padding: 20, backgroundColor: 'rgba(217,217,217,0.22)' }}
+                                style={{ padding: 20, backgroundColor: 'rgba(217,217,217,0.22)', height: '100%' }}
                                 hoverable
                                 cover={<img alt="example" src="https://watermark.lovepik.com/photo/20211125/large/lovepik-cram-school-teaching-picture_500998070.jpg" />}
                             >
                                 <Meta
                                     avatar={<Avatar size={48} src="https://media.istockphoto.com/id/1356636078/vi/anh/ch%C3%A2n-dung-m%E1%BB%99t-gi%C3%A1o-vi%C3%AAn-trong-l%E1%BB%9Bp-h%E1%BB%8Dc.jpg?s=612x612&w=0&k=20&c=AswtW364UNeNawoRwKIa9UDcCrrWxNr42An_LcGimlU=" />}
-                                    title="Khóa học toán cho trẻ em"
+                                    title={<h4 className={styles.className}>{item.courseName}</h4>}
                                     description={
                                         <>
-                                            <p>Tên lớp: {oneClass.className}</p>
-                                            <p>Tên giáo viên: {oneClass.lecturerName}</p>
+                                            <p className={styles.classDetail}><span className={styles.classTitle}>Tên lớp: </span>{item.className}</p>
+                                            <p className={styles.classDetail}><span className={styles.classTitle}>Tên giáo viên: </span>{item.lecturerName}</p>
                                         </>
                                     }
                                 />
                             </Card>
                         </Col>
-                    })}
+                    ))}
                 </Row>
             ) : (
                 <div className={styles.message}>

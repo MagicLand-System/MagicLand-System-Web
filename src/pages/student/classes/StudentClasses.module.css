@@ -2,7 +2,7 @@
 .title {
   font-family: "Baloo 2", sans-serif;
   font-size: 2rem;
-  color: #3A0CA3;
+  color: #3a0ca3;
   text-align: center;
   margin-top: 40px;
 }
@@ -12,4 +12,16 @@
 }
 .message p {
   color: black;
+}
+.className {
+  font-family: "Baloo 2", sans-serif;
+  font-size: 1.2rem;
+  color: #3a0ca3;
+  margin: 0;
+}
+.classDetail {
+  margin: 0;
+}
+.classTitle {
+  font-weight: bold;
 }
