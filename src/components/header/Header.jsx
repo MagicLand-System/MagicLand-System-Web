@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import { HomeOutlined } from '@ant-design/icons';
+import { HomeOutlined, ShoppingCartOutlined } from '@ant-design/icons';
 import { Button, ConfigProvider, Menu } from 'antd';
 import styles from './Header.module.css'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
@@ -78,11 +78,11 @@ export default function Header() {
         },
         {
           label: (
-            <Link style={{ fontWeight: 'normal' }} to={'/'}>
+            <Link style={{ fontWeight: 'normal' }} to={'/course'}>
               Khóa học
             </Link>
           ),
-          key: '/courses',
+          key: '/course',
         },
         {
           label: (
@@ -125,8 +125,16 @@ export default function Header() {
                 </Link>
               ),
               key: '/add-student',
-            }
+            },
           ]
+        },
+        {
+          label: (
+            <Link style={{ fontWeight: 'normal' }} to={'/cart'}>
+            </Link>
+          ),
+          key: '/cart',
+          icon: <ShoppingCartOutlined style={{fontSize: 18}} />,
         },
         {
           label: (
@@ -150,6 +158,14 @@ export default function Header() {
                 </Link>
               ),
               key: '/account',
+            },
+            {
+              label: (
+                <Link style={{ fontWeight: 'normal' }} to={'/'}>
+                  Đổi mật khẩu
+                </Link>
+              ),
+              key: '/change-password',
             },
             {
               label: (

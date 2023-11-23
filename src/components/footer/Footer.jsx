@@ -22,20 +22,20 @@ export default function Footer() {
         </p>
       </Col>
       <Col md={7} className={styles.column} style={{ paddingRight: '80px' }}>
-        <h4>MagicLand cung cấp đa dạng các khóa học và sự kiện cho trẻ</h4>
+        <h4 style={{color: 'white'}}>MagicLand cung cấp đa dạng các khóa học và sự kiện cho trẻ</h4>
       </Col>
       <Col md={5} className={styles.column}>
-        <h4>Magicland</h4>
+        <h4 style={{color: 'white'}}>Magicland</h4>
         <p><Link className={styles.link}>Về chúng tôi</Link></p>
         <p><Link className={styles.link}>Khóa học</Link></p>
         <p><Link className={styles.link}>Sự kiện</Link></p>
         <p><Link className={styles.link}>Đánh giá</Link></p>
       </Col>
       <Col md={5} className={styles.column}>
-        <h4>Thông tin liên lạc</h4>
-        <p>SĐT: +84 999999999</p>
-        <p>Địa chỉ: Quận 1, thành phố Hồ Chí Minh</p>
-        <p>Gmail: magicland@gmail.com</p>
+        <h4 style={{color: 'white'}}>Thông tin liên lạc</h4>
+        <p style={{color: 'white'}}>SĐT: +84 999999999</p>
+        <p style={{color: 'white'}}>Địa chỉ: Quận 1, thành phố Hồ Chí Minh</p>
+        <p style={{color: 'white'}}>Gmail: magicland@gmail.com</p>
       </Col>
     </Row>
   )

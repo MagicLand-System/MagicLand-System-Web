@@ -17,6 +17,16 @@ import StudentClasses from './pages/student/classes/StudentClasses.jsx'
 import StudentEvents from './pages/student/events/StudentEvents.jsx'
 import EditStudentInfo from './pages/student/editStudentInfo/EditStudentInfo.jsx'
 
+import HomePageComponent from './pages/User/HomePage'
+import CourseComponent from './pages/User/Course'
+import DetailCourseComponent from './pages/User/Course/Detail'
+import ListClassComponent from './pages/User/Course/ListClass'
+import DetailClassComponent from './pages/User/Course/ListClass/Detail'
+import PaymentComponent from './pages/User/Payment'
+import PaymentConfirmComponent from './pages/User/Payment/PaymentConfirm'
+import CartComponent from './pages/User/Cart'
+import { PrimeReactProvider } from 'primereact/api'
+
 const router = createBrowserRouter([
   //Router đã đăng nhập thì k vào được, k có header, footer
   {
@@ -71,18 +81,51 @@ const router = createBrowserRouter([
         },
       ] //các route phải đăng nhập mới vào được
     },
-      // các route đăng nhập hay không vẫn vào được
-      // {
-      //   path: '/...',
-      //   element: </>
-      // }
+    // các route đăng nhập hay không vẫn vào được
+    {
+      path: '',
+      element: <HomePageComponent />
+    },
+    //courses
+    {
+      path: '/course',
+      element: <CourseComponent />
+    },
+    {
+      path: '/course/detail/:id',
+      element: <DetailCourseComponent />
+    },
+    {
+      path: '/course/listClass',
+      element: <ListClassComponent />
+    },
+    {
+      path: '/class/detail',
+      element: <DetailClassComponent />
+    },
+    //payment
+    {
+      path: '/payment',
+      element: <PaymentComponent />
+    },
+    {
+      path: '/payment/paymentConfirm',
+      element: <PaymentConfirmComponent />
+    },
+    //cart
+    {
+      path: '/cart',
+      element: <CartComponent />
+    },
     ]
   }
 ]
 )
 
 ReactDOM.createRoot(document.getElementById('root')).render(
-  <Provider store={store}>
-    <RouterProvider router={router} />
-  </Provider>
+  <PrimeReactProvider>
+    <Provider store={store}>
+      <RouterProvider router={router} />
+    </Provider>
+  </PrimeReactProvider>
 )
