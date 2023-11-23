@@ -41,7 +41,7 @@ export default function StudentClasses() {
             {classes.length > 0 ? (
                 <Row>
                     {classes.map((oneClass, index) => {
-                        <Col md={8} style={{ padding: 20 }}>
+                        <Col key={index} md={8} style={{ padding: 20 }}>
                             <Card
                                 style={{ padding: 20, backgroundColor: 'rgba(217,217,217,0.22)' }}
                                 hoverable
