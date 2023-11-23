@@ -111,7 +111,7 @@ export default function Header() {
               children: user?.students.map((student) => {
                 return {
                   label: (
-                    <Link style={{ fontWeight: 'normal' }} to={`/students/${student.id}/classes/waiting`}>
+                    <Link style={{ fontWeight: 'normal' }} to={`/students/${student.id}/classes/upcoming`}>
                       {student.fullName}
                     </Link>
                   ),
