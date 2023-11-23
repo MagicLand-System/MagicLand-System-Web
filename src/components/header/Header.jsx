@@ -8,6 +8,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { signOut } from 'firebase/auth';
 import { removeUser } from '../../store/features/authSlice';
 import { auth } from '../../../firebase.config';
+import logo from '../../assets/images/logo.png';
 
 const itemsNotLogin = [
   {
@@ -63,7 +64,6 @@ export default function Header() {
   const dispatch = useDispatch()
   const navigate = useNavigate()
   const [items, setItems] = useState(itemsNotLogin)
-  console.log(user)
   useEffect(() => {
     if (user?.role.name === 'PARENT') {
       setItems([
@@ -111,7 +111,7 @@ export default function Header() {
               children: user?.students.map((student) => {
                 return {
                   label: (
-                    <Link style={{ fontWeight: 'normal' }} to={`/students/${student?.id}`}>
+                    <Link style={{ fontWeight: 'normal' }} to={`/students/${student.id}/classes/waiting`}>
                       {student.fullName}
                     </Link>
                   ),
@@ -177,7 +177,7 @@ export default function Header() {
   return (
     <div className={styles.container}>
       <div className={styles.logo}>
-        <img src='./src/assets/images/logo.png' alt="logo" />
+        <img src={logo} alt="logo" />
         <p>&ensp;
           <span className={`${styles.m} ${styles.logoSpan}`}>m</span>
           <span className={`${styles.a} ${styles.logoSpan}`}>a</span>
