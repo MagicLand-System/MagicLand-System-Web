@@ -26,6 +26,8 @@ import PaymentComponent from './pages/User/Payment'
 import PaymentConfirmComponent from './pages/User/Payment/PaymentConfirm'
 import CartComponent from './pages/User/Cart'
 import { PrimeReactProvider } from 'primereact/api'
+import ClassManagement from './pages/classManagement/ClassManagement.jsx'
+import ImportClass from './pages/classManagement/importClass/ImportClass.jsx'
 
 const router = createBrowserRouter([
   //Router đã đăng nhập thì k vào được, k có header, footer
@@ -50,73 +52,87 @@ const router = createBrowserRouter([
     path: '/',
     element: <App />,
     errorElement: <Error404 />,
-    children: [{
-      element: <AuthRoutes />,
-      children: [
-        {
-          path: '/add-student',
-          element: <AddStudent />
-        },
-        {
-          path: '/students/:id',
-          element: <Student />,
-          children: [
-            {
-              path: 'schedule',
-              element: <StudentSchedule />
-            },
-            {
-              path: 'classes/:status',
-              element: <StudentClasses />
-            },
-            {
-              path: 'events/:status',
-              element: <StudentEvents />
-            },
-            {
-              path: 'edit',
-              element: <EditStudentInfo />
-            },
-          ]
-        },
-      ] //các route phải đăng nhập mới vào được
-    },
-    // các route đăng nhập hay không vẫn vào được
-    {
-      path: '',
-      element: <HomePageComponent />
-    },
-    //courses
-    {
-      path: '/course',
-      element: <CourseComponent />
-    },
-    {
-      path: '/course/detail/:id',
-      element: <DetailCourseComponent />
-    },
-    {
-      path: '/course/listClass',
-      element: <ListClassComponent />
-    },
-    {
-      path: '/class/detail',
-      element: <DetailClassComponent />
-    },
-    //payment
-    {
-      path: '/payment',
-      element: <PaymentComponent />
-    },
-    {
-      path: '/payment/paymentConfirm',
-      element: <PaymentConfirmComponent />
-    },
-    //cart
-    {
-      path: '/cart',
-      element: <CartComponent />
-    },
+    children: [
+      {
+        element: <AuthRoutes role='PARENT' />,
+        children: [
+          {
+            path: '/add-student',
+            element: <AddStudent />
+          },
+          {
+            path: '/students/:id',
+            element: <Student />,
+            children: [
+              {
+                path: 'schedule',
+                element: <StudentSchedule />
+              },
+              {
+                path: 'classes/:status',
+                element: <StudentClasses />
+              },
+              {
+                path: 'events/:status',
+                element: <StudentEvents />
+              },
+              {
+                path: 'edit',
+                element: <EditStudentInfo />
+              },
+            ]
+          },
+        ]
+      },
+      {
+        element: <AuthRoutes role='STAFF' />,
+        children: [
+          {
+            path: '/class-management',
+            element: <ClassManagement />
+          },
+          {
+            path: '/class-management/import',
+            element: <ImportClass />
+          },
+        ] //các route phải đăng nhập mới vào được
+      },
+      // các route đăng nhập hay không vẫn vào được
+      {
+        path: '',
+        element: <HomePageComponent />
+      },
+      //courses
+      {
+        path: '/course',
+        element: <CourseComponent />
+      },
+      {
+        path: '/course/detail/:id',
+        element: <DetailCourseComponent />
+      },
+      {
+        path: '/course/listClass',
+        element: <ListClassComponent />
+      },
+      {
+        path: '/class/detail',
+        element: <DetailClassComponent />
+      },
+      //payment
+      {
+        path: '/payment',
+        element: <PaymentComponent />
+      },
+      {
+        path: '/payment/paymentConfirm',
+        element: <PaymentConfirmComponent />
+      },
+      //cart
+      {
+        path: '/cart',
+        element: <CartComponent />
+      },
     ]
   }
 ]

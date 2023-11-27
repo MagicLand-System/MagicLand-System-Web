@@ -13,7 +13,7 @@ import logo from '../../assets/images/logo.png';
 const itemsNotLogin = [
   {
     label: (
-      <Link style={{ fontWeight: 'normal' }} to={'/'}>
+      <Link className={styles.label} to={'/'}>
         Trang chủ
       </Link>
     ),
@@ -22,15 +22,15 @@ const itemsNotLogin = [
   },
   {
     label: (
-      <Link style={{ fontWeight: 'normal' }} to={'/'}>
+      <Link className={styles.label} to={'/course'}>
         Khóa học
       </Link>
     ),
-    key: '/courses',
+    key: '/course',
   },
   {
     label: (
-      <Link style={{ fontWeight: 'normal' }} to={'/'}>
+      <Link className={styles.label} to={'/'}>
         Sự kiện
       </Link>
     ),
@@ -38,7 +38,7 @@ const itemsNotLogin = [
   },
   {
     label: (
-      <Link style={{ fontWeight: 'normal' }} to={'/'}>
+      <Link className={styles.label} to={'/'}>
         Về chúng tôi
       </Link>
     ),
@@ -69,7 +69,7 @@ export default function Header() {
       setItems([
         {
           label: (
-            <Link style={{ fontWeight: 'normal' }} to={'/'}>
+            <Link className={styles.label} to={'/'}>
               Trang chủ
             </Link>
           ),
@@ -78,7 +78,7 @@ export default function Header() {
         },
         {
           label: (
-            <Link style={{ fontWeight: 'normal' }} to={'/course'}>
+            <Link className={styles.label} to={'/course'}>
               Khóa học
             </Link>
           ),
@@ -86,7 +86,7 @@ export default function Header() {
         },
         {
           label: (
-            <Link style={{ fontWeight: 'normal' }} to={'/'}>
+            <Link className={styles.label} to={'/'}>
               Sự kiện
             </Link>
           ),
@@ -94,14 +94,16 @@ export default function Header() {
         },
         {
           label: (
-            <Link style={{ fontWeight: 'normal' }} to={'/'}>
+            <Link className={styles.label} to={'/'}>
               Về chúng tôi
             </Link>
           ),
           key: '/about-us',
         },
         {
-          label: 'Học viên',
+          label: <Link style={{color: 'white'}} className={styles.label}>
+            Học viên
+          </Link>,
           key: '/students',
           children: [
             user.students.length > 0 &&
@@ -111,7 +113,7 @@ export default function Header() {
               children: user?.students.map((student) => {
                 return {
                   label: (
-                    <Link style={{ fontWeight: 'normal' }} to={`/students/${student.id}/classes/upcoming`}>
+                    <Link className={styles.label} to={`/students/${student.id}/classes/upcoming`}>
                       {student.fullName}
                     </Link>
                   ),
@@ -120,7 +122,7 @@ export default function Header() {
               })
             }, {
               label: (
-                <Link style={{ fontWeight: 'normal' }} to={'/add-student'}>
+                <Link className={styles.label} to={'/add-student'}>
                   Thêm học viên
                 </Link>
               ),
@@ -130,11 +132,11 @@ export default function Header() {
         },
         {
           label: (
-            <Link style={{ fontWeight: 'normal' }} to={'/cart'}>
+            <Link className={styles.label} to={'/cart'}>
             </Link>
           ),
           key: '/cart',
-          icon: <ShoppingCartOutlined style={{fontSize: 18}} />,
+          icon: <ShoppingCartOutlined style={{ fontSize: 18 }} />,
         },
         {
           label: (
@@ -145,7 +147,7 @@ export default function Header() {
           children: [
             {
               label: (
-                <Link style={{ fontWeight: 'normal' }} to={'/'}>
+                <Link className={styles.label} to={'/'}>
                   Ví
                 </Link>
               ),
@@ -153,7 +155,7 @@ export default function Header() {
             },
             {
               label: (
-                <Link style={{ fontWeight: 'normal' }} to={'/'}>
+                <Link className={styles.label} to={'/'}>
                   Thông tin tài khoản
                 </Link>
               ),
@@ -161,7 +163,89 @@ export default function Header() {
             },
             {
               label: (
-                <Link style={{ fontWeight: 'normal' }} to={'/'}>
+                <Link className={styles.label} to={'/'}>
+                  Đổi mật khẩu
+                </Link>
+              ),
+              key: '/change-password',
+            },
+            {
+              label: (
+                <Button style={{ border: 'none', width: '100%' }} onClick={async () => {
+                  await signOut(auth);
+                  dispatch(removeUser());
+                  localStorage.removeItem('accessToken');
+                  navigate('/login')
+                }}>
+                  Đăng xuất
+                </Button>
+              ),
+              key: 'logout',
+            }
+          ]
+        },
+      ]);
+    } else if (user?.role.name === 'STAFF') {
+      setItems([
+        {
+          label: (
+            <Link className={styles.label} to={'/'}>
+              Trang chủ
+            </Link>
+          ),
+          key: '/',
+          icon: <HomeOutlined />,
+        },
+        {
+          label: (
+            <Link className={styles.label} to={'/'}>
+              Thống kê
+            </Link>
+          ),
+          key: '/dashboard',
+        },
+        {
+          label: (
+            <Link className={styles.label} to={'/class-management'}>
+              Quản lý lớp học
+            </Link>
+          ),
+          key: '/class-management',
+        },
+        {
+          label: (
+            <Link className={styles.label} to={'/'}>
+              Quản lý sự kiện
+            </Link>
+          ),
+          key: '/event-management',
+        },
+        {
+          label: (
+            <Link className={styles.label} to={'/'}>
+              Quản lý tài khoản
+            </Link>
+          ),
+          key: '/account-management',
+        },
+        {
+          label: (
+            <Button style={{ paddingBottom: '5px' }}>
+              &nbsp;{user?.fullName}
+            </Button>
+          ),
+          children: [
+            {
+              label: (
+                <Link className={styles.label} to={'/'}>
+                  Thông tin tài khoản
+                </Link>
+              ),
+              key: '/account',
+            },
+            {
+              label: (
+                <Link className={styles.label} to={'/'}>
                   Đổi mật khẩu
                 </Link>
               ),

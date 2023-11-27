@@ -134,6 +134,7 @@ export default function Login() {
                 className={styles.otpInput}
               >
               </OtpInput>
+              <p style={{ textAlign: 'center', color: 'black', marginTop: '0px' }}>Chưa nhận được mã? <Link onClick={onLogin} style={{ color: '#f2c955', textDecoration: 'underline' }}>Gửi lại</Link></p>
               {loading ? (
                 <Button loading className={styles.button}>Xác thực</Button>
               ) : otp.length < 6 ? (

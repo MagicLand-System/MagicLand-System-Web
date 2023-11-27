@@ -1,7 +1,7 @@
 import React, { useState } from 'react'
 import styles from './Register.module.css'
 import { Link, useNavigate } from 'react-router-dom'
-import { Button, ConfigProvider, DatePicker, Input, Radio } from 'antd'
+import { Button, DatePicker, Input, Radio } from 'antd'
 import Alert from 'antd/es/alert/Alert';
 import OtpInput from 'otp-input-react';
 import PhoneInput from 'react-phone-input-2';
@@ -163,6 +163,7 @@ export default function Register() {
                 className={styles.otpInput}
               >
               </OtpInput>
+              <p style={{ textAlign: 'center', color: 'black', marginTop: '0px' }}>Chưa nhận được mã? <Link onClick={onSignup} style={{ color: '#f2c955', textDecoration: 'underline' }}>Gửi lại</Link></p>
               {loading ? (
                 <Button loading className={styles.button}>Xác thực</Button>
               ) : otp.length < 6 ? (
@@ -202,7 +203,7 @@ export default function Register() {
               </div>
               <p style={{ color: '#c0c0c0', fontSize: 16, marginBottom: 5, marginTop: 0 }}>Ngày sinh</p>
               <DatePicker
-                style={{ width: '100%', height: '40px' }}
+                className={styles.input}
                 disabledDate={(current) => {
                   return (current > dayjs().subtract(3, 'year'))
                 }}
@@ -216,21 +217,9 @@ export default function Register() {
               <p style={{ color: '#c0c0c0', fontSize: 16, marginBottom: 5, marginTop: 0 }}>Giới tính</p>
               <div style={{ margin: '10px' }}>
                 <Radio.Group onChange={(e) => { setGender(e.target.value) }} value={gender}>
-                  <ConfigProvider
-                    theme={{
-                      components: {
-                        Radio: {
-                          buttonSolidCheckedActiveBg: '#f2c955',
-                          buttonSolidCheckedBg: '#f2c955',
-                          buttonSolidCheckedHoverBg: '#f2c955',
-                        },
-                      },
-                    }}
-                  >
-                    <Radio value='Nữ'>Nữ</Radio>
-                    <Radio value='Nam'>Nam</Radio>
-                    <Radio value='Khác'>Khác</Radio>
-                  </ConfigProvider>
+                  <Radio value='Nữ'>Nữ</Radio>
+                  <Radio value='Nam'>Nam</Radio>
+                  <Radio value='Khác'>Khác</Radio>
                 </Radio.Group>
               </div>
               <div style={{ display: 'flex', gap: '10px' }}>

@@ -3,7 +3,7 @@ import { fetchUser } from '../store/features/authSlice';
 import { useDispatch, useSelector } from 'react-redux';
 import { userSelector } from '../store/selectors';
 
-const AuthRoutes = () => {
+const AuthRoutes = ({ role }) => {
     const location = useLocation();
     const dispatch = useDispatch();
     let user = useSelector(userSelector);
@@ -13,7 +13,11 @@ const AuthRoutes = () => {
         if (!user) {
             dispatch(fetchUser());
         } else {
-            return <Outlet />;
+            if (user.role.name === role) {
+                return <Outlet />;
+            } else {
+                return <Navigate to="/error404" state={{ from: location }} replace />
+            }
         }
     } else {
         return <Navigate to="/login" state={{ from: location }} replace />;
