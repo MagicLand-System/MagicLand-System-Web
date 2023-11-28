@@ -12,10 +12,11 @@
 }
 .menu {
   justify-content: flex-end;
-  min-width: 50%;
+  min-width: 75%;
   color: #ffffff;
 }
 .logo {
+  width: 100%;
   display: flex;
   padding-top: 5px;
 }

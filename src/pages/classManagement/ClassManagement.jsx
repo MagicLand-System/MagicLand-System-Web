@@ -529,6 +529,12 @@ export default function ClassManagement() {
           timer: 2000
         }).then(() => {
           setAddModalOpen(false)
+          setCourse(null)
+          setLecturer(null)
+          setStartedDay(null)
+          setRoom(null)
+          setSchedules([{ day: null, startTime: null, endTime: null }]) 
+          formik.resetForm()
         })
       }
     },
@@ -617,6 +623,7 @@ export default function ClassManagement() {
           <Select
             className={styles.input}
             placeholder="Chọn khóa học"
+            value={course}
             onChange={(value) => setCourse(value)}
             options={courses.sort((a, b) => a.courseCode.toLowerCase().localeCompare(b.courseCode.toLowerCase())).map((course) => ({
               value: course.courseCode,
@@ -642,6 +649,7 @@ export default function ClassManagement() {
           <Select
             className={styles.input}
             placeholder="Giáo viên"
+            value={lecturer}
             onChange={(value) => setLecturer(value)}
             options={lecturers.map((lecturer) => ({
               value: lecturer.id,
@@ -671,6 +679,7 @@ export default function ClassManagement() {
           </div>
           <DatePicker
             className={styles.input}
+            value={startedDay}
             disabledDate={(current) => {
               return current && current < dayjs().startOf('day');
             }}
@@ -696,7 +705,7 @@ export default function ClassManagement() {
             {schedulesError && (<p style={{ color: 'red', fontSize: '14px', margin: '0' }}>{schedulesError}</p>)}
           </div>
           <div>
-            <Button style={{marginBottom: '8px'}} onClick={() => { setSchedules([...schedules, { day: null, startTime: null, endTime: null }]) }}>
+            <Button style={{ marginBottom: '8px' }} onClick={() => { setSchedules([...schedules, { day: null, startTime: null, endTime: null }]) }}>
               Thêm lịch học
             </Button>
           </div>
