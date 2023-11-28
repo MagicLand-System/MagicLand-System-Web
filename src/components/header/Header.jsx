@@ -101,7 +101,7 @@ export default function Header() {
           key: '/about-us',
         },
         {
-          label: <Link style={{color: 'white'}} className={styles.label}>
+          label: <Link style={{ color: 'white' }} className={styles.label}>
             Học viên
           </Link>,
           key: '/students',
@@ -141,7 +141,7 @@ export default function Header() {
         {
           label: (
             <Button style={{ paddingBottom: '5px' }}>
-              &nbsp;{user?.fullName}
+              {user?.fullName}
             </Button>
           ),
           children: [
@@ -231,7 +231,7 @@ export default function Header() {
         {
           label: (
             <Button style={{ paddingBottom: '5px' }}>
-              &nbsp;{user?.fullName}
+              {user?.fullName}
             </Button>
           ),
           children: [
