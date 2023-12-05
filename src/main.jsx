@@ -27,7 +27,7 @@ import PaymentConfirmComponent from './pages/User/Payment/PaymentConfirm'
 import CartComponent from './pages/User/Cart'
 import { PrimeReactProvider } from 'primereact/api'
 import ClassManagement from './pages/classManagement/ClassManagement.jsx'
-import ImportClass from './pages/classManagement/importClass/ImportClass.jsx'
+import ClassDetail from './pages/classManagement/classDetail/ClassDetail.jsx'
 
 const router = createBrowserRouter([
   //Router đã đăng nhập thì k vào được, k có header, footer
@@ -92,9 +92,9 @@ const router = createBrowserRouter([
             element: <ClassManagement />
           },
           {
-            path: '/class-management/import',
-            element: <ImportClass />
-          },
+            path: '/class-management/detail/:id',
+            element: <ClassDetail />
+          }
         ] //các route phải đăng nhập mới vào được
       },
       // các route đăng nhập hay không vẫn vào được

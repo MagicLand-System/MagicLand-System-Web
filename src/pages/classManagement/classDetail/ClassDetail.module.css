@@ -16,9 +16,11 @@
   padding: 2px 15px;
 }
 .importButton {
+  margin-top: 24px;
   background-color: #f2c955;
   color: black !important;
-  margin-right: 8px;
+  font-size: 1rem;
+  height: 40px;
 }
 .importButton:hover {
   background: #ffd766 !important;
@@ -81,4 +83,12 @@
 }
 .addTitle span {
   color: red;
+}
+.classTitle {
+  font-size: 1rem;
+  color: #888888;
+}
+.classDetail {
+  font-size: 1rem;
+  text-align: right;
 }

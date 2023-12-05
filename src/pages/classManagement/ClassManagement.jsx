@@ -1,18 +1,18 @@
 import React, { useState, useEffect } from 'react'
 import styles from './ClassManagement.module.css'
-import { Button, DatePicker, Radio, Input, Modal, Table, Select, TimePicker } from 'antd';
+import { Button, DatePicker, Radio, Input, Modal, Table, Select, TimePicker, Row, Col } from 'antd';
 import { CloudUploadOutlined, PlusOutlined, DeleteOutlined, CloudDownloadOutlined } from '@ant-design/icons';
 import Swal from 'sweetalert2';
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
 import dayjs from 'dayjs'
 import { useNavigate } from 'react-router-dom';
+import { AutoComplete } from 'antd';
 
 const { Search } = Input;
 
 const dataClasses = [
   {
-    image: 'https://cdn.popsww.com/blog-kids-learn/sites/3/2022/03/hoc-toan-lop-4.jpeg',
     className: 'CLA001',
     courseCode: 'EMA01',
     courseName: 'Toán tiếng anh 1',
@@ -20,16 +20,17 @@ const dataClasses = [
     method: 'online',
     lecturerName: 'Ngô Gia Thưởng',
     room: null,
+    minNumOfChildrens: 15,
     maxNumOfChildrens: 30,
     numOfChildrens: 20,
-    startedDate: '16/10/2023',
+    startDate: '16/10/2023',
+    endDate: '15/11/2023',
     schedule: [
       { day: 'monday', startTime: '10:15', endTime: '12:15' },
       { day: 'wednesday', startTime: '10:15', endTime: '12:15' }
     ]
   },
   {
-    image: 'https://baobariavungtau.com.vn/dataimages/202208/original/images1753055_tranh.jpg',
     className: 'CLA002',
     courseCode: 'APA01',
     courseName: 'Vẽ tranh nghệ thuật',
@@ -37,16 +38,17 @@ const dataClasses = [
     method: 'offline',
     room: '001',
     lecturerName: 'Nguyễn Thị Hương',
+    minNumOfChildrens: 10,
     maxNumOfChildrens: 25,
     numOfChildrens: 15,
-    startedDate: '21/11/2023',
+    startDate: '21/11/2023',
+    endDate: '21/12/2023',
     schedule: [
       { day: 'tuesday', startTime: '14:30', endTime: '16:30' },
       { day: 'thursday', startTime: '14:30', endTime: '16:30' }
     ]
   },
   {
-    image: 'https://hocmonviet.edu.vn/wp-content/uploads/2021/02/anh-thuc-te-khoa-hoc-nau-an-cho-tre-em-tai-hoc-mon-viet-25.jpg',
     className: 'CLA003',
     courseCode: 'CKK01',
     courseName: 'Nấu ăn cho em',
@@ -54,15 +56,16 @@ const dataClasses = [
     method: 'offline',
     lecturerName: 'Trần Văn Tuấn',
     room: '002',
+    minNumOfChildrens: 10,
     maxNumOfChildrens: 20,
     numOfChildrens: 10,
-    startedDate: '25/12/2023',
+    startDate: '25/12/2023',
+    endDate: '25/12/2023',
     schedule: [
       { day: 'monday', startTime: '09:00', endTime: '11:00' }
     ]
   },
   {
-    image: 'https://toanvn.edu.vn/uploads/ckeditor/pictures/2430/content_top-12-trung-tam-day-toan-chat-luong-cao-ha-noi-1.jpg',
     className: 'CLA004',
     courseCode: 'EMA02',
     courseName: 'Toán tiếng anh 2',
@@ -70,16 +73,17 @@ const dataClasses = [
     method: 'online',
     lecturerName: 'Phạm Thị Hạnh',
     room: null,
+    minNumOfChildrens: 15,
     maxNumOfChildrens: 30,
     numOfChildrens: 25,
-    startedDate: '17/10/2023',
+    startDate: '17/10/2023',
+    endDate: '16/11/2023',
     schedule: [
       { day: 'tuesday', startTime: '11:00', endTime: '13:00' },
       { day: 'thursday', startTime: '11:00', endTime: '13:00' }
     ]
   },
   {
-    image: 'https://letweb-os-1.sgp1.digitaloceanspaces.com/dailyinfo.vn/2022/01/26011630/hoc-lap-trinh-cung-se-la-mot-hinh-thuc-giai-tri-khi-tre-du-nhan-thuc-de-hieu-ve-no.jpg',
     className: 'CLA005',
     courseCode: 'PRT01',
     courseName: 'Tư duy lập trình',
@@ -87,16 +91,17 @@ const dataClasses = [
     method: 'offline',
     lecturerName: 'Lê Văn Hùng',
     room: '003',
+    minNumOfChildrens: 15,
     maxNumOfChildrens: 25,
     numOfChildrens: 20,
-    startedDate: '20/12/2023',
+    startDate: '20/12/2023',
+    endDate: '21/01/2024',
     schedule: [
       { day: 'monday', startTime: '13:30', endTime: '15:30' },
       { day: 'wednesday', startTime: '13:30', endTime: '15:30' }
     ]
   },
   {
-    image: 'https://www.nestlemilo.com.vn/sites/default/files/2021-10/vovinam-1.jpg',
     className: 'CLA006',
     courseCode: 'VOV01',
     courseName: 'Vovinam',
@@ -104,16 +109,17 @@ const dataClasses = [
     method: 'offline',
     lecturerName: 'Nguyễn Thị Hiền',
     room: '004',
+    minNumOfChildrens: 15,
     maxNumOfChildrens: 20,
     numOfChildrens: 15,
-    startedDate: '28/11/2023',
+    startDate: '28/11/2023',
+    endDate: '28/12/2023',
     schedule: [
       { day: 'tuesday', startTime: '10:00', endTime: '12:00' },
       { day: 'thursday', startTime: '10:00', endTime: '12:00' }
     ]
   },
   {
-    image: 'https://ts.masterkids.edu.vn/public/kids2/assets/img/c4.jpg',
     className: 'CLA007',
     courseCode: 'CIC01',
     courseName: 'Tự tin giao tiếp',
@@ -121,15 +127,16 @@ const dataClasses = [
     method: 'online',
     lecturerName: 'Trần Văn Hoàng',
     room: null,
+    minNumOfChildrens: 15,
     maxNumOfChildrens: 30,
     numOfChildrens: 28,
-    startedDate: '14/11/2023',
+    startDate: '14/11/2023',
+    endDate: '14/11/2023',
     schedule: [
       { day: 'monday', startTime: '14:00', endTime: '16:00' }
     ]
   },
   {
-    image: 'https://phongtuyensinh.dongdoctm.edu.vn/wp-content/uploads/2023/08/Khoa-hoc-lam-banh-va-do-uong-cho-tre-em-3.jpg',
     className: 'CLA008',
     courseCode: 'BMD01',
     courseName: 'Làm bánh và pha chế',
@@ -137,15 +144,16 @@ const dataClasses = [
     method: 'offline',
     lecturerName: 'Phan Thị Ngọc Anh',
     room: '005',
+    minNumOfChildrens: 15,
     maxNumOfChildrens: 25,
     numOfChildrens: 22,
-    startedDate: '05/12/2023',
+    startDate: '05/12/2023',
+    endDate: '06/01/2024',
     schedule: [
       { day: 'tuesday', startTime: '15:30', endTime: '17:30' },
     ]
   },
   {
-    image: 'https://giasuhanoigioi.edu.vn/wp-content/uploads/nen-thue-gia-su-day-tieng-anh-tai-nha-la-nguoi-viet-hay-nguoi-nuoc-ngoai.jpg',
     className: 'CLA009',
     courseCode: 'ENG01',
     courseName: 'Tiếng anh cơ bản 1',
@@ -153,16 +161,17 @@ const dataClasses = [
     method: 'online',
     lecturerName: 'Vũ Thị Mai',
     room: null,
+    minNumOfChildrens: 10,
     maxNumOfChildrens: 20,
     numOfChildrens: 18,
-    startedDate: '22/11/2023',
+    startDate: '22/11/2023',
+    endDate: '22/12/2023',
     schedule: [
       { day: 'monday', startTime: '16:45', endTime: '18:45' },
       { day: 'wednesday', startTime: '16:45', endTime: '18:45' }
     ]
   },
   {
-    image: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQU1r1rXxEphShKtHsLNFoOG7Fxq9yTgswvJvYEUJa3tWSLvNx1mE4L5N_F_WPI1u2-EMw&usqp=CAU',
     className: 'CLA010',
     courseCode: 'ENG02',
     courseName: 'Tiếng anh cơ bản 2',
@@ -170,9 +179,64 @@ const dataClasses = [
     method: 'online',
     lecturerName: 'Vũ Thị Mai',
     room: null,
+    minNumOfChildrens: 10,
     maxNumOfChildrens: 20,
     numOfChildrens: 12,
-    startedDate: '27/09/2023',
+    startDate: '27/09/2023',
+    endDate: '26/10/2023',
+    schedule: [
+      { day: 'monday', startTime: '16:45', endTime: '18:45' },
+      { day: 'wednesday', startTime: '16:45', endTime: '18:45' }
+    ]
+  },
+  {
+    className: 'CLA011',
+    courseCode: 'BMD01',
+    courseName: 'Làm bánh và pha chế',
+    status: 'waiting',
+    method: 'offline',
+    lecturerName: null,
+    room: null,
+    minNumOfChildrens: 10,
+    maxNumOfChildrens: 25,
+    numOfChildrens: 22,
+    startDate: '04/01/2024',
+    endDate: '04/01/2024',
+    schedule: [
+      { day: 'thursday', startTime: '15:30', endTime: '17:30' },
+    ]
+  },
+  {
+    className: 'CLA012',
+    courseCode: 'ENG01',
+    courseName: 'Tiếng anh cơ bản 1',
+    status: 'waiting',
+    method: 'online',
+    lecturerName: null,
+    room: null,
+    minNumOfChildrens: 15,
+    maxNumOfChildrens: 20,
+    numOfChildrens: 18,
+    startDate: '15/01/2024',
+    endDate: '14/02/2024',
+    schedule: [
+      { day: 'monday', startTime: '16:45', endTime: '18:45' },
+      { day: 'wednesday', startTime: '16:45', endTime: '18:45' }
+    ]
+  },
+  {
+    className: 'CLA013',
+    courseCode: 'ENG02',
+    courseName: 'Tiếng anh cơ bản 2',
+    status: 'waiting',
+    method: 'online',
+    lecturerName: null,
+    room: null,
+    minNumOfChildrens: 15,
+    maxNumOfChildrens: 20,
+    numOfChildrens: 12,
+    startDate: '17/01/2024',
+    endDate: '19/02/2024',
     schedule: [
       { day: 'monday', startTime: '16:45', endTime: '18:45' },
       { day: 'wednesday', startTime: '16:45', endTime: '18:45' }
@@ -266,7 +330,7 @@ const dataLectures = [
 const ScheduleInput = ({ index, schedule, onDayChange, onTimeChange, onDelete }) => {
   const { day, startTime, endTime } = schedule;
   return (
-    <div style={{ display: 'flex', gap: '8px', marginTop: '8px' }}>
+    <div style={{ display: 'flex', gap: '8px', marginBottom: '8px' }}>
       <Select
         className={styles.input}
         placeholder={`Lịch học ${index + 1}`}
@@ -326,12 +390,6 @@ const columns = [
     dataIndex: 'className',
     // sorter: true,
     sorter: (a, b) => a.className.toLowerCase().localeCompare(b.className.toLowerCase()),
-    render: (text, record) => (
-      <div style={{ display: 'flex', flexDirection: 'row', alignItems: 'center' }}>
-        <img src={record.image} alt="Class Image" style={{ width: '50px', marginRight: '10px' }} />
-        <p>{record.className}</p>
-      </div>
-    ),
   },
   {
     title: 'Mã - Tên khóa học',
@@ -343,13 +401,15 @@ const columns = [
   {
     title: 'Trạng thái',
     dataIndex: 'status',
-    render: (text, record) => {
-      if (record.status === 'completed') {
-        return <div style={{ backgroundColor: '#e7e9ea', color: '#495057' }} className={styles.status}>Đã hoàn thành</div>
-      } else if (record.status === 'upcoming') {
-        return <div style={{ backgroundColor: '#cce5ff', color: '#004085' }} className={styles.status}>Sắp tới</div>
-      } else if (record.status === 'on-going') {
-        return <div style={{ backgroundColor: '#d4edda', color: '#155724' }} className={styles.status}>Đang diễn ra</div>
+    render: (status) => {
+      if (status === 'completed') {
+        return <div style={{ backgroundColor: '#e7e9ea', color: '#495057', whiteSpace: 'nowrap' }} className={styles.status}>Đã hoàn thành</div>
+      } else if (status === 'upcoming') {
+        return <div style={{ backgroundColor: '#cce5ff', color: '#004085', whiteSpace: 'nowrap' }} className={styles.status}>Sắp tới</div>
+      } else if (status === 'on-going') {
+        return <div style={{ backgroundColor: '#d4edda', color: '#155724', whiteSpace: 'nowrap' }} className={styles.status}>Đang diễn ra</div>
+      } else if (status === 'waiting') {
+        return <div style={{ backgroundColor: '#f8d7da', color: '#721c24', whiteSpace: 'nowrap' }} className={styles.status}>Đang chờ</div>
       }
     },
     filters: [
@@ -365,6 +425,10 @@ const columns = [
         text: 'Đang diễn ra',
         value: 'on-going',
       },
+      {
+        text: 'Đang chờ',
+        value: 'waiting',
+      },
     ],
     filterMode: 'tree',
     filterSearch: true,
@@ -373,10 +437,10 @@ const columns = [
   {
     title: 'Hình thức',
     dataIndex: 'method',
-    render: (text, record) => {
-      if (record.method === 'online') {
+    render: (method) => {
+      if (method === 'online') {
         return <div style={{ backgroundColor: '#e6d9f0', color: '#6f42c1' }} className={styles.status}>Online</div>
-      } else if (record.method === 'offline') {
+      } else if (method === 'offline') {
         return <div style={{ backgroundColor: '#ffe5cc', color: '#d9534f' }} className={styles.status}>Offline</div>
       }
     },
@@ -397,6 +461,13 @@ const columns = [
   {
     title: 'Giáo viên',
     dataIndex: 'lecturerName',
+    render: (lecturerName) => {
+      if (!lecturerName) {
+        return "Không có"
+      } else {
+        return `${lecturerName}`
+      }
+    },
   },
   {
     title: 'Phòng học',
@@ -410,6 +481,10 @@ const columns = [
     },
   },
   {
+    title: 'Số học viên tối thiểu',
+    dataIndex: 'minNumOfChildrens',
+  },
+  {
     title: 'Số học viên tối đa',
     dataIndex: 'maxNumOfChildrens',
   },
@@ -419,7 +494,11 @@ const columns = [
   },
   {
     title: 'Ngày bắt đầu',
-    dataIndex: 'startedDate',
+    dataIndex: 'startDate',
+  },
+  {
+    title: 'Ngày kết thúc',
+    dataIndex: 'endDate',
   },
   {
     title: 'Lịch học hàng tuần',
@@ -461,8 +540,10 @@ export default function ClassManagement() {
   const [addModalOpen, setAddModalOpen] = useState(false)
   // const [courses, setCourses] = useState([]);
   const [courses, setCourses] = useState(dataCourses);
+  const [coursesOptions, setCoursesOptions] = useState(courses);
   // const [lecturers, setlecturers] = useState([])
   const [lecturers, setlecturers] = useState(dataLectures)
+  const [lecturersOptions, setLecturersOptions] = useState(lecturers);
 
   const [course, setCourse] = useState(null)
   const [courseError, setCourseError] = useState(null)
@@ -482,6 +563,7 @@ export default function ClassManagement() {
 
   const formik = useFormik({
     initialValues: {
+      minNumOfChildrens: null,
       maxNumOfChildrens: null,
     },
     onSubmit: async values => {
@@ -494,21 +576,21 @@ export default function ClassManagement() {
         } else {
           setCourseError(null)
         }
-        if (lecturer === null) {
-          setLecturerError("Vui lòng chọn giáo viên")
-        } else {
-          setLecturerError(null)
-        }
+        // if (lecturer === null) {
+        //   setLecturerError("Vui lòng chọn giáo viên")
+        // } else {
+        //   setLecturerError(null)
+        // }
         if (startedDay === null) {
           setStartedDayError("Vui lòng nhập ngày bắt đầu")
         } else {
           setStartedDayError(null)
         }
-        if (method === 'offline' && room === null) {
-          setRoomError("Vui lòng nhập phòng học")
-        } else {
-          setRoomError(null)
-        }
+        // if (method === 'offline' && room === null) {
+        //   setRoomError("Vui lòng nhập phòng học")
+        // } else {
+        //   setRoomError(null)
+        // }
         if (hasNullValues) {
           setSchedulesError("Vui lòng điền đủ thông tin lịch học");
         } else {
@@ -520,7 +602,9 @@ export default function ClassManagement() {
         if (method === 'online') {
           formik.setValues({ room: null })
         }
-        console.log({ ...values, startedDay: stringStartedDay, course, lecturer, method, schedules })
+        const courseId = course.split(" - ")[0];
+        const lecturerId = lecturer.split(" - ")[0];
+        console.log({ ...values, startedDay: stringStartedDay, course: courseId, lecturer: lecturerId, method, schedules })
         Swal.fire({
           position: "center",
           icon: "success",
@@ -530,16 +614,21 @@ export default function ClassManagement() {
         }).then(() => {
           setAddModalOpen(false)
           setCourse(null)
+          setCoursesOptions(courses)
           setLecturer(null)
           setStartedDay(null)
           setRoom(null)
-          setSchedules([{ day: null, startTime: null, endTime: null }]) 
+          setSchedules([{ day: null, startTime: null, endTime: null }])
           formik.resetForm()
         })
       }
     },
     validationSchema: Yup.object({
-      maxNumOfChildrens: Yup.number().min(1, "Số lượng học viên tối thiểu là 1"),
+      minNumOfChildrens: Yup.number().min(5, "Số lượng học viên tối thiểu phải lớn hơn 5"),
+      maxNumOfChildrens: Yup.number().when(
+        'minNumOfChildrens',
+        (minNum, schema) => schema.min(minNum, "Số lượng học viên tối đa phải lớn hơn hoặc bằng số tối thiểu")
+      ),
     }),
   });
   const fetchData = () => {
@@ -596,6 +685,18 @@ export default function ClassManagement() {
     updatedSchedules.splice(index, 1);
     setSchedules(updatedSchedules);
   };
+
+  const handleImport = () => {
+    Swal.fire({
+      position: "center",
+      icon: "success",
+      title: "Thêm lớp học thành công",
+      showConfirmButton: false,
+      timer: 2000
+    }).then(() => {
+      setImportModalOpen(false);
+    })
+  }
   return (
     <div className={styles.container}>
       <h2 className={styles.title}>Quản lý lớp học</h2>
@@ -611,104 +712,201 @@ export default function ClassManagement() {
         pagination={tableParams.pagination}
         loading={loading}
         onChange={handleTableChange}
+        onRow={(record) => ({
+          onClick: () => navigate(`detail/${record.className}`, record),
+        })}
       />
       <Modal
         title="Thêm lớp học"
         centered
         open={addModalOpen}
         footer={null}
+        width={1000}
         onCancel={() => setAddModalOpen(false)}
       >
         <form onSubmit={formik.handleSubmit}>
-          <Select
-            className={styles.input}
-            placeholder="Chọn khóa học"
-            value={course}
-            onChange={(value) => setCourse(value)}
-            options={courses.sort((a, b) => a.courseCode.toLowerCase().localeCompare(b.courseCode.toLowerCase())).map((course) => ({
-              value: course.courseCode,
-              label: `${course.courseCode} - ${course.courseName}`,
-            }))}
-          />
-          <div style={{ height: '24px', paddingLeft: '10px' }}>
-            {courseError && (<p style={{ color: 'red', fontSize: '14px', margin: '0' }}>{courseError}</p>)}
-          </div>
-          <Input
-            placeholder="Số lượng học viên tối đa"
-            name='maxNumOfChildrens'
-            type='number'
-            value={formik.values.maxNumOfChildrens}
-            onChange={formik.handleChange}
-            error={formik.touched.maxNumOfChildrens && formik.errors.maxNumOfChildrens}
-            className={styles.input}
-            required
-          />
-          <div style={{ height: '24px', paddingLeft: '10px' }}>
-            {formik.errors.maxNumOfChildrens && formik.touched.maxNumOfChildrens && (<p style={{ color: 'red', fontSize: '14px', margin: '0' }}>{formik.errors.maxNumOfChildrens}</p>)}
-          </div>
-          <Select
-            className={styles.input}
-            placeholder="Giáo viên"
-            value={lecturer}
-            onChange={(value) => setLecturer(value)}
-            options={lecturers.map((lecturer) => ({
-              value: lecturer.id,
-              label: lecturer.fullName,
-            }))}
-          />
-          <div style={{ height: '24px', paddingLeft: '10px' }}>
-            {lecturerError && (<p style={{ color: 'red', fontSize: '14px', margin: '0' }}>{lecturerError}</p>)}
-          </div>
-          <div style={{ marginBottom: '8px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <p style={{ color: '#c0c0c0', fontSize: 16, marginBottom: 5, marginTop: 0 }}>Hình thức</p>
-            <Radio.Group onChange={(e) => { setMethod(e.target.value) }} value={method}>
-              <Radio value='offline'>Offline</Radio>
-              <Radio value='online'>Online</Radio>
-            </Radio.Group>
-          </div>
-          <Input
-            placeholder="Phòng học"
-            name='room'
-            value={room}
-            onChange={(e) => { setRoom(e.target.value) }}
-            className={styles.input}
-            disabled={method === 'online'}
-          />
-          <div style={{ height: '24px', paddingLeft: '10px' }}>
-            {roomError && (<p style={{ color: 'red', fontSize: '14px', margin: '0' }}>{roomError}</p>)}
-          </div>
-          <DatePicker
-            className={styles.input}
-            value={startedDay}
-            disabledDate={(current) => {
-              return current && current < dayjs().startOf('day');
-            }}
-            onChange={(date) => setStartedDay(date)}
-            format={'DD/MM/YYYY'}
-            placeholder="Ngày bắt đầu" />
-          <div style={{ height: '24px', paddingLeft: '10px' }}>
-            {startedDayError && (<p style={{ color: 'red', fontSize: '14px', margin: '0' }}>{startedDayError}</p>)}
-          </div>
-          <p style={{ color: '#c0c0c0', fontSize: 16, marginBottom: 5, marginTop: 0 }}>Lịch học theo tuần</p>
+          <Row>
+            <Col md={4}>
+              <p className={styles.addTitle}><span>*</span> Khóa học:</p>
+            </Col>
+            <Col md={20}>
+              <AutoComplete
+                className={styles.input}
+                placeholder="Chọn khóa học"
+                defaultValue={course}
+                onSelect={(data) => { setCourse(data) }}
+                options={
+                  coursesOptions
+                    .sort((a, b) => a.courseCode.toLowerCase().localeCompare(b.courseCode.toLowerCase()))
+                    .map((course) => ({
+                      value: `${course.courseCode} - ${course.courseName}`,
+                      label: `${course.courseCode} - ${course.courseName}`,
+                    }))}
+                onSearch={(value) => {
+                  if (value) {
+                    const filteredOptions = courses.filter(
+                      (course) =>
+                        `${course.courseCode} - ${course.courseName}`
+                          .toLowerCase()
+                          .includes(value?.toLowerCase())
+                    );
+                    setCoursesOptions(filteredOptions);
+                  }
+                }}
+              />
+              <div style={{ height: '24px', paddingLeft: '10px' }}>
+                {courseError && (<p style={{ color: 'red', fontSize: '14px', margin: '0' }}>{courseError}</p>)}
+              </div>
+            </Col>
+          </Row>
+          <Row>
+            <Col md={4}>
+              <p className={styles.addTitle} style={{ lineHeight: '18px' }}><span>*</span> Số lượng học viên (tối thiểu - tối đa):</p>
+            </Col>
+            <Col md={20}>
+              <div style={{ display: 'flex', gap: '8px' }}>
+                <Input
+                  placeholder="Số lượng học viên tối thiểu"
+                  name='minNumOfChildrens'
+                  type='number'
+                  min={5}
+                  value={formik.values.minNumOfChildrens}
+                  onChange={formik.handleChange}
+                  error={formik.touched.minNumOfChildrens && formik.errors.minNumOfChildrens}
+                  className={styles.input}
+                  required
+                />
+                <Input
+                  placeholder="Số lượng học viên tối đa"
+                  name='maxNumOfChildrens'
+                  type='number'
+                  min={5}
+                  value={formik.values.maxNumOfChildrens}
+                  onChange={formik.handleChange}
+                  error={formik.touched.maxNumOfChildrens && formik.errors.maxNumOfChildrens}
+                  className={styles.input}
+                  required
+                />
+              </div>
+              <div style={{ height: '24px', paddingLeft: '10px' }}>
+                {formik.errors.minNumOfChildrens && formik.touched.minNumOfChildrens && (<p style={{ color: 'red', fontSize: '14px', margin: '0' }}>{formik.errors.minNumOfChildrens}</p>)}
+                {formik.errors.maxNumOfChildrens && formik.touched.maxNumOfChildrens && (<p style={{ color: 'red', fontSize: '14px', margin: '0' }}>{formik.errors.maxNumOfChildrens}</p>)}
+              </div>
+            </Col>
+          </Row>
+          {/* <Row>
+            <Col md={4}>
+              <p className={styles.addTitle}><span>*</span> Giáo viên:</p>
+            </Col>
+            <Col md={20}>
+              <AutoComplete
+                className={styles.input}
+                placeholder="Giáo viên"
+                onSelect={(data) => { setLecturer(data) }}
+                defaultValue={lecturer}
+                options={
+                  lecturersOptions
+                    .map((lecturer) => ({
+                      value: `${lecturer.id} - ${lecturer.fullName}`,
+                      label: `${lecturer.id} - ${lecturer.fullName}`,
+                    }))}
+                onSearch={(value) => {
+                  const filteredOptions = lecturers.filter(
+                    (lecture) =>
+                      `${lecture.id} - ${lecture.fullName}`
+                        .toLowerCase()
+                        .includes(value.toLowerCase())
+                  );
+                  setLecturersOptions(filteredOptions);
+                }}
+              />
+              <div style={{ height: '24px', paddingLeft: '10px' }}>
+                {lecturerError && (<p style={{ color: 'red', fontSize: '14px', margin: '0' }}>{lecturerError}</p>)}
+              </div>
+            </Col>
+          </Row> */}
+          <Row>
+            <Col md={4}>
+              <p className={styles.addTitle}><span>*</span> Ngày bắt đầu:</p>
+            </Col>
+            <Col md={20}>
+              <DatePicker
+                className={styles.input}
+                value={startedDay}
+                disabledDate={(current) => {
+                  return current && current < dayjs().startOf('day');
+                }}
+                onChange={(date) => setStartedDay(date)}
+                format={'DD/MM/YYYY'}
+                placeholder="Ngày bắt đầu" />
+              <div style={{ height: '24px', paddingLeft: '10px' }}>
+                {startedDayError && (<p style={{ color: 'red', fontSize: '14px', margin: '0' }}>{startedDayError}</p>)}
+              </div>
+            </Col>
+          </Row>
+          <Row style={{ marginBottom: '8px' }}>
+            <Col md={4}>
+              <p className={styles.addTitle}><span>*</span> Hình thức</p>
+            </Col>
+            <Col md={20} style={{ display: 'flex', alignItems: 'center' }}>
+              <Radio.Group onChange={(e) => { setMethod(e.target.value) }} value={method}>
+                <Radio value='offline'>Offline</Radio>
+                <Radio value='online'>Online</Radio>
+              </Radio.Group>
+            </Col>
+          </Row>
 
+          <Row>
+            <Col md={4}>
+              <p style={{ color: '#999999', fontSize: '16px', textAlign: 'right', marginRight: '16px' }}>Lịch học hàng tuần:</p>
+            </Col>
+            <Col md={20} style={{ display: 'flex', alignItems: 'center', justifyContent: 'right' }}>
+              <Button style={{ marginRight: '24px' }} onClick={() => { setSchedules([...schedules, { day: null, startTime: null, endTime: null }]) }}>
+                + Thêm lịch học
+              </Button>
+            </Col>
+          </Row>
           {schedules.map((schedule, index) => (
-            <ScheduleInput
-              key={index}
-              index={index}
-              schedule={schedule}
-              onDayChange={handleDayChange}
-              onTimeChange={handleTimeChange}
-              onDelete={handleDeleteSchedule}
-            />
+            <Row>
+              <Col md={4}>
+                <p className={styles.addTitle}><span>*</span> Lịch học {index + 1}:</p>
+              </Col>
+              <Col md={20}>
+                <ScheduleInput
+                  key={index}
+                  index={index}
+                  schedule={schedule}
+                  onDayChange={handleDayChange}
+                  onTimeChange={handleTimeChange}
+                  onDelete={handleDeleteSchedule}
+                />
+              </Col>
+            </Row>
           ))}
           <div style={{ height: '24px', paddingLeft: '10px' }}>
             {schedulesError && (<p style={{ color: 'red', fontSize: '14px', margin: '0' }}>{schedulesError}</p>)}
           </div>
-          <div>
-            <Button style={{ marginBottom: '8px' }} onClick={() => { setSchedules([...schedules, { day: null, startTime: null, endTime: null }]) }}>
-              Thêm lịch học
-            </Button>
+          <div style={{ height: '24px', paddingLeft: '10px' }}>
+            {lecturerError && (<p style={{ color: 'red', fontSize: '14px', margin: '0' }}>{lecturerError}</p>)}
           </div>
+          {/* <Row>
+            <Col md={4}>
+              <p className={styles.addTitle}><span>*</span> Phòng học</p>
+            </Col>
+            <Col md={20}>
+              <Input
+                placeholder="Phòng học"
+                name='room'
+                value={room}
+                onChange={(e) => { setRoom(e.target.value) }}
+                className={styles.input}
+                disabled={method === 'online'}
+              />
+              <div style={{ height: '24px', paddingLeft: '10px' }}>
+                {roomError && method === 'offline' && (<p style={{ color: 'red', fontSize: '14px', margin: '0' }}>{roomError}</p>)}
+              </div>
+            </Col>
+          </Row> */}
           <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
             <Button className={styles.saveButton} htmlType='submit'>
               Lưu
@@ -729,7 +927,7 @@ export default function ClassManagement() {
         <Button className={styles.addButton} icon={<CloudDownloadOutlined />}>Tải tệp mẫu</Button>
         <Button type='primary' className={styles.importButton} icon={<CloudUploadOutlined />}>Chọn tệp</Button>
         <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
-          <Button className={styles.saveButton} onClick={() => navigate('import')}>
+          <Button onClick={handleImport} className={styles.saveButton}>
             Nạp tập tin
           </Button>
           <Button className={styles.cancelButton} onClick={() => { setImportModalOpen(false) }}>
@@ -737,6 +935,6 @@ export default function ClassManagement() {
           </Button>
         </div>
       </Modal>
-    </div>
+    </div >
   )
 }

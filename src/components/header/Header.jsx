@@ -30,7 +30,7 @@ const itemsNotLogin = [
   },
   {
     label: (
-      <Link className={styles.label} to={'/'}>
+      <Link className={styles.label} to={'#'}>
         Sự kiện
       </Link>
     ),
@@ -38,7 +38,7 @@ const itemsNotLogin = [
   },
   {
     label: (
-      <Link className={styles.label} to={'/'}>
+      <Link className={styles.label} to={'#'}>
         Về chúng tôi
       </Link>
     ),
@@ -86,7 +86,7 @@ export default function Header() {
         },
         {
           label: (
-            <Link className={styles.label} to={'/'}>
+            <Link className={styles.label} to={'#'}>
               Sự kiện
             </Link>
           ),
@@ -94,7 +94,7 @@ export default function Header() {
         },
         {
           label: (
-            <Link className={styles.label} to={'/'}>
+            <Link className={styles.label} to={'#'}>
               Về chúng tôi
             </Link>
           ),
@@ -147,7 +147,7 @@ export default function Header() {
           children: [
             {
               label: (
-                <Link className={styles.label} to={'/'}>
+                <Link className={styles.label} to={'#'}>
                   Ví
                 </Link>
               ),
@@ -155,7 +155,7 @@ export default function Header() {
             },
             {
               label: (
-                <Link className={styles.label} to={'/'}>
+                <Link className={styles.label} to={'#'}>
                   Thông tin tài khoản
                 </Link>
               ),
@@ -163,7 +163,7 @@ export default function Header() {
             },
             {
               label: (
-                <Link className={styles.label} to={'/'}>
+                <Link className={styles.label} to={'#'}>
                   Đổi mật khẩu
                 </Link>
               ),
@@ -189,16 +189,7 @@ export default function Header() {
       setItems([
         {
           label: (
-            <Link className={styles.label} to={'/'}>
-              Trang chủ
-            </Link>
-          ),
-          key: '/',
-          icon: <HomeOutlined />,
-        },
-        {
-          label: (
-            <Link className={styles.label} to={'/'}>
+            <Link className={styles.label} to={'#'}>
               Thống kê
             </Link>
           ),
@@ -214,7 +205,7 @@ export default function Header() {
         },
         {
           label: (
-            <Link className={styles.label} to={'/'}>
+            <Link className={styles.label} to={'#'}>
               Quản lý sự kiện
             </Link>
           ),
@@ -222,7 +213,7 @@ export default function Header() {
         },
         {
           label: (
-            <Link className={styles.label} to={'/'}>
+            <Link className={styles.label} to={'#'}>
               Quản lý tài khoản
             </Link>
           ),
@@ -237,7 +228,7 @@ export default function Header() {
           children: [
             {
               label: (
-                <Link className={styles.label} to={'/'}>
+                <Link className={styles.label} to={'#'}>
                   Thông tin tài khoản
                 </Link>
               ),
@@ -245,7 +236,7 @@ export default function Header() {
             },
             {
               label: (
-                <Link className={styles.label} to={'/'}>
+                <Link className={styles.label} to={'#'}>
                   Đổi mật khẩu
                 </Link>
               ),
