@@ -3,15 +3,12 @@
   line-height: 1.5;
   font-weight: 400;
 
-  background-color: #fff;
-
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   -webkit-text-size-adjust: 100%;
 }
-
 a {
   font-weight: 500;
   color: #646cff;

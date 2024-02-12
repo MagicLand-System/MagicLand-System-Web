@@ -15,6 +15,8 @@ const AuthRoutes = ({ role }) => {
         } else {
             if (user.role.name === role) {
                 return <Outlet />;
+            } else if (user.role.name === 'STAFF') {
+                return <Navigate to="/class-management" state={{ from: location }} replace />
             } else {
                 return <Navigate to="/error404" state={{ from: location }} replace />
             }

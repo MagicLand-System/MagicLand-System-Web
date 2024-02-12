@@ -1,6 +1,6 @@
 import axios from "axios";
 
-const url = "https://magic-land-system.azurewebsites.net";
+const url = "https://magiclandapiv2.somee.com";
 const instance = axios.create({
     baseURL: url,
     headers: {

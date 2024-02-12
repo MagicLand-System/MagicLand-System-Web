@@ -203,6 +203,7 @@ export default function Register() {
               </div>
               <p style={{ color: '#c0c0c0', fontSize: 16, marginBottom: 5, marginTop: 0 }}>Ngày sinh</p>
               <DatePicker
+                allowClear={false}
                 className={styles.input}
                 disabledDate={(current) => {
                   return (current > dayjs().subtract(3, 'year'))

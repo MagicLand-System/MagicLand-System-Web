@@ -1,7 +1,7 @@
 import axios from "axios";
 import Swal from "sweetalert2";
 
-const URL = "https://magic-land-system.azurewebsites.net";
+const URL = "https://magiclandapiv2.somee.com";
 
 const instance = axios.create({
   baseURL: URL,
@@ -16,7 +16,7 @@ instance.interceptors.response.use(
   },
   (err) => {
     if (err.response) {
-      if (err.response.status === 401) {
+      if (err.response.status === 401 || err.response.status === 500) {
         Swal.fire({
           icon: 'error',
           title: 'Hãy đăng nhập để tiếp tục!',

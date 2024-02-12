@@ -1,7 +1,7 @@
 import axios from "axios";
 import { refresh } from "./refresh";
 
-const url = "https://magic-land-system.azurewebsites.net";
+const url = "https://magiclandapiv2.somee.com";
 const instance = axios.create({
   baseURL: url,
   headers: {
@@ -29,7 +29,7 @@ instance.interceptors.response.use(
   async (err) => {
     const originalConfig = err.config;
 
-    if (originalConfig.url !== "/api/v1/auth" && err.response) {
+    if (err.response) {
       // Access Token was expired
       if (err.response.status === 401 && !originalConfig._retry) {
         originalConfig._retry = true;

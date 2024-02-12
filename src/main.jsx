@@ -28,9 +28,17 @@ import CartComponent from './pages/User/Cart'
 import { PrimeReactProvider } from 'primereact/api'
 import ClassManagement from './pages/classManagement/ClassManagement.jsx'
 import ClassDetail from './pages/classManagement/classDetail/ClassDetail.jsx'
+import TransactionManagement from './pages/transactionManagement/TransactionManagement.jsx'
+import AttendanceManagement from './pages/attendanceManagement/AttendanceManagement.jsx'
+import AttendanceDetail from './pages/attendanceManagement/attendanceDetail/AttendanceDetail.jsx'
+import MakeUpClass from './pages/attendanceManagement/makeUpClass/MakeUpClass.jsx'
+import CourseManagement from './pages/courseManagement/CourseManagement.jsx'
+import ChangeClass from './pages/classManagement/changeClass/ChangeClass.jsx'
+import AddCourse from './pages/courseManagement/addCourse/AddCourse.jsx'
+import CourseDetail from './pages/courseManagement/courseDetail/CourseDetail.jsx'
 
 const router = createBrowserRouter([
-  //Router đã đăng nhập thì k vào được, k có header, footer
+  //Route đã đăng nhập thì k vào được, k có header, footer
   {
     element: <UnLoginRoutes />, children: [
       {
@@ -43,17 +51,18 @@ const router = createBrowserRouter([
       },
     ]
   },
+  //error route
   {
     path: "/error404",
     element: <Error404 />,
   },
-  //router có header, footer:
+  //route có header, footer:
   {
     path: '/',
     element: <App />,
     errorElement: <Error404 />,
     children: [
-      {
+      { //các route phải đăng nhập mới vào được
         element: <AuthRoutes role='PARENT' />,
         children: [
           {
@@ -94,45 +103,92 @@ const router = createBrowserRouter([
           {
             path: '/class-management/detail/:id',
             element: <ClassDetail />
-          }
-        ] //các route phải đăng nhập mới vào được
+          },
+          {
+            path: '/class-management/detail/:classId/change-class/:studentId',
+            element: <ChangeClass />
+          },
+          {
+            path: '/transaction-management',
+            element: <TransactionManagement />
+          },
+          {
+            path: '/attendance-management',
+            element: <AttendanceManagement />
+          },
+          {
+            path: '/check-attendance/:id',
+            element: <AttendanceDetail />
+          },
+          {
+            path: '/check-attendance/:scheduleId/make-up-class/:studentId',
+            element: <MakeUpClass />
+          },
+          {
+            path: '/course-management',
+            element: <CourseManagement />
+          },
+          {
+            path: '/course-management/detail/:id',
+            element: <CourseDetail />
+          },
+          {
+            path: '/course-management/add-course',
+            element: <AddCourse />
+          },
+        ]
+      },
+      {
+        element: <AuthRoutes role='ADMIN' />,
+        children: [
+          {
+            path: '/course-management',
+            element: <CourseManagement />
+          },
+        ]
       },
       // các route đăng nhập hay không vẫn vào được
       {
-        path: '',
-        element: <HomePageComponent />
+        element: <AuthRoutes role={null} />,
+        children: [
+          {
+            path: '',
+            element: <HomePageComponent />
+          },
+          //courses
+          {
+            path: '/course',
+            element: <CourseComponent />
+          },
+          {
+            path: '/course/detail/:id',
+            element: <DetailCourseComponent />
+          },
+          {
+            path: '/course/listClass',
+            element: <ListClassComponent />
+          },
+          {
+            path: '/class/detail',
+            element: <DetailClassComponent />
+          },
+          //payment
+          {
+            path: '/payment',
+            element: <PaymentComponent />
+          },
+          {
+            path: '/payment/paymentConfirm',
+            element: <PaymentConfirmComponent />
+          },
+          //cart
+          {
+            path: '/cart',
+            element: <CartComponent />
+          },
+        ]
       },
-      //courses
-      {
-        path: '/course',
-        element: <CourseComponent />
-      },
-      {
-        path: '/course/detail/:id',
-        element: <DetailCourseComponent />
-      },
-      {
-        path: '/course/listClass',
-        element: <ListClassComponent />
-      },
-      {
-        path: '/class/detail',
-        element: <DetailClassComponent />
-      },
-      //payment
-      {
-        path: '/payment',
-        element: <PaymentComponent />
-      },
-      {
-        path: '/payment/paymentConfirm',
-        element: <PaymentConfirmComponent />
-      },
-      //cart
-      {
-        path: '/cart',
-        element: <CartComponent />
-      },
+
     ]
   }
 ]

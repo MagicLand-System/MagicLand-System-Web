@@ -10,11 +10,6 @@
   text-align: center;
   margin-top: 40px;
 }
-.status {
-  text-align: center;
-  border-radius: 20px;
-  padding: 2px 15px;
-}
 .importButton {
   background-color: #f2c955;
   color: black !important;
@@ -50,23 +45,6 @@
   background: #ffd766 !important;
   color: black !important;
 }
-.input {
-  width: 100%;
-  color: black;
-  height: 40px;
-}
-.input:focus {
-  border-color: #f2c955;
-}
-.input:hover {
-  border-color: #f2c955 !important;
-}
-.input div:focus {
-  border-color: #f2c955;
-}
-.input div:hover {
-  border-color: #f2c955 !important;
-}
 .saveButton {
   background-color: #f2c955;
   color: black !important;
@@ -86,16 +64,6 @@
   background: #fb5959 !important;
   color: white !important;
   border: 1px solid #FF6868 !important;
-}
-.addTitle {
-  text-align: right;
-  height: 40px;
-  margin: 0;
-  line-height: 40px;
-  margin-right: 16px;
-}
-.addTitle span {
-  color: red;
 }
 .modalHeader {
   padding-bottom: 5px;

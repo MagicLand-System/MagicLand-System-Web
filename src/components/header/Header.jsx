@@ -197,8 +197,24 @@ export default function Header() {
         },
         {
           label: (
+            <Link className={styles.label} to={'/transaction-management'}>
+              Giao dịch
+            </Link>
+          ),
+          key: '/transaction-management',
+        },
+        {
+          label: (
+            <Link className={styles.label} to={'/attendance-management'}>
+              Điểm danh
+            </Link>
+          ),
+          key: '/attendance-management',
+        },
+        {
+          label: (
             <Link className={styles.label} to={'/class-management'}>
-              Quản lý lớp học
+              Lớp học
             </Link>
           ),
           key: '/class-management',
@@ -206,7 +222,7 @@ export default function Header() {
         {
           label: (
             <Link className={styles.label} to={'#'}>
-              Quản lý sự kiện
+              Sự kiện
             </Link>
           ),
           key: '/event-management',
@@ -214,7 +230,80 @@ export default function Header() {
         {
           label: (
             <Link className={styles.label} to={'#'}>
-              Quản lý tài khoản
+              Nhân sự
+            </Link>
+          ),
+          key: '/account-management',
+        },
+        {
+          label: (
+            <Button style={{ paddingBottom: '5px' }}>
+              {user?.fullName}
+            </Button>
+          ),
+          children: [
+            {
+              label: (
+                <Link className={styles.label} to={'#'}>
+                  Thông tin tài khoản
+                </Link>
+              ),
+              key: '/account',
+            },
+            {
+              label: (
+                <Link className={styles.label} to={'#'}>
+                  Đổi mật khẩu
+                </Link>
+              ),
+              key: '/change-password',
+            },
+            {
+              label: (
+                <Button style={{ border: 'none', width: '100%' }} onClick={async () => {
+                  await signOut(auth);
+                  dispatch(removeUser());
+                  localStorage.removeItem('accessToken');
+                  navigate('/login')
+                }}>
+                  Đăng xuất
+                </Button>
+              ),
+              key: 'logout',
+            }
+          ]
+        },
+      ]);
+    } else if (user?.role.name === 'ADMIN') {
+      setItems([
+        {
+          label: (
+            <Link className={styles.label} to={'#'}>
+              Thống kê
+            </Link>
+          ),
+          key: '/dashboard',
+        },
+        {
+          label: (
+            <Link className={styles.label} to={'/course-management'}>
+              Khóa học
+            </Link>
+          ),
+          key: '/attendance-management',
+        },
+        {
+          label: (
+            <Link className={styles.label} to={'#'}>
+              Sự kiện
+            </Link>
+          ),
+          key: '/event-management',
+        },
+        {
+          label: (
+            <Link className={styles.label} to={'#'}>
+              Nhân sự
             </Link>
           ),
           key: '/account-management',
@@ -297,7 +386,7 @@ export default function Header() {
           }
         }}
       >
-        <Menu className={styles.menu} onClick={onClick} selectedKeys={[current]} mode="horizontal" items={items} />
+        <Menu className={styles.menu} onClick={onClick} selectedKeys={items.filter(item => current.includes(item.key)).map(item => item.key)} mode="horizontal" items={items} />
       </ConfigProvider>
     </div>
   );

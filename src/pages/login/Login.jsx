@@ -57,6 +57,9 @@ export default function Login() {
       if (error.response?.status === 404) {
         setLoading(false)
         setErrorMessage("Tài khoản của bạn không tồn tại, hãy đăng kí để tiếp tục");
+      } else {
+        setLoading(false)
+        setErrorMessage("Số điện thoại không hợp lệ");
       }
     }
   }
@@ -70,16 +73,17 @@ export default function Login() {
       const accessToken = data.accessToken;
       localStorage.setItem('accessToken', accessToken)
       dispatch(fetchUser())
-      Swal.fire({
-        position: "center",
-        icon: "success",
-        title: "Đăng nhập thành công",
-        showConfirmButton: false,
-        timer: 2000
-      }).then(() => {
-        setErrorMessage('')
-        navigate('/')
-      })
+        .then(Swal.fire({
+          position: "center",
+          icon: "success",
+          title: "Đăng nhập thành công",
+          showConfirmButton: false,
+          timer: 2000
+        }))
+        .then(() => {
+          setErrorMessage('')
+          navigate('/')
+        })
       setLoading(false)
     }).catch(err => {
       setErrorMessage("Xác thực OTP không thành công")

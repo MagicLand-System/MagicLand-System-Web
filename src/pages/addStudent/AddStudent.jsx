@@ -84,7 +84,7 @@ export default function AddStudent() {
             <Row>
                 <Col md={8} className={styles.left}>
                     <img className={styles.avatar} alt="children" src={image ? imageUrl : './src/assets/images/empty_avatar.png'} />
-                    <input type='file' ref={fileInputRef} onChange={handleImageChange} style={{ display: 'none' }} />
+                    <input type='file' accept='image/*' ref={fileInputRef} onChange={handleImageChange} style={{ display: 'none' }} />
                     <Button style={{ width: '180px' }} onClick={() => fileInputRef.current.click()} icon={<CloudUploadOutlined />} className={styles.button}>
                         Tải hình lên
                     </Button>
@@ -108,6 +108,7 @@ export default function AddStudent() {
                         </div>
                         <p style={{ color: '#c0c0c0', fontSize: 16, marginBottom: 5, marginTop: 0 }}>Ngày sinh</p>
                         <DatePicker
+                            allowClear={false}
                             style={{ width: '100%', height: '40px' }}
                             disabledDate={(current) => {
                                 return (current > dayjs().subtract(3, 'year'))

@@ -1,247 +1,29 @@
 import React, { useState, useEffect } from 'react'
 import styles from './ClassDetail.module.css'
-import { Button, DatePicker, Radio, Input, Modal, Table, Select, TimePicker, Row, Col, Avatar } from 'antd';
-import { CloudUploadOutlined, PlusOutlined, DeleteOutlined, CloudDownloadOutlined } from '@ant-design/icons';
-import Swal from 'sweetalert2';
+import { Button, DatePicker, Input, Table, Row, Col, Avatar, ConfigProvider, Tabs, Modal, Select } from 'antd';
+import { SwapOutlined, EditOutlined } from '@ant-design/icons';
+import { useNavigate, useParams } from 'react-router-dom';
+import { cancelClass, getClass, getLecturer, getRooms, getSessionOfClass, getSlots, getStudentsOfClass, updateClass, updateSession } from '../../../api/classesApi';
+import { formatDate, formatDayOfWeek, formatSlot } from '../../../utils/utils';
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
-import dayjs from 'dayjs'
-import { useNavigate, useParams } from 'react-router-dom';
-import { AutoComplete } from 'antd';
+import Swal from 'sweetalert2';
+import dayjs from 'dayjs';
+import { compareAsc } from 'date-fns';
 
 const { Search } = Input;
-const dataClass = {
-    image: 'https://enspire.edu.vn/wp-content/uploads/38978937761_d19f1c1169_k-1024x683.jpg',
-    className: 'CLA013',
-    courseCode: 'ENG02',
-    courseName: 'Tiếng anh cơ bản 2',
-    status: 'waiting',
-    method: 'offline',
-    lecturerName: null,
-    room: null,
-    minNumOfChildrens: 15,
-    maxNumOfChildrens: 20,
-    numOfChildrens: 12,
-    startDate: '17/01/2024',
-    endDate: '19/02/2024',
-    schedule: [
-        { day: 'monday', startTime: '16:45', endTime: '18:45' },
-        { day: 'wednesday', startTime: '16:45', endTime: '18:45' }
-    ]
-}
-const studentsData = [
-    {
-        id: 1,
-        image: 'https://leplateau.edu.vn/wp-content/uploads/2023/10/anh-be-gai-1.jpg',
-        fullName: 'Nguyễn Thị Băng Châu',
-        age: 6,
-        gender: 'Nữ',
-        parentName: 'Trần Lê Bảo Ngọc',
-        parentPhoneNumber: '0912344640',
-    },
-    {
-        id: 2,
-        image: 'https://mcdn.coolmate.me/image/May2022/kieu-toc-cho-be-trai_275.jpg',
-        fullName: 'Trần Văn An',
-        age: 6,
-        gender: 'Nam',
-        parentName: 'Trần Văn Bảo',
-        parentPhoneNumber: '0912345678',
-    },
-    {
-        id: 3,
-        image: "https://image-us.eva.vn/upload/3-2021/images/2021-09-11/be-gai-2-tuoi-dep-nhu-bup-be-song-bi-cam-tham-mygio-thay-doi-chi-dong-1-phim-nam-co-be-bi-cam-dao-keo-nam-2-tuoi-lu-mo-ca-trieu-le--1631324096-934-width660height880.jpg",
-        fullName: 'Lê Thị Cẩm Ly',
-        age: 6,
-        gender: 'Nữ',
-        parentName: 'Lê Văn Đăng',
-        parentPhoneNumber: '0912345679',
-    },
-    {
-        id: 4,
-        image: 'https://bizweb.dktcdn.net/100/438/408/files/kieu-toc-cho-be-trai-3-tuoi-yodyvn-1.jpg?v=1692066229333',
-        fullName: 'Phạm Văn Hải',
-        age: 7,
-        gender: 'Nam',
-        parentName: 'Phạm Văn Hùng',
-        parentPhoneNumber: '0912345680',
-    },
-    {
-        id: 5,
-        image: 'https://cdn.vn.alongwalk.info/vn/wp-content/uploads/2023/02/28174712/image-ngam-nhin-100-anh-be-gai-cute-dang-yeu-nhu-thien-than-167755603299485.jpg',
-        fullName: 'Trần Thị Giang',
-        age: 6,
-        gender: 'Nữ',
-        parentName: 'Trần Văn Hưng',
-        parentPhoneNumber: '0912345681',
-    },
-    {
-        id: 6,
-        image: 'https://hocchungchi.edu.vn/toc-dep-cho-be-trai-1-tuoi/imager_11_268_700.jpg',
-        fullName: 'Lê Văn Idris',
-        age: 6,
-        gender: 'Nam',
-        parentName: 'Lê Thị Kim',
-        parentPhoneNumber: '0912345682',
-    },
-    {
-        id: 7,
-        image: 'https://my-test-11.slatic.net/p/87692c06c261ed5ce3361039f345c5bb.jpg',
-        fullName: 'Nguyễn Thị Lệ Quyên',
-        age: 6,
-        gender: 'Nữ',
-        parentName: 'Nguyễn Văn Minh',
-        parentPhoneNumber: '0912345683',
-    },
-    {
-        id: 8,
-        image: 'https://image-us.eva.vn/upload/1-2022/images/2022-01-24/be-trai-sai-gon-bi-nham-lan-voi-bo-con-trai-hoa-minzy-vi-giong-90-me-ruot-tiet-lo-hoa-minzy-len-tieng-khi-hinh-anh-quy-tu-bi-loi-dun-1643000664-854-width660height925.jpg',
-        fullName: 'Phan Văn Nam',
-        age: 6,
-        gender: 'Nam',
-        parentName: 'Phan Thị Phương',
-        parentPhoneNumber: '0912345684',
-    },
-    {
-        id: 9,
-        image: 'https://haycafe.vn/wp-content/uploads/2022/12/Hinh-anh-em-be-Han-Quoc.jpg',
-        fullName: 'Vũ Thị Quỳnh',
-        age: 6,
-        gender: 'Nữ',
-        parentName: 'Vũ Văn Rồng',
-        parentPhoneNumber: '0912345685',
-    },
-    {
-        id: 10,
-        image: 'https://dongphuchaianh.vn/wp-content/uploads/2022/01/ao-so-mi-be-trai-trang.jpg',
-        fullName: 'Đỗ Văn Sơn',
-        age: 6,
-        gender: 'Nam',
-        parentName: 'Đỗ Thị Thủy',
-        parentPhoneNumber: '0912345686',
-    },
-];
-
-const dataLectures = [
-    {
-        id: 1,
-        fullName: 'Ngô Gia Thưởng',
-    },
-    {
-        id: 2,
-        fullName: 'Nguyễn Thị Hương',
-    },
-    {
-        id: 3,
-        fullName: 'Trần Văn Tuấn',
-    },
-    {
-        id: 4,
-        fullName: 'Phạm Thị Hạnh',
-    },
-    {
-        id: 5,
-        fullName: 'Lê Văn Hùng',
-    },
-    {
-        id: 6,
-        fullName: 'Nguyễn Thị Hiền',
-    },
-    {
-        id: 7,
-        fullName: 'Trần Văn Hoàng',
-    },
-    {
-        id: 8,
-        fullName: 'Phan Thị Ngọc Anh',
-    },
-    {
-        id: 9,
-        fullName: 'Vũ Thị Mai',
-    },
-
-]
-const dataRooms = [
-    {
-        room: '111'
-    },
-    {
-        room: '112'
-    },
-    {
-        room: '113'
-    },
-    {
-        room: '114'
-    },
-    {
-        room: '115'
-    },
-
-]
-const columns = [
-    {
-        title: 'Tên học viên',
-        dataIndex: 'fullName',
-        // sorter: true,
-        sorter: (a, b) => a.fullName.toLowerCase().localeCompare(b.fullName.toLowerCase()),
-        render: (text, record) => (
-            <div style={{ display: 'flex', flexDirection: 'row', alignItems: 'center' }}>
-                <Avatar size={64} src={record.image} style={{ marginRight: '10px' }} />
-                <p>{record.fullName}</p>
-            </div>
-        ),
-    },
-    {
-        title: 'Tuổi',
-        dataIndex: 'age',
-        // sorter: true,
-        sorter: (a, b) => a.age - b.age,
-    },
-    {
-        title: 'Giới tính',
-        dataIndex: 'gender',
-        render: (gender) => {
-            if (gender === 'Nữ') {
-                return <div style={{ backgroundColor: '#ffb6c1', color: '#800000', whiteSpace: 'nowrap' }} className={styles.status}>Nữ</div>
-            } else if (gender === 'Nam') {
-                return <div style={{ backgroundColor: '#87ceeb', color: '#000080', whiteSpace: 'nowrap' }} className={styles.status}>Nam</div>
-            }
-        },
-        filters: [
-            {
-                text: 'Nữ',
-                value: 'Nữ',
-            },
-            {
-                text: 'Nam',
-                value: 'Nam',
-            },
-        ],
-        filterMode: 'tree',
-        filterSearch: true,
-        onFilter: (value, record) => record.gender === value,
-    },
-    {
-        title: 'Tên phụ huynh',
-        dataIndex: 'parentName'
-    },
-    {
-        title: 'Số điện thoại phụ huynh',
-        dataIndex: 'parentPhoneNumber'
-    },
-];
-const getRandomuserParams = (params) => ({
-    results: params.pagination?.pageSize,
-    page: params.pagination?.current,
-    ...params,
-});
 
 export default function ClassDetail() {
+    const params = useParams();
+    const id = params.id;
 
     const navigate = useNavigate();
-    const [classData, setClassData] = useState(dataClass);
-    const [students, setStudents] = useState(studentsData);
+    const [tabActive, setTabActive] = useState('students')
+    const [classData, setClassData] = useState(null);
+    const [students, setStudents] = useState([]);
+    const [sessions, setSessions] = useState([]);
+    const [modifyModalOpen, setModifyModalOpen] = useState(false)
+    const [sessionModalOpen, setSessionModalOpen] = useState(false)
 
     const [loading, setLoading] = useState(false);
     const [tableParams, setTableParams] = useState({
@@ -251,46 +33,212 @@ export default function ClassDetail() {
         },
     });
 
-    const [addModalOpen, setAddModalOpen] = useState(false)
-    // const [lecturers, setlecturers] = useState([])
-    const [lecturers, setlecturers] = useState(dataLectures)
+    const [lecturers, setlecturers] = useState([])
     const [lecturersOptions, setLecturersOptions] = useState(lecturers);
 
     const [lecturer, setLecturer] = useState(null)
     const [lecturerError, setLecturerError] = useState(null)
 
-    const [rooms, setRooms] = useState(dataRooms)
+    const [rooms, setRooms] = useState([])
     const [roomsOptions, setRoomsOptions] = useState(rooms)
 
     const [room, setRoom] = useState(null)
     const [roomError, setRoomError] = useState(null)
 
-    const params = useParams();
-    const id = params.id;
-    const fetchData = () => {
-        //https://codesandbox.io/p/sandbox/ajax-antd-5-11-4-tkp6cv?file=%2Fdemo.tsx%3A104%2C5
-        // setLoading(true);
-        // const data = getData();
-        // if (data) {
-        //   setData(results);
-        //   setLoading(false);
-        //   setTableParams({
-        //     ...tableParams,
-        //     pagination: {
-        //       ...tableParams.pagination,
-        //       total: 200,
-        //       // 200 is mock data, you should read it from server
-        //       // total: data.totalCount,
-        //     },
-        //   });
-        // }
+    const [slots, setSlots] = useState([])
+    
+    const [sessionId, setSessionId] = useState(null);
+
+    const [lecturerSession, setLecturerSession] = useState(null)
+    const [lecturerSessionError, setLecturerSessionError] = useState(null)
+
+    const [roomSession, setRoomSession] = useState(null)
+    const [roomSessionError, setRoomSessionError] = useState(null)
+
+    const [slotSession, setSlotSession] = useState(null)
+    const [slotSessionError, setSlotSessionError] = useState(null)
+
+    const [dateSession, setDateSession] = useState(null);
+    const [dateSessionError, setDateSessionError] = useState(null)
+
+
+    const formik = useFormik({
+        initialValues: {
+            leastNumberStudent: null,
+            limitNumberStudent: null,
+        },
+        onSubmit: async values => {
+            if (!lecturer || !room) {
+                if (lecturer === null) {
+                    setLecturerError("Vui lòng chọn giáo viên")
+                } else {
+                    setLecturerError(null)
+                }
+                if (room === null) {
+                    setRoomError("Vui lòng nhập phòng học")
+                } else {
+                    setRoomError(null)
+                }
+            } else {
+                try {
+                    await updateClass(id, { ...values, lecturerId: lecturer, roomId: room })
+                        .then(() => {
+                            Swal.fire({
+                                position: "center",
+                                icon: "success",
+                                title: "Chỉnh sửa lớp học thành công",
+                                showConfirmButton: false,
+                                timer: 2000
+                            })
+                        })
+                        .then(() => {
+                            getClassDetail(id)
+                            getSessions(id)
+                            setModifyModalOpen(false)
+                            setLecturerError(null)
+                            setRoomError(null)
+                            formik.resetForm()
+                        })
+                } catch (error) {
+                    Swal.fire({
+                        position: "center",
+                        icon: "error",
+                        title: "Đã có lỗi xảy ra trong quá trình chỉnh sửa",
+                        showConfirmButton: false,
+                        timer: 2000
+                    })
+                }
+            }
+        },
+        validationSchema: Yup.object({
+            leastNumberStudent: Yup.number().min(1, "Số lượng học viên tối thiểu phải lớn hơn 1").max(25, "Số lượng học viên tối thiểu phải nhỏ hơn 25"),
+            limitNumberStudent: Yup.number().when(
+                'leastNumberStudent',
+                (minNum, schema) => schema.min(minNum, "Số lượng học viên tối đa phải lớn hơn hoặc bằng số tối thiểu")
+            ).max(25, "Số lượng học viên tối đa phải nhỏ hơn 25"),
+        }),
+    });
+    async function getClassDetail(id) {
+        const data = await getClass(id);
+        setClassData(data);
+        setLecturer(data.lecturerResponse.lectureId);
+        setRoom(data.roomResponse.roomId);
+        formik.setValues({
+            leastNumberStudent: data.leastNumberStudent,
+            limitNumberStudent: data.limitNumberStudent,
+        })
+
+    }
+    async function getStudentsList(id) {
+        try {
+            const data = await getStudentsOfClass(id);
+            setStudents(data);
+        } catch (error) {
+            console.log(error);
+        } finally {
+            setLoading(false)
+        }
+    };
+    async function getSessions(id) {
+        try {
+            const data = await getSessionOfClass(id);
+            setSessions(data);
+        } catch (error) {
+            console.log(error);
+        } finally {
+            setLoading(false)
+        }
+    };
+
+    async function getListsOfLecturer() {
+        const data = await getLecturer();
+        setlecturers(data);
+        setLecturersOptions(data);
+    };
+    async function getListsOfRooms() {
+        const data = await getRooms();
+        setRooms(data);
+        setRoomsOptions(data);
+    };
+    async function getListsOfSlots() {
+        const data = await getSlots();
+        setSlots(data);
     };
     useEffect(() => {
-        fetchData();
-    }, [JSON.stringify(tableParams)]);
+        getListsOfLecturer()
+        getListsOfRooms();
+        getListsOfSlots()
+    }, []);
+    useEffect(() => {
+        if (tabActive === 'students') {
+            getStudentsList(id);
+        } else if (tabActive === 'sessions') {
+            getSessions(id);
+        }
+    }, [tabActive]);
+    useEffect(() => {
+        getClassDetail(id)
+        if (tabActive === 'students') {
+            getStudentsList(id);
+        } else if (tabActive === 'sessions') {
+            getSessions(id);
+        }
+    }, [id]);
 
+    const handleUpdateSession = async () => {
+        if (!lecturerSession || !roomSession || !slotSession || !dateSession) {
+            if (lecturerSession === null) {
+                setLecturerSessionError("Vui lòng chọn giáo viên")
+            } else {
+                setLecturerSessionError(null)
+            }
+            if (roomSession === null) {
+                setRoomSessionError("Vui lòng nhập phòng học")
+            } else {
+                setRoomSessionError(null)
+            }
+            if (slotSession === null) {
+                setSlotSessionError("Vui lòng chọn giờ học")
+            } else {
+                setSlotSessionError(null)
+            }
+            if (dateSession === null) {
+                setDateSessionError("Vui lòng chọn ngày học")
+            } else {
+                setDateSessionError(null)
+            }
+        } else {
+            try {
+                await updateSession(sessionId, { lecturerId: lecturerSession, roomId: roomSession, slotId: slotSession, dateTime: dateSession })
+                    .then(() => {
+                        Swal.fire({
+                            position: "center",
+                            icon: "success",
+                            title: "Chỉnh sửa buổi học thành công",
+                            showConfirmButton: false,
+                            timer: 2000
+                        })
+                    })
+                    .then(() => {
+                        getSessions(id)
+                        setSessionModalOpen(false)
+                        setLecturerSessionError(null)
+                        setRoomSessionError(null)
+                        setDateSessionError(null)
+                        setSlotSessionError(null)
+                    })
+            } catch (error) {
+                Swal.fire({
+                    position: "center",
+                    icon: "error",
+                    title: "Đã có lỗi xảy ra trong quá trình chỉnh sửa",
+                    showConfirmButton: false,
+                    timer: 2000
+                })
+            }
+        }
+    }
     const handleTableChange = (pagination, filters, sorter) => {
-        console.log(pagination, filters, sorter)
         setTableParams({
             pagination,
             filters,
@@ -302,190 +250,581 @@ export default function ClassDetail() {
             setData([]);
         }
     };
-    const handleSubmit = () => {
-        if (!lecturer || (classData.method === 'offline' && room === null)) {
-            if (lecturer === null) {
-                setLecturerError("Vui lòng chọn giáo viên")
-            } else {
-                setLecturerError(null)
+    const handleCancelClass = () => {
+        Swal.fire({
+            position: "center",
+            icon: "warning",
+            title: "Bạn muốn hủy lớp này?",
+            text: "Bạn không thể hoàn tác hành động này",
+            showCancelButton: true,
+            cancelButtonColor: "#d33",
+            confirmButtonText: "Hủy lớp học",
+            cancelButtonText: "Hủy"
+        }).then(async (result) => {
+            if (result.isConfirmed) {
+                await cancelClass(id)
+                    .then(() => {
+                        Swal.fire({
+                            position: "center",
+                            icon: "success",
+                            title: "Hủy lớp học thành công",
+                            showConfirmButton: false,
+                            timer: 2000
+                        })
+                    })
             }
-            if (classData.method === 'offline' && room === null) {
-                setRoomError("Vui lòng nhập phòng học")
-            } else {
-                setRoomError(null)
-            }
-        } else {
-            console.log(lecturer, room)
-            Swal.fire({
-                position: "center",
-                icon: "success",
-                title: "Bắt đầu lớp học thành công",
-                showConfirmButton: false,
-                timer: 2000
-            }).then(() => { navigate('/class-management') })
-        }
+        });
     }
+    const ableToChangeClass = () => {
+        const today = new Date();
+        const startDateObj = new Date(classData?.startDate);
+        if (classData?.status?.toLowerCase().includes('canceled') ||
+            (classData?.status?.toLowerCase().includes('upcoming') &&
+                (startDateObj.getTime() - today.getTime()) / (1000 * 3600 * 24) > 7)
+        ) {
+            return 1;
+        }
+        return 0;
+    }
+    const studentsColumns = [
+        {
+            title: 'Tên học viên',
+            dataIndex: 'fullName',
+            sorter: (a, b) => a.fullName.toLowerCase().localeCompare(b.fullName.toLowerCase()),
+            render: (_, record) => (
+                <div style={{ display: 'flex', flexDirection: 'row', alignItems: 'center' }}>
+                    <Avatar size={64} src={record.imgAvatar} style={{ marginRight: '10px' }} />
+                    <p>{record.fullName}</p>
+                </div>
+            ),
+        },
+        {
+            title: 'Tuổi',
+            dataIndex: 'dateOfBirth',
+            render: (_, record) => (new Date().getFullYear() - new Date(record.dateOfBirth).getFullYear()),
+            sorter: (a, b) => a.age - b.age,
+        },
+        {
+            title: 'Giới tính',
+            dataIndex: 'gender',
+            render: (gender) => {
+                if (gender === 'Nữ') {
+                    return <div style={{ backgroundColor: '#ffb6c1', color: '#800000', whiteSpace: 'nowrap' }} className={styles.status}>Nữ</div>
+                } else if (gender === 'Nam') {
+                    return <div style={{ backgroundColor: '#87ceeb', color: '#000080', whiteSpace: 'nowrap' }} className={styles.status}>Nam</div>
+                }
+            },
+            filters: [
+                {
+                    text: 'Nữ',
+                    value: 'Nữ',
+                },
+                {
+                    text: 'Nam',
+                    value: 'Nam',
+                },
+            ],
+            filterMode: 'tree',
+            filterSearch: true,
+            onFilter: (value, record) => record.gender === value,
+        },
+        {
+            title: 'Tên phụ huynh',
+            dataIndex: 'parentName'
+        },
+        {
+            title: 'Số điện thoại phụ huynh',
+            dataIndex: 'parentPhoneNumber'
+        },
+        {
+            title: 'Chuyển lớp',
+            colSpan: ableToChangeClass(),
+            render: (_, record) => {
+                const today = new Date();
+                const startDateObj = new Date(classData?.startDate);
+                if (classData?.status?.toLowerCase().includes('canceled') ||
+                    (classData?.status?.toLowerCase().includes('upcoming') &&
+                        (startDateObj.getTime() - today.getTime()) / (1000 * 3600 * 24) > 7)
+                ) {
+                    return (
+                        <Button type='link' onClick={() => navigate(`change-class/${record.studentId}`, { state: { student: record } })} icon={< SwapOutlined />} size='large' />
+                    )
+                }
+            }
+        },
+    ];
+    const sessionsColumns = [
+        {
+            title: 'Buổi học',
+            dataIndex: 'index',
+            sorter: (a, b) => a.index - b.index,
+        },
+        {
+            title: 'Giáo viên',
+            dataIndex: 'lecturer',
+            render: (lecturer) => lecturer.fullName
+        },
+        {
+            title: 'Ngày học',
+            render: (_, record) => {
+                return `${formatDayOfWeek(record.dayOfWeeks)} - ${formatDate(record.date)}`
+            }
+        },
+        {
+            title: 'Giờ học',
+            render: (_, record) => `${record.slot.startTime} - ${record.slot.endTime}`
+        },
+        {
+            title: 'Phòng học',
+            dataIndex: 'room',
+            render: (room) => room.name
+        },
+        {
+            title: 'Trạng thái',
+            dataIndex: 'status',
+            render: (status) => {
+                if (status.toLowerCase().includes('future')) {
+                    return <div style={{ backgroundColor: '#e7e9ea', color: '#495057', whiteSpace: 'nowrap' }} className={styles.status}>Sắp tới</div>
+                } else if (status.toLowerCase().includes('completed')) {
+                    return <div style={{ backgroundColor: '#d4edda', color: '#155724', whiteSpace: 'nowrap' }} className={styles.status}>Đã hoàn thành</div>
+                }
+            }
+        },
+        {
+            title: 'Chỉnh sửa',
+            render: (_, record) => (
+                record.status.toLowerCase().includes('future') &&
+                <Button type='link' onClick={() => {
+                    setSessionId(record.id)
+                    setLecturerSession(record.lecturer.id)
+                    setRoomSession(record.room.roomId)
+                    setSlotSession(record.slot.slotId)
+                    setDateSession(dayjs(record.date))
+                    setSessionModalOpen(true)
+                }} icon={<EditOutlined />} size='large' />
+            ),
+        },
+    ];
+
     return (
         <div className={styles.container}>
             <h2 className={styles.title}>Chi tiết lớp học</h2>
-            <div style={{ display: 'flex' }}>
-                <div style={{ width: '50%', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                    <img style={{ width: '100%' }} src={classData.image} />
-                    <Button onClick={() => setAddModalOpen(true)} type='primary' className={styles.importButton} >Bắt đầu lớp học</Button>
-                </div>
-                <div style={{ width: '50%', paddingLeft: '24px', paddingRight: '24px' }}>
+            {classData && (
+                <>
                     <Row>
-                        <Col md={8}>
-                            <p className={styles.classTitle}>Mã lớp:</p>
+                        <Col md={6} xs={12} style={{ marginBottom: '40px' }}>
+                            <div className={styles.classPart}>
+                                <h5 className={styles.classPartTitle}>Thông tin chung:</h5>
+                                <Row>
+                                    <Col span={8}>
+                                        <p className={styles.classTitle}>Mã lớp:</p>
+                                    </Col>
+                                    <Col span={16}>
+                                        <p className={styles.classDetail}>{classData.classCode}</p>
+                                    </Col>
+                                </Row>
+                                <Row>
+                                    <Col span={8}>
+                                        <p className={styles.classTitle}>Tên khóa học:</p>
+                                    </Col>
+                                    <Col span={16}>
+                                        <p className={styles.classDetail}>{classData.courseName}</p>
+                                    </Col>
+                                </Row>
+                                <Row>
+                                    <Col span={8}>
+                                        <p className={styles.classTitle}>Giáo viên:</p>
+                                    </Col>
+                                    <Col span={16}>
+                                        <p className={styles.classDetail}>{classData.lecturerName}</p>
+                                    </Col>
+                                </Row>
+                                <Row>
+                                    <Col span={8}>
+                                        <p className={styles.classTitle}>Trạng thái:</p>
+                                    </Col>
+                                    <Col span={16}>
+                                        <p className={styles.classDetail}>{classData.status.toLowerCase().includes('completed') ? 'Đã hoàn thành'
+                                            : classData.status.toLowerCase().includes('upcoming') ? 'Sắp tới'
+                                                : classData.status.toLowerCase().includes('on-going') ? 'Đang diễn ra'
+                                                    : classData.status.toLowerCase().includes('canceled') && 'Đã hủy'}
+                                        </p>
+                                    </Col>
+                                </Row>
+                            </div>
                         </Col>
-                        <Col md={16}>
-                            <p className={styles.classDetail}>{classData.className}</p>
+                        <Col md={6} xs={12} style={{ marginBottom: '40px' }}>
+                            <div className={styles.classPart}>
+                                <h5 className={styles.classPartTitle}>Thời gian học:</h5>
+                                <Row>
+                                    <Col span={8}>
+                                        <p className={styles.classTitle}>Ngày bắt đầu:</p>
+                                    </Col>
+                                    <Col span={16}>
+                                        <p className={styles.classDetail}>{classData && `${formatDate(classData.startDate)}`}</p>
+                                    </Col>
+                                </Row>
+                                <Row>
+                                    <Col span={8}>
+                                        <p className={styles.classTitle}>Ngày kết thúc:</p>
+                                    </Col>
+                                    <Col span={16}>
+                                        <p className={styles.classDetail}>{classData && `${formatDate(classData.endDate)}`}</p>
+                                    </Col>
+                                </Row>
+                                <Row>
+                                    <Col span={10}>
+                                        <p className={styles.classTitle}>Lịch học hàng tuần:</p>
+                                    </Col>
+                                    <Col span={14}>
+                                        {classData?.schedules?.map((session, index) => (
+                                            <p className={styles.classDetail} key={index}>
+                                                {formatDayOfWeek(session.dayOfWeek)}: {session.startTime} - {session.endTime}
+                                            </p>
+                                        ))}
+                                    </Col>
+                                </Row>
+                            </div>
+                        </Col>
+                        <Col md={6} xs={12} style={{ marginBottom: '40px' }}>
+                            <div className={styles.classPart}>
+                                <h5 className={styles.classPartTitle}>Địa điểm học:</h5>
+                                <Row>
+                                    <Col span={8}>
+                                        <p className={styles.classTitle}>Hình thức:</p>
+                                    </Col>
+                                    <Col span={16}>
+                                        <p className={styles.classDetail} style={{ textTransform: 'capitalize' }}>{classData.method.toLowerCase()}</p>
+                                    </Col>
+                                </Row>
+                                <Row>
+                                    <Col span={8}>
+                                        <p className={styles.classTitle}>Phòng học:</p>
+                                    </Col>
+                                    <Col span={16}>
+                                        <p className={styles.classDetail}>{classData.roomResponse.name}</p>
+                                    </Col>
+                                </Row>
+                            </div>
+                        </Col>
+                        <Col md={6} xs={12} style={{ marginBottom: '40px' }}>
+                            <div className={styles.classPart}>
+                                <h5 className={styles.classPartTitle}>Quy định đăng ký:</h5>
+                                <Row>
+                                    <Col span={16}>
+                                        <p className={styles.classTitle}>Số lượng tối thiểu:</p>
+                                    </Col>
+                                    <Col span={8}>
+                                        <p className={styles.classDetail}>{classData.leastNumberStudent}</p>
+                                    </Col>
+                                </Row>
+                                <Row>
+                                    <Col span={16}>
+                                        <p className={styles.classTitle}>Số lượng tối đa:</p>
+                                    </Col>
+                                    <Col span={8}>
+                                        <p className={styles.classDetail}>{classData.limitNumberStudent}</p>
+                                    </Col>
+                                </Row>
+                                <Row>
+                                    <Col span={16}>
+                                        <p className={styles.classTitle}>Đã đăng kí:</p>
+                                    </Col>
+                                    <Col span={8}>
+                                        <p className={styles.classDetail}>{classData.numberStudentRegistered}</p>
+                                    </Col>
+                                </Row>
+                            </div>
                         </Col>
                     </Row>
-                    <Row>
-                        <Col md={8}>
-                            <p className={styles.classTitle}>Khóa học:</p>
-                        </Col>
-                        <Col md={16}>
-                            <p className={styles.classDetail}>{classData.courseCode} - {classData.courseName}</p>
-                        </Col>
-                    </Row>
-                    <Row>
-                        <Col md={8}>
-                            <p className={styles.classTitle}>Giáo viên:</p>
-                        </Col>
-                        <Col md={16}>
-                            <p className={styles.classDetail}>{classData.lecturerName ? classData.lecturerName : 'Không có'}</p>
-                        </Col>
-                    </Row>
-                    <Row>
-                        <Col md={8}>
-                            <p className={styles.classTitle}>Hình thức:</p>
-                        </Col>
-                        <Col md={16}>
-                            <p className={styles.classDetail}>{classData.method}</p>
-                        </Col>
-                    </Row>
-                    <Row>
-                        <Col md={8}>
-                            <p className={styles.classTitle}>Phòng học:</p>
-                        </Col>
-                        <Col md={16}>
-                            <p className={styles.classDetail}>{classData.room ? classData.room : 'Không có'}</p>
-                        </Col>
-                    </Row>
-                    <Row>
-                        <Col md={8}>
-                            <p className={styles.classTitle}>Số học viên tối thiểu:</p>
-                        </Col>
-                        <Col md={16}>
-                            <p className={styles.classDetail}>{classData.minNumOfChildrens}</p>
-                        </Col>
-                    </Row>
-                    <Row>
-                        <Col md={8}>
-                            <p className={styles.classTitle}>Số học viên tối đa:</p>
-                        </Col>
-                        <Col md={16}>
-                            <p className={styles.classDetail}>{classData.maxNumOfChildrens}</p>
-                        </Col>
-                    </Row>
-                    <Row>
-                        <Col md={8}>
-                            <p className={styles.classTitle}>Số học viên đã đăng kí:</p>
-                        </Col>
-                        <Col md={16}>
-                            <p className={styles.classDetail}>{classData.numOfChildrens}</p>
-                        </Col>
-                    </Row>
-                    <Row>
-                        <Col md={8}>
-                            <p className={styles.classTitle}>Ngày bắt đầu:</p>
-                        </Col>
-                        <Col md={16}>
-                            <p className={styles.classDetail}>{classData.startDate}</p>
-                        </Col>
-                    </Row>
-                    <Row>
-                        <Col md={8}>
-                            <p className={styles.classTitle}>Ngày kết thúc:</p>
-                        </Col>
-                        <Col md={16}>
-                            <p className={styles.classDetail}>{classData.endDate}</p>
-                        </Col>
-                    </Row>
-                    <Row>
-                        <Col md={8}>
-                            <p className={styles.classTitle}>Trạng thái:</p>
-                        </Col>
-                        <Col md={16}>
-                            <p className={styles.classDetail}>{classData.status === 'completed' ? 'Đã hoàn thành'
-                                : classData.status === 'upcoming' ? 'Sắp tới'
-                                    : classData.status === 'on-going' ? 'Đang diễn ra'
-                                        : classData.status === 'waiting' && 'Đang chờ'}
-                            </p>
-                        </Col>
-                    </Row>
-                    <Row>
-                        <Col md={8}>
-                            <p className={styles.classTitle}>Lịch học hàng tuần:</p>
-                        </Col>
-                        <Col md={16}>
-                            {classData.schedule.map((session, index) => (
-                                <p className={styles.classDetail} key={index}>
-                                    {session.day === 'monday' ? 'Thứ 2' :
-                                        session.day === 'tuesday' ? 'Thứ 3' :
-                                            session.day === 'wednesday' ? 'Thứ 4' :
-                                                session.day === 'thursday' ? 'Thứ 5' :
-                                                    session.day === 'friday' ? 'Thứ 6' :
-                                                        session.day === 'saturday' ? 'Thứ 7' : 'Chủ nhật'}: {session.startTime} - {session.endTime}
-                                </p>
-                            ))}
-                        </Col>
-                    </Row>
-                </div>
-            </div>
-            <h3 style={{ fontSize: '1.5rem' }} className={styles.title}>Học viên đã đăng kí</h3>
-            <div style={{ display: 'flex', marginBottom: '16px' }}>
-                <Search className={styles.searchBar} placeholder="Tìm kiếm học viên..." onSearch={(value, e) => { console.log(value) }} enterButton />
-            </div>
-            <Table
-                columns={columns}
-                rowKey={(record) => record.id}
-                dataSource={students}
-                pagination={tableParams.pagination}
-                loading={loading}
-                onChange={handleTableChange}
-            />
-            <Modal
-                title="Thêm thông tin"
-                centered
-                open={addModalOpen}
-                footer={null}
-                width={700}
-                onCancel={() => setAddModalOpen(false)}
+                    {!classData.status.toLowerCase().includes('canceled') && !classData.status.toLowerCase().includes('completed') && (
+                        <div style={{ display: 'flex', marginBottom: '20px' }}>
+                            <Button className={styles.saveButton} onClick={() => setModifyModalOpen(true)}>
+                                Chỉnh sửa
+                            </Button>
+                            <Button className={styles.cancelButton} onClick={handleCancelClass}>
+                                Hủy lớp học
+                            </Button>
+                        </div>
+                    )}
+                </>
+            )}
+            <ConfigProvider
+                theme={{
+                    components: {
+                        Tabs: {
+                            cardBg: '#f9e4aa',
+                        },
+                    },
+                }}
             >
-                <form>
+                <Tabs
+                    defaultActiveKey={'students'}
+                    type="card"
+                    size="middle"
+                    onChange={activeKey => setTabActive(activeKey)}
+                    items={[
+                        {
+                            label: 'Học viên',
+                            key: 'students',
+                            children: (
+                                <>
+                                    <div style={{ display: 'flex', marginBottom: '16px' }}>
+                                        <Search className={styles.searchBar} placeholder="Tìm kiếm học viên..." onSearch={(value, e) => { console.log(value) }} enterButton />
+                                    </div>
+                                    <Table
+                                        columns={studentsColumns}
+                                        rowKey={(record) => record.studentId}
+                                        dataSource={students}
+                                        pagination={tableParams.pagination}
+                                        loading={loading}
+                                        onChange={handleTableChange}
+                                    />
+                                </>
+                            )
+                        },
+                        {
+                            label: 'Lịch học',
+                            key: 'sessions',
+                            children: (
+                                <>
+                                    <Table
+                                        columns={sessionsColumns}
+                                        rowKey={(record) => record.id}
+                                        dataSource={sessions}
+                                        pagination={tableParams.pagination}
+                                        loading={loading}
+                                        onChange={handleTableChange}
+                                    />
+                                </>
+                            )
+                        },
+                    ]}
+                />
+
+            </ConfigProvider>
+            <ConfigProvider
+                theme={{
+                    components: {
+                        Modal: {
+                            titleFontSize: '1.2rem',
+                        },
+                    },
+                }}
+            >
+                <Modal
+                    title="Chỉnh sửa lớp học"
+                    centered
+                    open={modifyModalOpen}
+                    footer={null}
+                    onCancel={() => setModifyModalOpen(false)}
+                    width={600}
+                    classNames={{ header: styles.modalHeader }}
+                >
+                    <form onSubmit={formik.handleSubmit}>
+                        {classData?.status?.toLowerCase().includes('upcoming') && (
+                            <Row>
+                                <Col span={6}>
+                                    <p className={styles.addTitle} style={{ lineHeight: '18px' }}><span>*</span> Số lượng học viên (tối thiểu - tối đa):</p>
+                                </Col>
+                                <Col span={18}>
+                                    <div style={{ display: 'flex', gap: '8px' }}>
+                                        <Input
+                                            placeholder="Tối thiểu"
+                                            name='leastNumberStudent'
+                                            type='number'
+                                            min={1}
+                                            max={25}
+                                            value={formik.values.leastNumberStudent}
+                                            onChange={formik.handleChange}
+                                            error={formik.touched.leastNumberStudent && formik.errors.leastNumberStudent}
+                                            className={styles.input}
+                                            required
+                                        />
+                                        <Input
+                                            placeholder="Tối đa"
+                                            name='limitNumberStudent'
+                                            type='number'
+                                            min={5}
+                                            max={25}
+                                            value={formik.values.limitNumberStudent}
+                                            onChange={formik.handleChange}
+                                            error={formik.touched.limitNumberStudent && formik.errors.limitNumberStudent}
+                                            className={styles.input}
+                                            required
+                                        />
+                                    </div>
+                                    <div style={{ height: '24px', paddingLeft: '10px' }}>
+                                        {formik.errors.leastNumberStudent && formik.touched.leastNumberStudent && (<p style={{ color: 'red', fontSize: '14px', margin: '0' }}>{formik.errors.leastNumberStudent}</p>)}
+                                        {formik.errors.limitNumberStudent && formik.touched.limitNumberStudent && (<p style={{ color: 'red', fontSize: '14px', margin: '0' }}>{formik.errors.limitNumberStudent}</p>)}
+                                    </div>
+                                </Col>
+                            </Row>
+                        )}
+                        <Row>
+                            <Col span={6}>
+                                <p className={styles.addTitle}><span>*</span> Giáo viên:</p>
+                            </Col>
+                            <Col span={18}>
+                                <Select
+                                    showSearch
+                                    value={lecturer}
+                                    suffixIcon={null}
+                                    filterOption={false}
+                                    className={styles.input}
+                                    placeholder="Giáo viên"
+                                    onSelect={(data) => { setLecturer(data) }}
+                                    defaultValue={lecturer}
+                                    options={
+                                        lecturersOptions
+                                            .map((lecturer) => ({
+                                                value: lecturer.lectureId,
+                                                label: lecturer.fullName,
+                                            }))}
+                                    onSearch={(value) => {
+                                        const filteredOptions = lecturers.filter(
+                                            (lecture) =>
+                                                `${lecture.fullName}`
+                                                    .toLowerCase()
+                                                    .includes(value.toLowerCase())
+                                        );
+                                        setLecturersOptions(filteredOptions);
+                                    }}
+                                />
+                                <div style={{ height: '24px', paddingLeft: '10px' }}>
+                                    {lecturerError && (<p style={{ color: 'red', fontSize: '14px', margin: '0' }}>{lecturerError}</p>)}
+                                </div>
+                            </Col>
+                        </Row>
+                        <Row>
+                            <Col span={6}>
+                                <p className={styles.addTitle}><span>*</span> Phòng học:</p>
+                            </Col>
+                            <Col span={18}>
+                                <Select
+                                    showSearch
+                                    value={room}
+                                    suffixIcon={null}
+                                    filterOption={false}
+                                    className={styles.input}
+                                    placeholder="Phòng học"
+                                    onSelect={(data) => { setRoom(data) }}
+                                    options={roomsOptions.map((room) => ({
+                                        value: room.id,
+                                        label: room.name
+                                    }))}
+                                    onSearch={(value) => {
+                                        if (value) {
+                                            const filteredOptions = rooms.filter(
+                                                (room) => room.name.toLowerCase().includes(value?.toLowerCase())
+                                            );
+                                            setRoomsOptions(filteredOptions);
+                                        }
+                                    }}
+                                />
+                                <div style={{ height: '24px', paddingLeft: '10px' }}>
+                                    {roomError && (<p style={{ color: 'red', fontSize: '14px', margin: '0' }}>{roomError}</p>)}
+                                </div>
+                            </Col>
+                        </Row>
+                        <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+                            <Button className={styles.saveButton} htmlType='submit'>
+                                Lưu
+                            </Button>
+                            <Button className={styles.cancelButton} onClick={() => { setModifyModalOpen(false) }}>
+                                Hủy
+                            </Button>
+                        </div>
+                    </form>
+                </Modal>
+            </ConfigProvider>
+            <ConfigProvider
+                theme={{
+                    components: {
+                        Modal: {
+                            titleFontSize: '1.2rem',
+                        },
+                    },
+                }}
+            >
+                <Modal
+                    title="Chỉnh sửa buổi học"
+                    centered
+                    open={sessionModalOpen}
+                    footer={null}
+                    onCancel={() => setSessionModalOpen(false)}
+                    width={600}
+                    classNames={{ header: styles.modalHeader }}
+                >
                     <Row>
-                        <Col md={4}>
+                        <Col span={6}>
+                            <p className={styles.addTitle}><span>*</span> Ngày học:</p>
+                        </Col>
+                        <Col span={18}>
+                            <DatePicker
+                                className={styles.input}
+                                value={dateSession}
+                                disabledDate={(current) => {
+                                    return current && current < dayjs().add(1, 'day').startOf('day');
+                                }}
+                                onChange={(date) => setDateSession(date)}
+                                format={'DD/MM/YYYY'}
+                                allowClear={false}
+                                placeholder="Ngày học" />
+                            <div style={{ height: '24px', paddingLeft: '10px' }}>
+                                {dateSessionError && (<p style={{ color: 'red', fontSize: '14px', margin: '0' }}>{dateSessionError}</p>)}
+                            </div>
+                        </Col>
+                    </Row>
+                    <Row>
+                        <Col span={6}>
+                            <p className={styles.addTitle}><span>*</span> Giờ học:</p>
+                        </Col>
+                        <Col span={18}>
+                            <Select
+                                className={styles.input}
+                                value={slotSession}
+                                placeholder="Giờ học"
+                                onChange={(value) => setSlotSession(value)}
+                                options={slots
+                                    .sort((a, b) => {
+                                        const timeA = formatSlot(a.startTime);
+                                        const timeB = formatSlot(b.startTime);
+                                        return compareAsc(timeA, timeB);
+                                    }).map((slot) => ({
+                                        value: slot.id,
+                                        label: `${slot.startTime} - ${slot.endTime}`
+                                    }))}
+                            />
+                            <div style={{ height: '24px', paddingLeft: '10px' }}>
+                                {slotSessionError && (<p style={{ color: 'red', fontSize: '14px', margin: '0' }}>{slotSessionError}</p>)}
+                            </div>
+                        </Col>
+                    </Row>
+                    <Row>
+                        <Col span={6}>
                             <p className={styles.addTitle}><span>*</span> Giáo viên:</p>
                         </Col>
-                        <Col md={20}>
-                            <AutoComplete
+                        <Col span={18}>
+                            <Select
+                                showSearch
+                                value={lecturerSession}
+                                suffixIcon={null}
+                                filterOption={false}
                                 className={styles.input}
                                 placeholder="Giáo viên"
-                                onSelect={(data) => { setLecturer(data) }}
+                                onSelect={(data) => { setLecturerSession(data) }}
                                 defaultValue={lecturer}
                                 options={
                                     lecturersOptions
                                         .map((lecturer) => ({
-                                            value: `${lecturer.id} - ${lecturer.fullName}`,
-                                            label: `${lecturer.id} - ${lecturer.fullName}`,
+                                            value: lecturer.lectureId,
+                                            label: lecturer.fullName,
                                         }))}
                                 onSearch={(value) => {
                                     const filteredOptions = lecturers.filter(
                                         (lecture) =>
-                                            `${lecture.id} - ${lecture.fullName}`
+                                            `${lecture.fullName}`
                                                 .toLowerCase()
                                                 .includes(value.toLowerCase())
                                     );
@@ -493,49 +832,51 @@ export default function ClassDetail() {
                                 }}
                             />
                             <div style={{ height: '24px', paddingLeft: '10px' }}>
-                                {lecturerError && (<p style={{ color: 'red', fontSize: '14px', margin: '0' }}>{lecturerError}</p>)}
+                                {lecturerSessionError && (<p style={{ color: 'red', fontSize: '14px', margin: '0' }}>{lecturerSessionError}</p>)}
                             </div>
                         </Col>
                     </Row>
                     <Row>
-                        <Col md={4}>
-                            <p className={styles.addTitle}><span>*</span> Phòng học</p>
+                        <Col span={6}>
+                            <p className={styles.addTitle}><span>*</span> Phòng học:</p>
                         </Col>
-                        <Col md={20}>
-                            <AutoComplete
+                        <Col span={18}>
+                            <Select
+                                showSearch
+                                value={roomSession}
+                                suffixIcon={null}
+                                filterOption={false}
                                 className={styles.input}
-                                placeholder="Lớp học"
-                                defaultValue={room}
-                                onSelect={(data) => { setRoom(data) }}
+                                placeholder="Phòng học"
+                                onSelect={(data) => { setRoomSession(data) }}
                                 options={roomsOptions.map((room) => ({
-                                    value: `${room.room}`,
-                                    label: `${room.room}`,
+                                    value: room.id,
+                                    label: room.name
                                 }))}
-                                disabled={classData.method === 'online'}
                                 onSearch={(value) => {
                                     if (value) {
                                         const filteredOptions = rooms.filter(
-                                            (room) => room.room.toLowerCase().includes(value?.toLowerCase())
+                                            (room) => room.name.toLowerCase().includes(value?.toLowerCase())
                                         );
                                         setRoomsOptions(filteredOptions);
                                     }
                                 }}
                             />
                             <div style={{ height: '24px', paddingLeft: '10px' }}>
-                                {roomError && classData.method === 'offline' && (<p style={{ color: 'red', fontSize: '14px', margin: '0' }}>{roomError}</p>)}
+                                {roomSessionError && (<p style={{ color: 'red', fontSize: '14px', margin: '0' }}>{roomSessionError}</p>)}
                             </div>
                         </Col>
                     </Row>
                     <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
-                        <Button className={styles.saveButton} onClick={handleSubmit}>
+                        <Button className={styles.saveButton} onClick={handleUpdateSession}>
                             Lưu
                         </Button>
-                        <Button className={styles.cancelButton} onClick={() => { setAddModalOpen(false) }}>
+                        <Button className={styles.cancelButton} onClick={() => { setSessionModalOpen(false) }}>
                             Hủy
                         </Button>
                     </div>
-                </form>
-            </Modal>
+                </Modal>
+            </ConfigProvider>
         </div >
     )
 }
