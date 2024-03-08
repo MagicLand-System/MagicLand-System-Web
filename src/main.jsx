@@ -26,6 +26,7 @@ import PaymentComponent from './pages/User/Payment'
 import PaymentConfirmComponent from './pages/User/Payment/PaymentConfirm'
 import CartComponent from './pages/User/Cart'
 import { PrimeReactProvider } from 'primereact/api'
+
 import ClassManagement from './pages/classManagement/ClassManagement.jsx'
 import ClassDetail from './pages/classManagement/classDetail/ClassDetail.jsx'
 import TransactionManagement from './pages/transactionManagement/TransactionManagement.jsx'
@@ -36,6 +37,9 @@ import CourseManagement from './pages/courseManagement/CourseManagement.jsx'
 import ChangeClass from './pages/classManagement/changeClass/ChangeClass.jsx'
 import AddCourse from './pages/courseManagement/addCourse/AddCourse.jsx'
 import CourseDetail from './pages/courseManagement/courseDetail/CourseDetail.jsx'
+import SyllabusManagement from './pages/syllabusManagement/SyllabusManagement.jsx'
+import AddSyllabus from './pages/syllabusManagement/addSyllabus/AddSyllabus.jsx'
+import SyllabusDetail from './pages/syllabusManagement/syllabusDetail/SyllabusDetail.jsx'
 
 const router = createBrowserRouter([
   //Route đã đăng nhập thì k vào được, k có header, footer
@@ -124,6 +128,11 @@ const router = createBrowserRouter([
             path: '/check-attendance/:scheduleId/make-up-class/:studentId',
             element: <MakeUpClass />
           },
+        ]
+      },
+      {
+        element: <AuthRoutes role='ADMIN' />,
+        children: [
           {
             path: '/course-management',
             element: <CourseManagement />
@@ -136,14 +145,25 @@ const router = createBrowserRouter([
             path: '/course-management/add-course',
             element: <AddCourse />
           },
-        ]
-      },
-      {
-        element: <AuthRoutes role='ADMIN' />,
-        children: [
           {
-            path: '/course-management',
-            element: <CourseManagement />
+            path: '/course-management/update-course/:id',
+            element: <AddCourse />
+          },
+          {
+            path: '/syllabus-management',
+            element: <SyllabusManagement />
+          },
+          {
+            path: '/syllabus-management/detail/:id',
+            element: <SyllabusDetail />
+          },
+          {
+            path: '/syllabus-management/add-syllabus',
+            element: <AddSyllabus />
+          },
+          {
+            path: '/syllabus-management/update-syllabus/:id',
+            element: <AddSyllabus />
           },
         ]
       },

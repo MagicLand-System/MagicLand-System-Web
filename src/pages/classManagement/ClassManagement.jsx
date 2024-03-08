@@ -1,13 +1,13 @@
 import React, { useState, useEffect, useRef } from 'react'
 import styles from './ClassManagement.module.css'
-import { Button, DatePicker, Radio, Input, Modal, Table, Select, TimePicker, Row, Col, Tabs, ConfigProvider } from 'antd';
-import { CloudUploadOutlined, ZoomInOutlined, PlusOutlined, DeleteOutlined, CloudDownloadOutlined } from '@ant-design/icons';
+import { Button, DatePicker, Radio, Input, Modal, Table, Select, Row, Col, Tabs, ConfigProvider, Alert } from 'antd';
+import { CloudUploadOutlined, EyeOutlined, PlusOutlined, DeleteOutlined, CloudDownloadOutlined } from '@ant-design/icons';
 import Swal from 'sweetalert2';
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
 import dayjs from 'dayjs'
 import { useNavigate } from 'react-router-dom';
-import { addClass, getClassCode, getClasses, getLecturer, getRooms, getSlots } from '../../api/classesApi';
+import { addClass, getClassCode, getClasses, getLecturer, getLecturerBySchedule, getRooms, getRoomsBySchedule, getSlots, importClass } from '../../api/classesApi';
 import { getCourses } from '../../api/courseApi';
 import { formatDate, formatSlot, handleDownloadExcelFile } from '../../utils/utils';
 import { compareAsc } from 'date-fns';
@@ -143,6 +143,9 @@ export default function ClassManagement() {
   const [fileInput, setFileInput] = useState(null);
   const [excelFile, setExcelFile] = useState(null);
 
+  const [apiLoading, setApiLoading] = useState(false)
+  const [importRes, setImportRes] = useState(null)
+
   const handleFileChange = (e) => {
     let selectedFile = e.target.files[0];
     if (selectedFile) {
@@ -183,7 +186,9 @@ export default function ClassManagement() {
         return schedule.dateOfWeek === null || schedule.slotId === null;
       });
       const hasDuplicateValues = checkDuplicateCombinations();
-      if (!course || !lecturer || !startDate || !room || hasNullValues || hasDuplicateValues) {
+      const checkRoom = rooms.find(roomItem => roomItem.id === room);
+      const checkLecturer = lecturers.find(lecturerItem => lecturerItem.lectureId === lecturer);
+      if (!course || !lecturer || !startDate || !room || hasNullValues || hasDuplicateValues || !checkRoom || !checkLecturer) {
         if (course === null) {
           setCourseError("Vui lòng chọn khóa học")
         } else {
@@ -191,6 +196,8 @@ export default function ClassManagement() {
         }
         if (lecturer === null) {
           setLecturerError("Vui lòng chọn giáo viên")
+        } else if (!checkLecturer) {
+          setRoomError("Vui lòng chọn phòng học hợp lệ")
         } else {
           setLecturerError(null)
         }
@@ -200,7 +207,9 @@ export default function ClassManagement() {
           setStartDateError(null)
         }
         if (room === null) {
-          setRoomError("Vui lòng nhập phòng học")
+          setRoomError("Vui lòng chọn phòng học")
+        } else if (!checkRoom) {
+          setRoomError("Vui lòng chọn phòng học hợp lệ")
         } else {
           setRoomError(null)
         }
@@ -212,11 +221,17 @@ export default function ClassManagement() {
           setSchedulesError(null)
         }
       } else {
+        setCourseError(null)
+        setLecturerError(null)
+        setStartDateError(null)
+        setRoomError(null)
+        setSchedulesError(null)
         const startDateWeekFormat = dayjs(startDate).format('dddd')
         const isStartDateCorrect = scheduleRequests.some((schedule) => schedule.dateOfWeek === startDateWeekFormat);
         if (isStartDateCorrect) {
           const stringStartDate = startDate.toISOString()
           try {
+            setApiLoading(true)
             await addClass({ ...values, startDate: stringStartDate, courseId: course, lecturerId: lecturer, method, scheduleRequests, roomId: room })
               .then(() => {
                 Swal.fire({
@@ -247,13 +262,14 @@ export default function ClassManagement() {
                 formik.resetForm()
               })
           } catch (error) {
+            console.log(error)
             Swal.fire({
               position: "center",
               icon: "error",
-              title: "Đã có lỗi xảy ra trong quá trình tạo lớp",
-              showConfirmButton: false,
-              timer: 2000
+              title: error.response?.data?.Error,
             })
+          } finally {
+            setApiLoading(false)
           }
         } else {
           setStartDateError("Vui lòng chọn ngày bắt đầu trùng với lịch học")
@@ -276,10 +292,10 @@ export default function ClassManagement() {
       if (data) {
         setClasses(data);
         setTableParams({
-          ...tableParams,
           pagination: {
-            ...tableParams.pagination,
-            total: data.length,
+            current: 1,
+            pageSize: 10,
+            total: data.length
           },
         });
       }
@@ -299,13 +315,13 @@ export default function ClassManagement() {
     setSlots(data);
     setSlotsOptions(data);
   };
-  async function getListsOfLecturer() {
-    const data = await getLecturer();
+  async function getListsOfLecturer(startDate, schedules, courseId) {
+    const data = await getLecturerBySchedule({ startDate, schedules, courseId });
     setlecturers(data);
     setLecturersOptions(data);
   };
-  async function getListsOfRooms() {
-    const data = await getRooms();
+  async function getListsOfRooms(startDate, schedules, courseId) {
+    const data = await getRoomsBySchedule({ startDate, schedules, courseId });
     setRooms(data);
     setRoomsOptions(data);
   };
@@ -321,9 +337,26 @@ export default function ClassManagement() {
     getListsOfSlots();
   }, []);
   useEffect(() => {
-    getListsOfLecturer();
-    getListsOfRooms();
-  }, [scheduleRequests]);
+    const hasNullValues = scheduleRequests.some((schedule) => {
+      return schedule.dateOfWeek === null || schedule.slotId === null;
+    });
+    const hasDuplicateValues = checkDuplicateCombinations();
+    if (course && startDate && scheduleRequests) {
+      if (hasNullValues) {
+        setSchedulesError("Vui lòng điền đủ lịch học để chọn giáo viên và phòng học")
+        setlecturers([]);
+        setLecturersOptions([]);
+      } else if (hasDuplicateValues) {
+        setSchedulesError("Lịch học bị trùng")
+        setlecturers([]);
+        setLecturersOptions([]);
+      } else {
+        setSchedulesError(null)
+        getListsOfLecturer(startDate, scheduleRequests, course);
+        getListsOfRooms(startDate, scheduleRequests, course);
+      }
+    }
+  }, [scheduleRequests, startDate, course]);
   useEffect(() => {
     getListOfClasses(search, status)
   }, [search, status])
@@ -381,25 +414,71 @@ export default function ClassManagement() {
     }
   };
 
-  const handleImport = (e) => {
+  const handleImport = async (e) => {
     e.preventDefault();
+    let errors = []
     if (excelFile !== null) {
+      XLSX.SSF.is_date("dd/mm/yyyy");
       const workbook = XLSX.read(excelFile, { type: 'buffer' });
       const worksheetName = workbook.SheetNames[0];
       const worksheet = workbook.Sheets[worksheetName];
       const data = XLSX.utils.sheet_to_json(worksheet);
-      console.log(data);
-      Swal.fire({
-        position: "center",
-        icon: "success",
-        title: "Thêm lớp học thành công",
-        showConfirmButton: false,
-        timer: 2000
-      }).then(() => {
-        setImportModalOpen(false);
-        setExcelFile(null);
-        setFileInput(null);
-      })
+      let newData = []
+      if (data.length > 0) {
+        errors = errors.filter(error => error !== "Vui lòng điền đủ các thông tin lớp học");
+        errors = errors.filter(error => error !== "Vui lòng điền thông tin lớp học");
+        newData = data.map(row => ({
+          index: row['STT'] || null,
+          courseName: row['Tên khóa học'] || null,
+          lecturerPhone: row['Số điện thoại giáo viên'] || null,
+          leastNumberStudent: row['Số lượng học viên tối thiểu'] || null,
+          limitNumberStudent: row['Số lượng học viên tối đa'] || null,
+          startDate: row['Ngày bắt đầu'] || null,
+          method: row['Hình thức'] || null,
+          roomName: row['Phòng học'] || null,
+          scheduleRequests: row['Lịch học'] || null,
+        }))
+        newData.forEach(data => {
+          const scheduleTimes = data.scheduleRequests.split("\r\n");
+          data.scheduleRequests = scheduleTimes.map(time => ({ "scheduleTime": time.trim() }));
+          if (!data.index || !data.courseName || !data.lecturerPhone || !data.leastNumberStudent || !data.limitNumberStudent || !data.startDate || !data.method || !data.roomName || !data.scheduleRequests) {
+            if (!errors.includes("Vui lòng điền đủ các thông tin lớp học")) {
+              errors.push("Vui lòng điền đủ các thông tin lớp học");
+            }
+          }
+        });
+      } else {
+        errors.push("Vui lòng điền thông tin lớp học");
+      }
+      if (errors.length === 0) {
+        try {
+          setApiLoading(true)
+          const data = await importClass(newData)
+          if (data) {
+            setImportRes(data)
+            if (data.successRow > 0) {
+              getListOfClasses(search, status)
+            }
+            setExcelFile(null);
+            setFileInput(null);
+          }
+        } catch (error) {
+          Swal.fire({
+            icon: "error",
+            title: error.response.data.Error,
+            showConfirmButton: false,
+            timer: 2000
+          })
+        } finally {
+          setApiLoading(false)
+        }
+      } else {
+        Swal.fire({
+          icon: "error",
+          title: 'Có lỗi xãy ra',
+          html: errors.map(err => `${err}<br/>`).join(''),
+        })
+      }
     }
   }
 
@@ -432,11 +511,23 @@ export default function ClassManagement() {
     {
       title: 'Chi tiết',
       render: (_, record) => (
-        <Button type='link' onClick={() => navigate(`detail/${record.classId}`)} icon={<ZoomInOutlined />} size='large' />
+        <Button type='link' onClick={() => navigate(`detail/${record.classId}`)} icon={<EyeOutlined />} size='large' />
       ),
+      width: 120,
     },
   ];
+  const disabledDate = (current) => {
+    if (current && current < dayjs().add(1, 'day').startOf('day')) {
+      return true;
+    }
 
+    const validDates = scheduleRequests.map(schedule => schedule.dateOfWeek);
+    if (current && !validDates.includes(dayjs(current).format('dddd'))) {
+      return true;
+    }
+
+    return false;
+  };
   return (
     <div className={styles.container}>
       <h2 className={styles.title}>Quản lý lớp học</h2>
@@ -472,6 +563,7 @@ export default function ClassManagement() {
                   pagination={tableParams.pagination}
                   loading={loading}
                   onChange={handleTableChange}
+                  scroll={{ y: 'calc(100vh - 220px)' }}
                 />
               )
             }
@@ -590,60 +682,6 @@ export default function ClassManagement() {
                 </div>
               </Col>
             </Row>
-            <Row>
-              <Col span={6}>
-                <p className={styles.addTitle}><span>*</span> Giáo viên:</p>
-              </Col>
-              <Col span={18}>
-                <Select
-                  showSearch
-                  value={lecturer}
-                  suffixIcon={null}
-                  filterOption={false}
-                  className={styles.input}
-                  placeholder="Giáo viên"
-                  onSelect={(data) => { setLecturer(data) }}
-                  options={
-                    lecturersOptions
-                      .map((lecturer) => ({
-                        value: lecturer.lectureId,
-                        label: lecturer.fullName,
-                      }))}
-                  onSearch={(value) => {
-                    if (value) {
-                      const filteredOptions = lecturers.filter(
-                        (lecture) => lecture.fullName.toLowerCase().includes(value.toLowerCase())
-                      );
-                      setLecturersOptions(filteredOptions);
-                    } else {
-                      setCoursesOptions(courses);
-                    }
-                  }}
-                />
-                <div style={{ height: '24px', paddingLeft: '10px' }}>
-                  {lecturerError && (<p style={{ color: 'red', fontSize: '14px', margin: '0' }}>{lecturerError}</p>)}
-                </div>
-              </Col>
-            </Row>
-            <Row>
-              <Col span={6}>
-                <p className={styles.addTitle}><span>*</span> Ngày bắt đầu:</p>
-              </Col>
-              <Col span={18}>
-                <DatePicker
-                  className={styles.input}
-                  value={startDate}
-                  disabledDate={(current) => {
-                    return current && current < dayjs().add(1, 'day').startOf('day');
-                  }}
-                  onChange={(date) => setStartDate(date)}
-                  format={'DD/MM/YYYY'}
-                  placeholder="Ngày bắt đầu" />
-                <div style={{ height: '24px', paddingLeft: '10px' }}>
-                  {startDateError && (<p style={{ color: 'red', fontSize: '14px', margin: '0' }}>{startDateError}</p>)}
-                </div>
-              </Col>
-            </Row>
             <Row style={{ marginBottom: '8px' }}>
               <Col span={6}>
                 <p className={styles.addTitle}><span>*</span> Hình thức:</p>
@@ -694,6 +732,58 @@ export default function ClassManagement() {
             </Row>
             <Row>
               <Col span={6}>
+                <p className={styles.addTitle}><span>*</span> Ngày bắt đầu:</p>
+              </Col>
+              <Col span={18}>
+                <DatePicker
+                  className={styles.input}
+                  value={startDate}
+                  disabledDate={disabledDate}
+                  onChange={(date) => setStartDate(date)}
+                  format={'DD/MM/YYYY'}
+                  placeholder="Ngày bắt đầu" />
+                <div style={{ height: '24px', paddingLeft: '10px' }}>
+                  {startDateError && (<p style={{ color: 'red', fontSize: '14px', margin: '0' }}>{startDateError}</p>)}
+                </div>
+              </Col>
+            </Row>
+            <Row>
+              <Col span={6}>
+                <p className={styles.addTitle} style={{ lineHeight: '18px' }}><span>*</span> Giáo viên -<br /> số lớp đang dạy:</p>
+              </Col>
+              <Col span={18}>
+                <Select
+                  showSearch
+                  value={lecturer}
+                  suffixIcon={null}
+                  filterOption={false}
+                  className={styles.input}
+                  placeholder="Giáo viên"
+                  onSelect={(data) => { setLecturer(data) }}
+                  options={
+                    lecturersOptions
+                      .map((lecturer) => ({
+                        value: lecturer.lectureId,
+                        label: `${lecturer.fullName} - ${lecturer.numberOfClassesTeaching}`,
+                      }))}
+                  onSearch={(value) => {
+                    if (value) {
+                      const filteredOptions = lecturers.filter(
+                        (lecture) => lecture.fullName.toLowerCase().includes(value.toLowerCase())
+                      );
+                      setLecturersOptions(filteredOptions);
+                    } else {
+                      setCoursesOptions(courses);
+                    }
+                  }}
+                />
+                <div style={{ height: '24px', paddingLeft: '10px' }}>
+                  {lecturerError && (<p style={{ color: 'red', fontSize: '14px', margin: '0' }}>{lecturerError}</p>)}
+                </div>
+              </Col>
+            </Row>
+            <Row>
+              <Col span={6}>
                 <p className={styles.addTitle}><span>*</span> Phòng học:</p>
               </Col>
               <Col span={18}>
@@ -724,12 +814,42 @@ export default function ClassManagement() {
               </Col>
             </Row>
             <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
-              <Button className={styles.saveButton} htmlType='submit'>
-                Lưu
-              </Button>
-              <Button className={styles.cancelButton} onClick={() => { setAddModalOpen(false) }}>
-                Hủy
-              </Button>
+              {apiLoading ? (
+                <>
+                  <Button loading className={styles.saveButton}>
+                    Lưu
+                  </Button>
+                  <Button disabled className={styles.cancelButton}>
+                    Hủy
+                  </Button>
+                </>
+              ) : (
+                <>
+                  <Button className={styles.saveButton} htmlType='submit'>
+                    Lưu
+                  </Button>
+                  <Button className={styles.cancelButton} onClick={() => {
+                    setAddModalOpen(false)
+                    setCourse(null)
+                    setCoursesOptions(courses)
+                    setCourseError(null)
+
+                    setLecturer(null)
+                    setLecturerError(null)
+
+                    setStartDate(null)
+
+                    setRoom(null)
+                    setRoomError(null)
+
+                    setSchedulesRequests([{ dateOfWeek: null, slotId: null }])
+                    setSchedulesError(null)
+                    formik.resetForm()
+                  }}>
+                    Hủy
+                  </Button>
+                </>
+              )}
             </div>
           </form>
         </Modal>
@@ -752,24 +872,49 @@ export default function ClassManagement() {
           classNames={{ header: styles.modalHeader }}
         >
           <div style={{ display: 'flex', alignItems: 'center' }}>
-            <Button className={styles.addButton} icon={<CloudDownloadOutlined />} onClick={() => handleDownloadExcelFile(TEMPLATE_ADD_CLASS_FILE, 'Mau-tao-lop-hoc.xlsx')} >Tải tệp mẫu</Button>
+            <Button className={styles.addButton} icon={<CloudDownloadOutlined />} onClick={() => handleDownloadExcelFile(TEMPLATE_ADD_CLASS_FILE, 'Mau-tao-lop-hoc.xlsx')} >Tải mẫu lớp học</Button>
             <Button type='primary' className={styles.importButton} icon={<CloudUploadOutlined />} onClick={() => fileInputRef.current.click()}>Chọn tệp</Button>
             <input accept='application/vnd.ms-excel, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' type='file' style={{ display: 'none' }} ref={fileInputRef} onChange={handleFileChange} />
             <p>{fileInput ? fileInput.name : 'Chưa có tệp nào được chọn'}</p>
           </div>
           <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
-            <Button onClick={handleImport} className={styles.saveButton}>
-              Nạp tập tin
-            </Button>
-            <Button className={styles.cancelButton}
-              onClick={() => {
-                setFileInput(null)
-                setExcelFile(null)
-                setImportModalOpen(false)
-              }}>
-              Hủy
-            </Button>
+            {apiLoading ? (
+              <>
+                <Button loading className={styles.saveButton}>
+                  Nạp tập tin
+                </Button>
+                <Button disabled className={styles.cancelButton}>
+                  Hủy
+                </Button>
+              </>
+            ) : (
+              <>
+                <Button onClick={handleImport} className={styles.saveButton}>
+                  Nạp tập tin
+                </Button>
+                <Button className={styles.cancelButton}
+                  onClick={() => {
+                    setFileInput(null)
+                    setExcelFile(null)
+                    setImportModalOpen(false)
+                  }}>
+                  Hủy
+                </Button>
+              </>
+            )}
           </div>
+          {importRes && (
+            <>
+              <p style={{ color: 'green', marginBottom: 0 }}>Số lớp tạo thành công: <span>{importRes.successRow}</span></p>
+              <p style={{ color: 'red', marginTop: 0 }}>Số lớp tạo thất bại: <span>{importRes.failureRow}</span></p>
+              {importRes.rowInsertResponse.map(row => (
+                <>
+                  {row.isSucess ? <Alert style={{ marginBottom: 5 }} message={`${row.index} - Tạo lớp thành công`} type="success" showIcon />
+                    : <Alert style={{ marginBottom: 5 }} message={`${row.index} - ${row.error}`} type="error" showIcon />}
+                </>
+              ))}
+            </>
+          )}
         </Modal>
       </ConfigProvider>
     </div >

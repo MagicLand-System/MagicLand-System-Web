@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react'
 import styles from './CourseManagement.module.css'
 import { Button, Input, Modal, Table, ConfigProvider } from 'antd';
-import { CloudUploadOutlined, PlusOutlined, CloudDownloadOutlined } from '@ant-design/icons';
+import { PlusOutlined } from '@ant-design/icons';
 import Swal from 'sweetalert2';
 import { useNavigate } from 'react-router-dom';
 import { getSubjects, searchCourses } from '../../api/courseApi';
-import { ZoomInOutlined } from '@ant-design/icons';
+import { EyeOutlined } from '@ant-design/icons';
 import { formatDate } from '../../utils/utils';
 
 const { Search } = Input;
@@ -23,22 +23,26 @@ export default function CourseManagement() {
             pageSize: 10,
         },
     });
-    const [importModalOpen, setImportModalOpen] = useState(false);
 
     async function getListsOfCourses(searchString) {
-        setLoading(true);
-        const data = await searchCourses(searchString);
-        if (data) {
-            setCourses(data);
-            setTableParams({
-                ...tableParams,
-                pagination: {
-                    ...tableParams.pagination,
-                    total: data.length,
-                },
-            });
+        try {
+            setLoading(true);
+            const data = await searchCourses(searchString);
+            if (data) {
+                setCourses(data);
+                setTableParams({
+                    pagination: {
+                        current: 1,
+                        pageSize: 10,
+                        total: data.length
+                    },
+                });
+            }
+        } catch (error) {
+            console.log(error);
+        } finally {
+            setLoading(false);
         }
-        setLoading(false);
     };
     async function getListsOfSubjects() {
         const data = await getSubjects();
@@ -63,23 +67,9 @@ export default function CourseManagement() {
             ...sorter,
         });
         if (pagination.pageSize !== tableParams.pagination?.pageSize) {
-            setClasses([]);
+            setCourses([]);
         }
     };
-
-
-    const handleImport = () => {
-        Swal.fire({
-            position: "center",
-            icon: "success",
-            title: "Tạo khóa học thành công",
-            showConfirmButton: false,
-            timer: 2000
-        }).then(() => {
-            setImportModalOpen(false);
-        })
-    }
-
     const columns = [
         {
             title: 'Tên khóa học',
@@ -108,22 +98,15 @@ export default function CourseManagement() {
         {
             title: 'Số lớp học hiện tại',
             render: (_, record) => {
-                // return `${record.}`
-                return '10'
-            }
-        },
-        {
-            title: 'Ngày chỉnh sửa',
-            render: (_, record) => {
-                // return `${formatDate(startDate)}`
-                return '20/01/2024'
+                return `${record.numberClassOnGoing}`
             }
         },
         {
             title: 'Chi tiết',
             render: (_, record) => (
-                <Button type='link' onClick={() => navigate(`detail/${record.courseId}`)} icon={<ZoomInOutlined />} size='large' />
+                <Button type='link' onClick={() => navigate(`detail/${record.courseId}`)} icon={<EyeOutlined />} size='large' />
             ),
+            width: 120,
         },
     ];
 
@@ -131,8 +114,7 @@ export default function CourseManagement() {
         <div className={styles.container}>
             <h2 className={styles.title}>Quản lý khóa học</h2>
             <div style={{ display: 'flex', marginBottom: '16px' }}>
-                <Button onClick={() => setImportModalOpen(true)} type='primary' className={styles.importButton} icon={<CloudUploadOutlined />}>Tạo nhiều khóa</Button>
-                <Button onClick={() => navigate('add-course')} className={styles.addButton} icon={<PlusOutlined />}>Tạo khóa học</Button>
+                <Button onClick={() => navigate('add-course')} type='primary' className={styles.importButton} icon={<PlusOutlined />}>Thêm khóa học</Button>
                 <Search className={styles.searchBar} placeholder="Tìm kiếm khóa học" onSearch={(value, e) => { setSearch(value) }} enterButton />
             </div>
             <Table
@@ -142,37 +124,8 @@ export default function CourseManagement() {
                 pagination={tableParams.pagination}
                 loading={loading}
                 onChange={handleTableChange}
+                scroll={{ y: 'calc(100vh - 220px)' }}
             />
-            <ConfigProvider
-                theme={{
-                    components: {
-                        Modal: {
-                            titleFontSize: '1.2rem',
-                        },
-                    },
-                }}
-            >
-                <Modal
-                    title="Thêm tệp khóa học"
-                    centered
-                    open={importModalOpen}
-                    footer={null}
-                    onCancel={() => setImportModalOpen(false)}
-                    classNames={{ header: styles.modalHeader }}
-                >
-                    <Button className={styles.addButton} i
-                        con={<CloudDownloadOutlined />}>Tải tệp mẫu</Button>
-                    <Button type='primary' className={styles.importButton} icon={<CloudUploadOutlined />}>Chọn tệp</Button>
-                    <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
-                        <Button onClick={handleImport} className={styles.saveButton}>
-                            Nạp tập tin
-                        </Button>
-                        <Button className={styles.cancelButton} onClick={() => { setImportModalOpen(false) }}>
-                            Hủy
-                        </Button>
-                    </div>
-                </Modal>
-            </ConfigProvider>
         </div >
     )
 }

@@ -40,17 +40,33 @@ export default function Login() {
       const formatPhone = '+' + phone;
       const response = await checkExist({ phone: formatPhone })
       if (response.status === 200) {
-        onCaptchVerify()
-        const appVerifier = window.recaptchaVerifier;
-        signInWithPhoneNumber(auth, formatPhone, appVerifier)
-          .then((confirmationResult) => {
-            window.confirmationResult = confirmationResult;
-            setLoading(false)
+        // onCaptchVerify()
+        // const appVerifier = window.recaptchaVerifier;
+        // signInWithPhoneNumber(auth, formatPhone, appVerifier)
+        //   .then((confirmationResult) => {
+        //     window.confirmationResult = confirmationResult;
+        //     setLoading(false)
+        //     setErrorMessage('')
+        //     setShowOtp(true)
+        //   }).catch((error) => {
+        //     console.log(error)
+        //   })
+        const data = await authUser({ phone: formatPhone })
+        const accessToken = data.accessToken;
+        localStorage.setItem('accessToken', accessToken)
+        dispatch(fetchUser())
+          .then(Swal.fire({
+            position: "center",
+            icon: "success",
+            title: "Đăng nhập thành công",
+            showConfirmButton: false,
+            timer: 2000
+          }))
+          .then(() => {
             setErrorMessage('')
-            setShowOtp(true)
-          }).catch((error) => {
-            console.log(error)
+            navigate('/')
           })
+        setLoading(false)
       }
     } catch (error) {
       console.log(error)

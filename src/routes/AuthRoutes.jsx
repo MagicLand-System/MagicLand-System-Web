@@ -17,7 +17,10 @@ const AuthRoutes = ({ role }) => {
                 return <Outlet />;
             } else if (user.role.name === 'STAFF') {
                 return <Navigate to="/class-management" state={{ from: location }} replace />
-            } else {
+            } else if (user.role.name === 'ADMIN') {
+                return <Navigate to="/course-management" state={{ from: location }} replace />
+            }
+            else {
                 return <Navigate to="/error404" state={{ from: location }} replace />
             }
         }

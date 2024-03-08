@@ -1,12 +1,13 @@
 import React, { useEffect, useState } from 'react'
 import styles from './MakeUpClass.module.css'
-import { Button, Input, Table, Avatar, Checkbox, Select, Row, Col } from 'antd';
+import { Button, Input, Table, Avatar, Checkbox, Select, Row, Col, DatePicker } from 'antd';
 import { SwapOutlined } from '@ant-design/icons';
 import Swal from 'sweetalert2';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { formatDate, formatDayOfWeek, formatSlot } from '../../../utils/utils';
 import { arrangeMakeUpClass, getMakeUpClass, getSlots } from '../../../api/classesApi';
 import { compareAsc } from 'date-fns';
+import dayjs from 'dayjs';
 
 const { Search } = Input;
 
@@ -69,7 +70,7 @@ export default function MakeUpClass() {
             Swal.fire({
                 position: "center",
                 icon: "error",
-                title: "Có lỗi xảy ra trong quá trình chuyển lớp",
+                title: error.response?.data?.Error,
                 showConfirmButton: false,
                 timer: 2000
             })
@@ -84,17 +85,17 @@ export default function MakeUpClass() {
         });
         setSlots(sortedSlots);
     };
-    async function getListOfMakeUpClasses(search) {
+    async function getListOfMakeUpClasses(scheduleId, studentId, keyword, dateTime, slotId) {
         try {
             setLoading(true);
-            const data = await getMakeUpClass(scheduleId);
+            const data = await getMakeUpClass({ scheduleId, studentId, keyword, dateTime, slotId });
             if (data) {
                 setClasses(data);
                 setTableParams({
-                    ...tableParams,
                     pagination: {
-                        ...tableParams.pagination,
-                        total: data.length,
+                        current: 1,
+                        pageSize: 10,
+                        total: data.length
                     },
                 });
             }
@@ -108,13 +109,14 @@ export default function MakeUpClass() {
         getListsOfSlots()
     }, [])
     useEffect(() => {
-        getListOfMakeUpClasses(search)
-    }, [scheduleId, studentId, search])
+        getListOfMakeUpClasses(scheduleId, studentId, search, findDate, slot)
+    }, [scheduleId, studentId, search, findDate, slot])
     const classesColumn = [
         {
             render: (_, record) => (
                 <Checkbox checked={record.id === makeUpScheduleId} value={record.id} onChange={(e) => { setMakeUpScheduleId(e.target.value) }} />
-            )
+            ),
+            width: 120,
         },
         {
             title: 'Mã lớp học',
@@ -130,9 +132,9 @@ export default function MakeUpClass() {
             title: 'Hình thức',
             dataIndex: 'method',
             render: (method) => {
-                if (method.toLowerCase().includes('online')) {
+                if (method?.toLowerCase().includes('online')) {
                     return <div style={{ backgroundColor: '#E9FFEF', color: '#409261' }} className={styles.status}>Online</div>
-                } else if (method.toLowerCase().includes('offline')) {
+                } else if (method?.toLowerCase().includes('offline')) {
                     return <div style={{ backgroundColor: '#E4E4E4', color: '#3F3748' }} className={styles.status}>Offline</div>
                 }
             },
@@ -162,42 +164,15 @@ export default function MakeUpClass() {
             <p className={styles.classDetailTitle}>Học viên: <span className={styles.classDetail}>{student.student.fullName}</span></p>
             <div style={{ display: 'flex', marginBottom: '16px', gap: '8px' }}>
                 <Search className={styles.searchBar} placeholder="Tìm kiếm lớp học, giáo viên" onSearch={(value, e) => { setSearch(value) }} enterButton />
-                <Select
+                <DatePicker
                     className={styles.input}
-                    placeholder={`Ngày học trong tuần`}
                     value={findDate}
-                    onChange={(value) => setFindDate(value)}
-                    options={[
-                        {
-                            value: 'Monday',
-                            label: 'Thứ 2',
-                        },
-                        {
-                            value: 'Tuesday',
-                            label: 'Thứ 3',
-                        },
-                        {
-                            value: 'Wednesday',
-                            label: 'Thứ 4',
-                        },
-                        {
-                            value: 'Thursday',
-                            label: 'Thứ 5',
-                        },
-                        {
-                            value: 'Friday',
-                            label: 'Thứ 6',
-                        },
-                        {
-                            value: 'Saturday',
-                            label: 'Thứ 7',
-                        },
-                        {
-                            value: 'Sunday',
-                            label: 'Chủ nhật'
-                        }
-                    ]}
-                />
+                    disabledDate={(current) => {
+                        return current && current < dayjs().add(1, 'day').startOf('day');
+                    }}
+                    onChange={(date) => setFindDate(date)}
+                    format={'DD/MM/YYYY'}
+                    placeholder="Tìm kiếm ngày" />
                 <Select
                     className={styles.input}
                     value={slot}
@@ -216,6 +191,7 @@ export default function MakeUpClass() {
                 pagination={tableParams.pagination}
                 loading={loading}
                 onChange={handleTableChange}
+                scroll={{ y: 'calc(100vh - 220px)' }}
             />
             <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
                 <Button onClick={handleSaveMakeUpClass} className={styles.saveButton}>

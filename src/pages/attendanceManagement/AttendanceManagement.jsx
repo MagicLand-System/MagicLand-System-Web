@@ -1,7 +1,7 @@
 import React, { useState } from 'react'
 import styles from './AttendanceManagement.module.css'
 import { Button, Input, Table, DatePicker, ConfigProvider, Tabs } from 'antd';
-import { ZoomInOutlined } from '@ant-design/icons';
+import { EyeOutlined } from '@ant-design/icons';
 import dayjs from 'dayjs';
 import { useNavigate } from 'react-router-dom';
 import { getAttendanceClasses } from '../../api/attendance';
@@ -40,10 +40,10 @@ export default function AttendanceManagement() {
             if (data) {
                 setClasses(data);
                 setTableParams({
-                    ...tableParams,
                     pagination: {
-                        ...tableParams.pagination,
-                        total: data.length,
+                        current: 1,
+                        pageSize: 10,
+                        total: data.length
                     },
                 });
             }
@@ -85,8 +85,9 @@ export default function AttendanceManagement() {
         {
             title: 'Điểm danh',
             render: (_, record) => (
-                <Button type='link' onClick={() => navigate(`/check-attendance/${record.schedule.id}`)} icon={<ZoomInOutlined />} size='large' />
+                <Button type='link' onClick={() => navigate(`/check-attendance/${record.schedule.id}`)} icon={<EyeOutlined />} size='large' />
             ),
+            width: 120,
         },
     ];
 
@@ -142,6 +143,7 @@ export default function AttendanceManagement() {
                                     pagination={tableParams.pagination}
                                     loading={loading}
                                     onChange={handleTableChange}
+                                    scroll={{ y: 'calc(100vh - 220px)' }}
                                 />
                             )
                         },
@@ -156,6 +158,7 @@ export default function AttendanceManagement() {
                                     pagination={tableParams.pagination}
                                     loading={loading}
                                     onChange={handleTableChange}
+                                    scroll={{ y: 'calc(100vh - 220px)' }}
                                 />
                             )
                         },

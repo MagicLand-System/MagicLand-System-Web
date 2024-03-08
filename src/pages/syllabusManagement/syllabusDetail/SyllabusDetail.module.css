@@ -67,12 +67,10 @@
 .input div:hover {
   border-color: #f2c955 !important;
 }
-.inputNumber {
-  text-align: right;
-}
 .saveButton {
   background-color: #f2c955;
   color: black !important;
+  margin-right: 8px;
 }
 .saveButton:hover {
   background: #ffd766 !important;
@@ -132,23 +130,27 @@
   align-items: center;
 }
 .image {
-  width: 50%;
+  width: 80%;
   margin-bottom: 20px;
 }
 .steps {
   width: 50%;
   margin: 20px auto 30px;
 }
-.disableSelect {
-  color: black !important;
-}
-.syllabusInfo {
-  text-align: right;
-  margin: 0;
-  font-size: 1rem;
-}
 .syllabusTitle {
   color: #888888;
   margin: 0;
   font-size: 1rem;
+  text-align: right;
+}
+.syllabusDetail {
+  margin: 0;
+  font-size: 1rem;
+}
+.addTitle {
+  text-align: right;
+  height: 40px;
+  margin: 0;
+  line-height: 40px;
+  margin-right: 16px;
 }

@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react'
 import styles from './TransactionManagement.module.css'
 import { formatDateTime, formatPhone } from '../../utils/utils';
 import { Button, Input, Table, DatePicker, ConfigProvider, Modal, Row, Col } from 'antd';
-import { ZoomInOutlined } from '@ant-design/icons';
+import { EyeOutlined } from '@ant-design/icons';
 import dayjs from 'dayjs';
 import { useNavigate } from 'react-router-dom';
 import { getTransactions, getTransactionsDetail } from '../../api/transaction';
@@ -11,19 +11,6 @@ import { current } from '@reduxjs/toolkit';
 const { Search } = Input;
 const { RangePicker } = DatePicker;
 
-const transactionData = [
-  {
-    id: '123abcdef',
-    phoneNumber: '0912345678',
-    fullName: 'Ngô Gia Thưởng',
-    time: '2024-01-05T14:48:00.000Z',
-    amount: 400000,
-    method: 'VNPay',
-    courseName: 'Vẽ Mỹ Thuật 1',
-    classCode: 'VMT3',
-    student: 'Trần Lê Bảo Ngọc'
-  }
-]
 export default function TransactionManagement() {
   const navigate = useNavigate()
   const [transactions, setTransactions] = useState([])
@@ -111,8 +98,9 @@ export default function TransactionManagement() {
     {
       title: 'Chi tiết',
       render: (_, record) => (
-        <Button type='link' onClick={() => getTransaction(record)} icon={<ZoomInOutlined />} size='large' />
+        <Button type='link' onClick={() => getTransaction(record)} icon={<EyeOutlined />} size='large' />
       ),
+      width: 120,
     },
   ];
 
@@ -154,6 +142,7 @@ export default function TransactionManagement() {
         pagination={tableParams.pagination}
         loading={loading}
         onChange={handleTableChange}
+        scroll={{ y: 'calc(100vh - 220px)' }}
       />
       <ConfigProvider
         theme={{

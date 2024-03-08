@@ -4,7 +4,7 @@ import { Button, DatePicker, Input, Table, Row, Col, Avatar, ConfigProvider, Tab
 import { SwapOutlined, EditOutlined } from '@ant-design/icons';
 import { useNavigate, useParams } from 'react-router-dom';
 import { cancelClass, getClass, getLecturer, getRooms, getSessionOfClass, getSlots, getStudentsOfClass, updateClass, updateSession } from '../../../api/classesApi';
-import { formatDate, formatDayOfWeek, formatSlot } from '../../../utils/utils';
+import { formatDate, formatDayOfWeek, formatPhone, formatSlot } from '../../../utils/utils';
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
 import Swal from 'sweetalert2';
@@ -46,7 +46,7 @@ export default function ClassDetail() {
     const [roomError, setRoomError] = useState(null)
 
     const [slots, setSlots] = useState([])
-    
+
     const [sessionId, setSessionId] = useState(null);
 
     const [lecturerSession, setLecturerSession] = useState(null)
@@ -103,7 +103,7 @@ export default function ClassDetail() {
                     Swal.fire({
                         position: "center",
                         icon: "error",
-                        title: "Đã có lỗi xảy ra trong quá trình chỉnh sửa",
+                        title: error.response?.data?.Error,
                         showConfirmButton: false,
                         timer: 2000
                     })
@@ -127,12 +127,19 @@ export default function ClassDetail() {
             leastNumberStudent: data.leastNumberStudent,
             limitNumberStudent: data.limitNumberStudent,
         })
-
     }
     async function getStudentsList(id) {
         try {
             const data = await getStudentsOfClass(id);
             setStudents(data);
+            setTableParams({
+                ...tableParams,
+                pagination: {
+                    current: 1,
+                    pageSize: 10,
+                    total: data?.length
+                },
+            });
         } catch (error) {
             console.log(error);
         } finally {
@@ -209,6 +216,7 @@ export default function ClassDetail() {
             }
         } else {
             try {
+                console.log(sessionId)
                 await updateSession(sessionId, { lecturerId: lecturerSession, roomId: roomSession, slotId: slotSession, dateTime: dateSession })
                     .then(() => {
                         Swal.fire({
@@ -231,7 +239,7 @@ export default function ClassDetail() {
                 Swal.fire({
                     position: "center",
                     icon: "error",
-                    title: "Đã có lỗi xảy ra trong quá trình chỉnh sửa",
+                    title: error.response?.data?.Error,
                     showConfirmButton: false,
                     timer: 2000
                 })
@@ -244,11 +252,6 @@ export default function ClassDetail() {
             filters,
             ...sorter,
         });
-
-        // `dataSource` is useless since `pageSize` changed
-        if (pagination.pageSize !== tableParams.pagination?.pageSize) {
-            setData([]);
-        }
     };
     const handleCancelClass = () => {
         Swal.fire({
@@ -271,6 +274,7 @@ export default function ClassDetail() {
                             showConfirmButton: false,
                             timer: 2000
                         })
+                        getClassDetail(id)
                     })
             }
         });
@@ -346,11 +350,18 @@ export default function ClassDetail() {
                     (classData?.status?.toLowerCase().includes('upcoming') &&
                         (startDateObj.getTime() - today.getTime()) / (1000 * 3600 * 24) > 7)
                 ) {
-                    return (
-                        <Button type='link' onClick={() => navigate(`change-class/${record.studentId}`, { state: { student: record } })} icon={< SwapOutlined />} size='large' />
-                    )
+                    if (record.canChangeClass) {
+                        return (
+                            <Button type='link' onClick={() => navigate(`change-class/${record.studentId}`, { state: { student: record } })} icon={< SwapOutlined />} size='large' />
+                        )
+                    } else {
+                        return (
+                            <p style={{ margin: 0 }}> Đã chuyển lớp</p>
+                        )
+                    }
                 }
-            }
+            },
+            width: 120,
         },
     ];
     const sessionsColumns = [
@@ -393,7 +404,7 @@ export default function ClassDetail() {
         {
             title: 'Chỉnh sửa',
             render: (_, record) => (
-                record.status.toLowerCase().includes('future') &&
+                record.status.toLowerCase().includes('future') && !classData?.status?.toLowerCase().includes('canceled') &&
                 <Button type='link' onClick={() => {
                     setSessionId(record.id)
                     setLecturerSession(record.lecturer.id)
@@ -403,6 +414,7 @@ export default function ClassDetail() {
                     setSessionModalOpen(true)
                 }} icon={<EditOutlined />} size='large' />
             ),
+            width: 120,
         },
     ];
 
@@ -425,22 +437,6 @@ export default function ClassDetail() {
                                 </Row>
                                 <Row>
                                     <Col span={8}>
-                                        <p className={styles.classTitle}>Tên khóa học:</p>
-                                    </Col>
-                                    <Col span={16}>
-                                        <p className={styles.classDetail}>{classData.courseName}</p>
-                                    </Col>
-                                </Row>
-                                <Row>
-                                    <Col span={8}>
-                                        <p className={styles.classTitle}>Giáo viên:</p>
-                                    </Col>
-                                    <Col span={16}>
-                                        <p className={styles.classDetail}>{classData.lecturerName}</p>
-                                    </Col>
-                                </Row>
-                                <Row>
-                                    <Col span={8}>
                                         <p className={styles.classTitle}>Trạng thái:</p>
                                     </Col>
                                     <Col span={16}>
@@ -451,65 +447,6 @@ export default function ClassDetail() {
                                         </p>
                                     </Col>
                                 </Row>
-                            </div>
-                        </Col>
-                        <Col md={6} xs={12} style={{ marginBottom: '40px' }}>
-                            <div className={styles.classPart}>
-                                <h5 className={styles.classPartTitle}>Thời gian học:</h5>
-                                <Row>
-                                    <Col span={8}>
-                                        <p className={styles.classTitle}>Ngày bắt đầu:</p>
-                                    </Col>
-                                    <Col span={16}>
-                                        <p className={styles.classDetail}>{classData && `${formatDate(classData.startDate)}`}</p>
-                                    </Col>
-                                </Row>
-                                <Row>
-                                    <Col span={8}>
-                                        <p className={styles.classTitle}>Ngày kết thúc:</p>
-                                    </Col>
-                                    <Col span={16}>
-                                        <p className={styles.classDetail}>{classData && `${formatDate(classData.endDate)}`}</p>
-                                    </Col>
-                                </Row>
-                                <Row>
-                                    <Col span={10}>
-                                        <p className={styles.classTitle}>Lịch học hàng tuần:</p>
-                                    </Col>
-                                    <Col span={14}>
-                                        {classData?.schedules?.map((session, index) => (
-                                            <p className={styles.classDetail} key={index}>
-                                                {formatDayOfWeek(session.dayOfWeek)}: {session.startTime} - {session.endTime}
-                                            </p>
-                                        ))}
-                                    </Col>
-                                </Row>
-                            </div>
-                        </Col>
-                        <Col md={6} xs={12} style={{ marginBottom: '40px' }}>
-                            <div className={styles.classPart}>
-                                <h5 className={styles.classPartTitle}>Địa điểm học:</h5>
-                                <Row>
-                                    <Col span={8}>
-                                        <p className={styles.classTitle}>Hình thức:</p>
-                                    </Col>
-                                    <Col span={16}>
-                                        <p className={styles.classDetail} style={{ textTransform: 'capitalize' }}>{classData.method.toLowerCase()}</p>
-                                    </Col>
-                                </Row>
-                                <Row>
-                                    <Col span={8}>
-                                        <p className={styles.classTitle}>Phòng học:</p>
-                                    </Col>
-                                    <Col span={16}>
-                                        <p className={styles.classDetail}>{classData.roomResponse.name}</p>
-                                    </Col>
-                                </Row>
-                            </div>
-                        </Col>
-                        <Col md={6} xs={12} style={{ marginBottom: '40px' }}>
-                            <div className={styles.classPart}>
-                                <h5 className={styles.classPartTitle}>Quy định đăng ký:</h5>
                                 <Row>
                                     <Col span={16}>
                                         <p className={styles.classTitle}>Số lượng tối thiểu:</p>
@@ -532,6 +469,113 @@ export default function ClassDetail() {
                                     </Col>
                                     <Col span={8}>
                                         <p className={styles.classDetail}>{classData.numberStudentRegistered}</p>
+                                    </Col>
+                                </Row>
+                            </div>
+                        </Col>
+                        <Col md={6} xs={12} style={{ marginBottom: '40px' }}>
+                            <div className={styles.classPart}>
+                                <h5 className={styles.classPartTitle}>Học vụ:</h5>
+                                <Row>
+                                    <Col span={8}>
+                                        <p className={styles.classTitle}>Ngày bắt đầu:</p>
+                                    </Col>
+                                    <Col span={16}>
+                                        <p className={styles.classDetail}>{classData && `${formatDate(classData.startDate)}`}</p>
+                                    </Col>
+                                </Row>
+                                <Row>
+                                    <Col span={8}>
+                                        <p className={styles.classTitle}>Ngày kết thúc:</p>
+                                    </Col>
+                                    <Col span={16}>
+                                        <p className={styles.classDetail}>{classData && `${formatDate(classData.endDate)}`}</p>
+                                    </Col>
+                                </Row>
+                                <Row>
+                                    <Col span={8}>
+                                        <p className={styles.classTitle}>Hình thức:</p>
+                                    </Col>
+                                    <Col span={16}>
+                                        <p className={styles.classDetail} style={{ textTransform: 'capitalize' }}>{classData.method.toLowerCase()}</p>
+                                    </Col>
+                                </Row>
+                                <Row>
+                                    <Col span={8}>
+                                        <p className={styles.classTitle}>Phòng học:</p>
+                                    </Col>
+                                    <Col span={16}>
+                                        <p className={styles.classDetail}>{classData.roomResponse.name}</p>
+                                    </Col>
+                                </Row>
+                                <Row>
+                                    <Col span={10}>
+                                        <p className={styles.classTitle}>Lịch học hàng tuần:</p>
+                                    </Col>
+                                    <Col span={14}>
+                                        {classData?.schedules?.map((session, index) => (
+                                            <p className={styles.classDetail} key={index}>
+                                                {formatDayOfWeek(session.dayOfWeek)}: {session.startTime} - {session.endTime}
+                                            </p>
+                                        ))}
+                                    </Col>
+                                </Row>
+                            </div>
+                        </Col>
+                        <Col md={6} xs={12} style={{ marginBottom: '40px' }}>
+                            <div className={styles.classPart}>
+                                <h5 className={styles.classPartTitle}>Khóa học:</h5>
+                                <Row>
+                                    <Col span={8}>
+                                        <p className={styles.classTitle}>Tên khóa học:</p>
+                                    </Col>
+                                    <Col span={16}>
+                                        <p className={styles.classDetail}>{classData.courseResponse.name}</p>
+                                    </Col>
+                                </Row>
+                                <Row>
+                                    <Col span={16}>
+                                        <p className={styles.classTitle}>Mã giáo trình:</p>
+                                    </Col>
+                                    <Col span={8}>
+                                        <p className={styles.classDetail}>{classData.courseResponse.syllabusCode}</p>
+                                    </Col>
+                                </Row>
+                                <Row>
+                                    <Col span={16}>
+                                        <p className={styles.classTitle}>Độ tuổi phù hợp:</p>
+                                    </Col>
+                                    <Col span={8}>
+                                        <p className={styles.classDetail}>{classData.courseResponse.minYearOldsStudent} - {classData.courseResponse.maxYearOldsStudent} tuổi</p>
+                                    </Col>
+                                </Row>
+                            </div>
+                        </Col>
+                        <Col md={6} xs={12} style={{ marginBottom: '40px' }}>
+                            <div className={styles.classPart}>
+                                <h5 className={styles.classPartTitle}>Giáo viên:</h5>
+                                <Row>
+                                    <Col span={8}>
+                                        <p className={styles.classTitle}>Tên giáo viên:</p>
+                                    </Col>
+                                    <Col span={16}>
+                                        <p className={styles.classDetail} style={{ textTransform: 'capitalize' }}>{classData.lecturerResponse.fullName}</p>
+                                    </Col>
+                                </Row>
+                                <Row>
+                                    <Col span={8}>
+                                        <p className={styles.classTitle}>Số điện thoại:</p>
+                                    </Col>
+                                    <Col span={16}>
+                                        <p className={styles.classDetail}>{formatPhone(classData.lecturerResponse.phone)}</p>
+                                    </Col>
+                                </Row>
+                                <Row>
+                                    <Col span={8}>
+                                        <p className={styles.classTitle}>Email:</p>
+                                    </Col>
+                                    <Col span={16}>
+                                        <p className={styles.classDetail}>{classData.lecturerResponse.email}</p>
                                     </Col>
                                 </Row>
                             </div>
@@ -579,6 +623,7 @@ export default function ClassDetail() {
                                         pagination={tableParams.pagination}
                                         loading={loading}
                                         onChange={handleTableChange}
+                                        scroll={{ y: 'calc(100vh - 220px)' }}
                                     />
                                 </>
                             )
@@ -595,6 +640,7 @@ export default function ClassDetail() {
                                         pagination={tableParams.pagination}
                                         loading={loading}
                                         onChange={handleTableChange}
+                                        scroll={{ y: 'calc(100vh - 220px)' }}
                                     />
                                 </>
                             )
@@ -645,7 +691,7 @@ export default function ClassDetail() {
                                             placeholder="Tối đa"
                                             name='limitNumberStudent'
                                             type='number'
-                                            min={5}
+                                            min={1}
                                             max={25}
                                             value={formik.values.limitNumberStudent}
                                             onChange={formik.handleChange}
@@ -731,7 +777,13 @@ export default function ClassDetail() {
                             <Button className={styles.saveButton} htmlType='submit'>
                                 Lưu
                             </Button>
-                            <Button className={styles.cancelButton} onClick={() => { setModifyModalOpen(false) }}>
+                            <Button className={styles.cancelButton} onClick={() => {
+                                setModifyModalOpen(false)
+                                setModifyModalOpen(false)
+                                setLecturerError(null)
+                                setRoomError(null)
+                                formik.resetForm()
+                            }}>
                                 Hủy
                             </Button>
                         </div>
@@ -871,7 +923,14 @@ export default function ClassDetail() {
                         <Button className={styles.saveButton} onClick={handleUpdateSession}>
                             Lưu
                         </Button>
-                        <Button className={styles.cancelButton} onClick={() => { setSessionModalOpen(false) }}>
+                        <Button className={styles.cancelButton} onClick={() => {
+                            setSessionModalOpen(false)
+                            setSessionModalOpen(false)
+                            setLecturerSessionError(null)
+                            setRoomSessionError(null)
+                            setDateSessionError(null)
+                            setSlotSessionError(null)
+                        }}>
                             Hủy
                         </Button>
                     </div>

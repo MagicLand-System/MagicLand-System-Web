@@ -37,7 +37,7 @@ export default function ChangeClass() {
         });
 
         if (pagination.pageSize !== tableParams.pagination?.pageSize) {
-            setAttendanceList([]);
+            setClasses([]);
         }
     };
     const handleSaveChangeClass = async () => {
@@ -69,7 +69,7 @@ export default function ChangeClass() {
             Swal.fire({
                 position: "center",
                 icon: "error",
-                title: "Có lỗi xảy ra trong quá trình chuyển lớp",
+                title: error.response?.data?.Error,
                 showConfirmButton: false,
                 timer: 2000
             })
@@ -79,7 +79,8 @@ export default function ChangeClass() {
         {
             render: (_, record) => (
                 <Checkbox checked={record.classId === newClassId} value={record.classId} onChange={(e) => { setNewClassId(e.target.value) }} />
-            )
+            ),
+            width: 120,
         },
         {
             title: 'Mã lớp học',
@@ -119,19 +120,24 @@ export default function ChangeClass() {
         },
     ];
     async function getListsOfClasses(classId, studentId) {
-        setLoading(true);
-        const data = await getSuitableClass({ classId, studentIdList: [studentId] });
-        if (data) {
-            setClasses(data);
-            setTableParams({
-                ...tableParams,
-                pagination: {
-                    ...tableParams.pagination,
-                    total: data.length,
-                },
-            });
+        try {
+            setLoading(true);
+            const data = await getSuitableClass({ classId, studentIdList: [studentId] });
+            if (data) {
+                setClasses(data);
+                setTableParams({
+                    pagination: {
+                        current: 1,
+                        pageSize: 10,
+                        total: data.length
+                    },
+                });
+            }
+        } catch (error) {
+            console.log(error);
+        } finally {
+            setLoading(false);
         }
-        setLoading(false);
     };
     useEffect(() => {
         getListsOfClasses(classId, studentId);
@@ -151,6 +157,7 @@ export default function ChangeClass() {
                 pagination={tableParams.pagination}
                 loading={loading}
                 onChange={handleTableChange}
+                scroll={{ y: 'calc(100vh - 220px)' }}
             />
             <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
                 <Button onClick={handleSaveChangeClass} className={styles.saveButton}>

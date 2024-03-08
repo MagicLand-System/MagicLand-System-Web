@@ -58,7 +58,7 @@ export default function AttendanceDetail() {
             Swal.fire({
                 position: "center",
                 icon: "error",
-                title: "Đã có lỗi xảy ra trong quá trình điểm danh",
+                title: error.response?.data?.Error,
                 showConfirmButton: false,
                 timer: 2000
             })
@@ -71,10 +71,10 @@ export default function AttendanceDetail() {
             if (data) {
                 setAttendanceList(data);
                 setTableParams({
-                    ...tableParams,
                     pagination: {
-                        ...tableParams.pagination,
-                        total: data.length,
+                        current: 1,
+                        pageSize: 10,
+                        total: data.length
                     },
                 });
             }
@@ -91,9 +91,9 @@ export default function AttendanceDetail() {
         {
             title: 'Học viên',
             render: (_, record) => (
-                <div style={{display: 'flex', gap: '16px'}}>
+                <div style={{ display: 'flex', gap: '16px' }}>
                     <Avatar size={64} src={record.student.avatarImage} />
-                    <p style={{fontWeight: 'bold', fontSize: '1rem'}}>{record.student.fullName}</p>
+                    <p style={{ fontWeight: 'bold', fontSize: '1rem' }}>{record.student.fullName}</p>
                 </div>
             )
         },
@@ -133,6 +133,7 @@ export default function AttendanceDetail() {
                 pagination={tableParams.pagination}
                 loading={loading}
                 onChange={handleTableChange}
+                scroll={{ y: 'calc(100vh - 220px)' }}
             />
             <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
                 <Button onClick={handleSaveAttendance} className={styles.saveButton}>

@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useRef, useState } from 'react'
 import styles from './Register.module.css'
 import { Link, useNavigate } from 'react-router-dom'
 import { Button, DatePicker, Input, Radio } from 'antd'
@@ -6,13 +6,14 @@ import Alert from 'antd/es/alert/Alert';
 import OtpInput from 'otp-input-react';
 import PhoneInput from 'react-phone-input-2';
 import "react-phone-input-2/lib/style.css"
-import { auth } from '../../../firebase.config';
+import { auth, firebaseConfig } from '../../../firebase.config';
 import { RecaptchaVerifier, signInWithPhoneNumber, signOut } from 'firebase/auth';
 import Swal from 'sweetalert2';
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
 import dayjs from 'dayjs'
 import { checkExist, register } from '../../api/auth';
+import { usePlacesWidget } from 'react-google-autocomplete';
 
 export default function Register() {
   const navigate = useNavigate()
@@ -26,6 +27,11 @@ export default function Register() {
   const [dateOfBirth, setDateOfBirth] = useState(dayjs().subtract(3, 'year'))
   const [gender, setGender] = useState('Khác')
   const [dateOfBirthError, setDateOfBirthError] = useState(null)
+
+  const [address, setAddress] = useState(null)
+  const [addressError, setAddressError] = useState(null)
+
+  const addressRef = useRef(null);
 
   function onCaptchVerify() {
     if (!window.recaptchaVerifier) {
@@ -79,20 +85,34 @@ export default function Register() {
       setLoading(false)
     })
   }
+  const { ref: adrRef } = usePlacesWidget({
+    apiKey: firebaseConfig.apiKey,
+    onPlaceSelected: (place) => {
+      addressRef.current.setValue(place?.formatted_address)
+      setAddress(place?.formatted_address)
+    },
+    language: 'vi'
+  })
   const formik = useFormik({
     initialValues: {
       fullName: '',
       email: '',
-      city: '',
-      district: '',
-      street: '',
     },
     onSubmit: async values => {
-      if (dateOfBirth === null) {
-        setDateOfBirthError("Vui lòng nhập ngày tháng năm sinh")
+      if (!dateOfBirth || !address) {
+        if (!dateOfBirth) {
+          setDateOfBirthError("Vui lòng nhập ngày tháng năm sinh")
+        } else {
+          setDateOfBirthError(null)
+        }
+        if (!address) {
+          setAddressError("Vui lòng nhập địa chỉ")
+        } else {
+          setAddressError(null)
+        }
       } else {
         const stringDateOfBirth = dateOfBirth.toISOString()
-        const data = await register({ ...values, phone: `+${phone}`, gender, dateOfBirth: stringDateOfBirth })
+        const data = await register({ ...values, phone: `+${phone}`, gender, dateOfBirth: stringDateOfBirth, address })
         if (data) {
           await signOut(auth)
           Swal.fire({
@@ -110,9 +130,6 @@ export default function Register() {
     validationSchema: Yup.object({
       fullName: Yup.string().required("Vui lòng nhập họ và tên").matches(/(\w.+\s).+/, 'Vui lòng nhập ít nhất 2 từ'),
       email: Yup.string().email("Vui lòng nhập đúng email").required("Vui lòng nhập email"),
-      city: Yup.string().required("Vui lòng nhập địa chỉ"),
-      district: Yup.string().required("Vui lòng nhập địa chỉ"),
-      street: Yup.string().required("Vui lòng nhập địa chỉ"),
     }),
   });
   return (
@@ -176,7 +193,8 @@ export default function Register() {
         ) : (!showOtp && showFillInfo) && (
           <>
             <h2 className={styles.title} style={{ marginTop: '20px' }}>Thông tin</h2>
-            <form onSubmit={formik.handleSubmit} style={{ marginTop: '0', width: '60%' }} className={styles.form}>
+            <form onSubmit={formik.handleSubmit} style={{ marginTop: 0, width: '60%', marginBottom: 20 }} className={styles.form}>
+              <p className={styles.addTitle}><span>*</span> Họ và tên:</p>
               <Input
                 placeholder="Họ và tên"
                 name='fullName'
@@ -189,6 +207,7 @@ export default function Register() {
               <div style={{ height: '24px', paddingLeft: '10px' }}>
                 {formik.errors.fullName && formik.touched.fullName && (<p style={{ color: 'red', fontSize: '14px', margin: '0' }}>{formik.errors.fullName}</p>)}
               </div>
+              <p className={styles.addTitle}><span>*</span> Email:</p>
               <Input
                 placeholder="Email"
                 name='email'
@@ -201,7 +220,7 @@ export default function Register() {
               <div style={{ height: '24px', paddingLeft: '10px' }}>
                 {formik.errors.email && formik.touched.email && (<p style={{ color: 'red', fontSize: '14px', margin: '0' }}>{formik.errors.email}</p>)}
               </div>
-              <p style={{ color: '#c0c0c0', fontSize: 16, marginBottom: 5, marginTop: 0 }}>Ngày sinh</p>
+              <p className={styles.addTitle}><span>*</span> Ngày sinh:</p>
               <DatePicker
                 allowClear={false}
                 className={styles.input}
@@ -215,7 +234,7 @@ export default function Register() {
               <div style={{ height: '24px', paddingLeft: '10px' }}>
                 {dateOfBirthError && (<p style={{ color: 'red', fontSize: '14px', margin: '0' }}>{dateOfBirthError}</p>)}
               </div>
-              <p style={{ color: '#c0c0c0', fontSize: 16, marginBottom: 5, marginTop: 0 }}>Giới tính</p>
+              <p className={styles.addTitle}><span>*</span> Giới tính:</p>
               <div style={{ margin: '10px' }}>
                 <Radio.Group onChange={(e) => { setGender(e.target.value) }} value={gender}>
                   <Radio value='Nữ'>Nữ</Radio>
@@ -223,41 +242,17 @@ export default function Register() {
                   <Radio value='Khác'>Khác</Radio>
                 </Radio.Group>
               </div>
-              <div style={{ display: 'flex', gap: '10px' }}>
-                <Input
-                  placeholder="Thành phố"
-                  name='city'
-                  value={formik.values.city}
-                  onChange={formik.handleChange}
-                  error={formik.touched.city && formik.errors.city}
-                  className={styles.input}
-                  style={{ width: 'calc(50%-5px)' }}
-                  required
-                />
-                <Input
-                  placeholder="Quận / Huyện"
-                  name='district'
-                  value={formik.values.district}
-                  onChange={formik.handleChange}
-                  error={formik.touched.district && formik.errors.district}
-                  className={styles.input}
-                  required
-                />
-              </div>
-              <div style={{ height: '24px', paddingLeft: '10px' }}>
-                {(formik.errors.city && formik.touched.city) || (formik.errors.district && formik.touched.district) && (<p style={{ color: 'red', fontSize: '14px', margin: '0' }}>{formik.errors.district}</p>)}
-              </div>
+              <p className={styles.addTitle}><span>*</span> Địa chỉ:</p>
               <Input
-                placeholder="Số nhà - Tên Đường"
-                name='street'
-                value={formik.values.street}
-                onChange={formik.handleChange}
-                error={formik.touched.street && formik.errors.street}
+                ref={(c) => {
+                  addressRef.current = c;
+                  if (c) adrRef.current = c.input;
+                }}
                 className={styles.input}
                 required
               />
               <div style={{ height: '24px', paddingLeft: '10px' }}>
-                {formik.errors.street && formik.touched.street && (<p style={{ color: 'red', fontSize: '14  px', margin: '0' }}>{formik.errors.street}</p>)}
+                {addressError && (<p style={{ color: 'red', fontSize: '14  px', margin: '0' }}>{addressError}</p>)}
               </div>
               <Button htmlType='submit' className={styles.button}>
                 Xác nhận

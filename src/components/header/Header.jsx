@@ -286,11 +286,19 @@ export default function Header() {
         },
         {
           label: (
+            <Link className={styles.label} to={'/syllabus-management'}>
+              Giáo trình
+            </Link>
+          ),
+          key: '/syllabus-management',
+        },
+        {
+          label: (
             <Link className={styles.label} to={'/course-management'}>
               Khóa học
             </Link>
           ),
-          key: '/attendance-management',
+          key: '/course-management',
         },
         {
           label: (
@@ -350,10 +358,6 @@ export default function Header() {
     }
   }, [user])
 
-  const onClick = (e) => {
-    setCurrent(e.key);
-  };
-
   return (
     <div className={styles.container}>
       <div className={styles.logo}>
@@ -386,7 +390,13 @@ export default function Header() {
           }
         }}
       >
-        <Menu className={styles.menu} onClick={onClick} selectedKeys={items.filter(item => current.includes(item.key)).map(item => item.key)} mode="horizontal" items={items} />
+        <Menu className={styles.menu} onClick={(e) => setCurrent(e.key)} selectedKeys={items.filter(item => {
+          if (current !== '' && current.includes(item.key)) {
+            return current.includes(item.key) && item.key !== '/'
+          } else {
+            return item.key === '/'
+          }
+        }).map(item => item.key)} mode="horizontal" items={items} />
       </ConfigProvider>
     </div>
   );
