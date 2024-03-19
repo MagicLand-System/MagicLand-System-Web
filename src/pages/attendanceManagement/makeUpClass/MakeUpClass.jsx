@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import styles from './MakeUpClass.module.css'
-import { Button, Input, Table, Avatar, Checkbox, Select, Row, Col, DatePicker } from 'antd';
-import { SwapOutlined } from '@ant-design/icons';
+import { Button, Input, Table, Checkbox, Select, DatePicker, ConfigProvider } from 'antd';
 import Swal from 'sweetalert2';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { formatDate, formatDayOfWeek, formatSlot } from '../../../utils/utils';
@@ -89,16 +88,14 @@ export default function MakeUpClass() {
         try {
             setLoading(true);
             const data = await getMakeUpClass({ scheduleId, studentId, keyword, dateTime, slotId });
-            if (data) {
-                setClasses(data);
-                setTableParams({
-                    pagination: {
-                        current: 1,
-                        pageSize: 10,
-                        total: data.length
-                    },
-                });
-            }
+            setClasses(data);
+            setTableParams({
+                pagination: {
+                    current: 1,
+                    pageSize: 10,
+                    total: data.length
+                },
+            });
         } catch (error) {
             console.log(error);
         } finally {
@@ -164,15 +161,24 @@ export default function MakeUpClass() {
             <p className={styles.classDetailTitle}>Học viên: <span className={styles.classDetail}>{student.student.fullName}</span></p>
             <div style={{ display: 'flex', marginBottom: '16px', gap: '8px' }}>
                 <Search className={styles.searchBar} placeholder="Tìm kiếm lớp học, giáo viên" onSearch={(value, e) => { setSearch(value) }} enterButton />
-                <DatePicker
-                    className={styles.input}
-                    value={findDate}
-                    disabledDate={(current) => {
-                        return current && current < dayjs().add(1, 'day').startOf('day');
-                    }}
-                    onChange={(date) => setFindDate(date)}
-                    format={'DD/MM/YYYY'}
-                    placeholder="Tìm kiếm ngày" />
+                <ConfigProvider
+                    theme={{
+                        components: {
+                            DatePicker: {
+                                activeBorderColor: '#f2c955'
+                            },
+                        },
+                    }}>
+                    <DatePicker
+                        className={styles.input}
+                        value={findDate}
+                        disabledDate={(current) => {
+                            return current && current < dayjs().add(1, 'day').startOf('day');
+                        }}
+                        onChange={(date) => setFindDate(date)}
+                        format={'DD/MM/YYYY'}
+                        placeholder="Tìm kiếm ngày" />
+                </ConfigProvider>
                 <Select
                     className={styles.input}
                     value={slot}

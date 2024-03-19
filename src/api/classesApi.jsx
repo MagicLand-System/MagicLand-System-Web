@@ -1,11 +1,4 @@
-import apiUnlogin from "./apiUnlogin";
 import api from "./api";
-
-const classesAPI = {
-  getClasses: () => apiUnlogin.get("/api/v1/classes"),
-  searchClass: (keyWord) => apiUnlogin.get(`/api/v1/classes/filter?${keyWord}`),
-};
-
 export const getClasses = async (credential) => {
   const response = await api.get("/api/v1/staff/classes", {
     params: credential
@@ -107,4 +100,3 @@ export const importClass = async (credential) => {
   return response.data;
 };
 
-export default classesAPI;

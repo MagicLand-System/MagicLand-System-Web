@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react'
 import styles from './SyllabusDetail.module.css'
-import { Button, Table, Row, Col, Tabs, ConfigProvider, Divider, Modal, DatePicker, Input, Select } from 'antd';
+import { Button, Table, Row, Col, Tabs, ConfigProvider, Divider, Modal, DatePicker, Input, Select, Empty } from 'antd';
 import { EditOutlined, CloudDownloadOutlined, CloudUploadOutlined, EyeOutlined } from '@ant-design/icons';
 import { useNavigate, useParams } from 'react-router-dom';
 import * as XLSX from 'xlsx';
@@ -214,7 +214,6 @@ export default function SyllabusDetail() {
             const dataGeneral = XLSX.utils.sheet_to_json(worksheetGeneral);
             let numOfSessions = 0;
             if (dataGeneral.length === 1) {
-                errors = errors.filter(error => error !== "Vui lòng điền đủ các thông tin chung");
                 let newDataGeneral = dataGeneral.map(row => ({
                     syllabusName: row['Tên giáo trình'] || null,
                     subjectCode: row['Mã giáo trình'] || null,
@@ -233,6 +232,16 @@ export default function SyllabusDetail() {
                 if (!generalData.syllabusName || !generalData.subjectCode || !generalData.type || !generalData.timePerSession || !generalData.numOfSessions || !generalData.description || !generalData.studentTasks || !generalData.scoringScale || !generalData.effectiveDate || !generalData.minAvgMarkToPass) {
                     errors.push("Vui lòng điền đủ các thông tin chung")
                 }
+                if (generalData.effectiveDate) {
+                    const today = new Date()
+                    today.setHours(0, 0, 0, 0)
+
+                    const date = new parse(generalData.effectiveDate, "dd/MM/yyyy", new Date())
+                    date.setHours(12, 0, 0, 0)
+                    if (date < today) {
+                        errors.push("Ngày hiệu lực không hợp lệ")
+                    }
+                }
                 newDataGeneral.forEach(data => {
                     const preRequisite = data.preRequisite?.split("\r\n");
                     data.preRequisite = preRequisite
@@ -246,7 +255,6 @@ export default function SyllabusDetail() {
             const dataSyllabus = XLSX.utils.sheet_to_json(worksheetSyllabus);
             let syllabusLength = 0
             if (dataSyllabus.length > 0) {
-                errors = errors.filter(error => error !== "Vui lòng điền đủ các thông tin giáo trình");
                 let newDataSyllabus = dataSyllabus.map(row => ({
                     index: row['STT'] || null,
                     topicName: row['Chủ đề'] || null,
@@ -284,14 +292,11 @@ export default function SyllabusDetail() {
                 if (!errors.includes("Vui lòng điền đủ các thông tin giáo trình")) {
                     errors.push("Thông tin số buổi và giáo trình không phù hợp");
                 }
-            } else {
-                errors = errors.filter(error => error !== "Thông tin số buổi và giáo trình không phù hợp");
             }
             //sheet assessment
             const worksheetAssessment = workbook.Sheets['Đánh giá'];
             const dataAssessment = XLSX.utils.sheet_to_json(worksheetAssessment);
             if (dataAssessment.length > 0) {
-                errors = errors.filter(error => error !== "Vui lòng điền đủ các thông tin đánh giá");
                 let newDataAssessment = dataAssessment.map(row => ({
                     type: row['Loại bài tập'] || null,
                     contentName: row['Nội dung'] || null,
@@ -307,9 +312,9 @@ export default function SyllabusDetail() {
                     const weight = data.weight.replace("%", "");
                     data.weight = weight
                     sumWeight = sumWeight + parseInt(weight);
-                    const duration = data.duration.toString();
+                    const duration = data.duration?.toString();
                     data.duration = duration
-                    if (!data.type || !data.contentName || !data.part || !data.weight || !(data.completionCriteria >= 0) || !data.method || !data.duration || !data.questionType) {
+                    if (!data.type || !data.contentName || !data.part || !data.weight || !(data.completionCriteria >= 0) || !data.method) {
                         if (!errors.includes("Vui lòng điền đủ các thông tin đánh giá")) {
                             errors.push("Vui lòng điền đủ các thông tin đánh giá");
                         }
@@ -317,8 +322,6 @@ export default function SyllabusDetail() {
                 });
                 if (sumWeight !== 100) {
                     errors.push("Vui lòng điền đúng đánh giá trọng số");
-                } else {
-                    errors = errors.filter(error => error !== "Vui lòng điền đúng đánh giá trọng số");
                 }
                 syllabusDetail = { ...syllabusDetail, examSyllabusRequests: newDataAssessment }
             } else {
@@ -450,7 +453,7 @@ export default function SyllabusDetail() {
         {
             title: 'Loại câu hỏi',
             dataIndex: 'questionType',
-            render: (questionType) => questionType.split("\r\n").map((question, index) => <p style={{ margin: 0 }} key={index}>{question}</p>),
+            render: (questionType) => questionType?.split("\r\n").map((question, index) => <p style={{ margin: 0 }} key={index}>{question}</p>),
         },
     ];
     const exerciseColumns = [
@@ -625,7 +628,7 @@ export default function SyllabusDetail() {
                     </Col>
                     <Divider style={{ margin: 0 }} />
                     <Col span={4}>
-                        <p className={styles.syllabusTitle}>Mã môn:</p>
+                        <p className={styles.syllabusTitle}>Mã giáo trình:</p>
                     </Col>
                     <Col span={20} style={{ paddingLeft: 10 }}>
                         <p className={styles.syllabusDetail}>{syllabusDetail?.subjectCode}</p>
@@ -743,7 +746,7 @@ export default function SyllabusDetail() {
                                     dataSource={syllabusDetail?.sessionResponses}
                                     pagination={tableParams.pagination}
                                     onChange={handleTableChange}
-                                    scroll={{y: 'calc(100vh - 220px)'}}
+                                    scroll={{ y: 'calc(100vh - 220px)' }}
                                 />
                             )
                         },
@@ -757,7 +760,7 @@ export default function SyllabusDetail() {
                                     dataSource={syllabusDetail?.exams}
                                     pagination={tableParams.pagination}
                                     onChange={handleTableChange}
-                                    scroll={{y: 'calc(100vh - 220px)'}}
+                                    scroll={{ y: 'calc(100vh - 220px)' }}
                                 />
                             )
                         },
@@ -765,32 +768,28 @@ export default function SyllabusDetail() {
                             label: 'Bài tập',
                             key: 'exercise',
                             children: (
-                                <>
-                                    <Table
-                                        columns={exerciseColumns}
-                                        rowKey={(record) => record.questionPackageId}
-                                        dataSource={syllabusDetail?.questionPackages}
-                                        pagination={tableParams.pagination}
-                                        onChange={handleTableChange}
-                                        scroll={{y: 'calc(100vh - 220px)'}}
-                                    />
-                                </>
+                                <Table
+                                    columns={exerciseColumns}
+                                    rowKey={(record) => record.questionPackageId}
+                                    dataSource={syllabusDetail?.questionPackages}
+                                    pagination={tableParams.pagination}
+                                    onChange={handleTableChange}
+                                    scroll={{ y: 'calc(100vh - 220px)' }}
+                                />
                             )
                         },
                         {
                             label: 'Tài liệu',
                             key: 'material',
                             children: (
-                                <>
-                                    <Table
-                                        columns={materialColumns}
-                                        rowKey={(record) => record.materialId}
-                                        dataSource={syllabusDetail?.materials}
-                                        pagination={tableParams.pagination}
-                                        onChange={handleTableChange}
-                                        scroll={{y: 'calc(100vh - 220px)'}}
-                                    />
-                                </>
+                                <Table
+                                    columns={materialColumns}
+                                    rowKey={(record) => record.materialId}
+                                    dataSource={syllabusDetail?.materials}
+                                    pagination={tableParams.pagination}
+                                    onChange={handleTableChange}
+                                    scroll={{ y: 'calc(100vh - 220px)' }}
+                                />
                             )
                         }
                     ]}
@@ -925,6 +924,15 @@ export default function SyllabusDetail() {
                                     filterOption={false}
                                     className={styles.input}
                                     placeholder="Chọn loại giáo trình"
+                                    notFoundContent={
+                                        <Empty
+                                            image={Empty.PRESENTED_IMAGE_SIMPLE}
+                                            description={
+                                                <span>
+                                                    Không tìm thấy loại giáo trình
+                                                </span>
+                                            } />
+                                    }
                                     onSelect={(data) => { setCategory(data) }}
                                     options={
                                         categoriesOptions
@@ -955,15 +963,25 @@ export default function SyllabusDetail() {
                                     <p className={styles.addTitle}><span>*</span> Ngày hiệu lực:</p>
                                 </Col>
                                 <Col span={17}>
-                                    <DatePicker
-                                        className={styles.input}
-                                        value={effectiveDate}
-                                        disabledDate={(current) => {
-                                            return current && current < dayjs().add(0, 'day').startOf('day');
+                                    <ConfigProvider
+                                        theme={{
+                                            components: {
+                                                DatePicker: {
+                                                    activeBorderColor: '#f2c955'
+                                                },
+                                            },
                                         }}
-                                        onChange={(date) => setEffectiveDate(date)}
-                                        format={'DD/MM/YYYY'}
-                                        placeholder="Ngày hiệu lực" />
+                                    >
+                                        <DatePicker
+                                            className={styles.input}
+                                            value={effectiveDate}
+                                            disabledDate={(current) => {
+                                                return current && current < dayjs().add(0, 'day').startOf('day');
+                                            }}
+                                            onChange={(date) => setEffectiveDate(date)}
+                                            format={'DD/MM/YYYY'}
+                                            placeholder="Ngày hiệu lực" />
+                                    </ConfigProvider>
                                     <div style={{ height: '24px', paddingLeft: '10px' }}>
                                         {effectiveDateError && (<p style={{ color: 'red', fontSize: '14px', margin: '0' }}>{effectiveDateError}</p>)}
                                     </div>

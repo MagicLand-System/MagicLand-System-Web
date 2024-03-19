@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import styles from './ClassDetail.module.css'
-import { Button, DatePicker, Input, Table, Row, Col, Avatar, ConfigProvider, Tabs, Modal, Select } from 'antd';
+import { Button, DatePicker, Input, Table, Row, Col, Avatar, ConfigProvider, Tabs, Modal, Select, Empty } from 'antd';
 import { SwapOutlined, EditOutlined } from '@ant-design/icons';
 import { useNavigate, useParams } from 'react-router-dom';
 import { cancelClass, getClass, getLecturer, getRooms, getSessionOfClass, getSlots, getStudentsOfClass, updateClass, updateSession } from '../../../api/classesApi';
@@ -632,17 +632,15 @@ export default function ClassDetail() {
                             label: 'Lịch học',
                             key: 'sessions',
                             children: (
-                                <>
-                                    <Table
-                                        columns={sessionsColumns}
-                                        rowKey={(record) => record.id}
-                                        dataSource={sessions}
-                                        pagination={tableParams.pagination}
-                                        loading={loading}
-                                        onChange={handleTableChange}
-                                        scroll={{ y: 'calc(100vh - 220px)' }}
-                                    />
-                                </>
+                                <Table
+                                    columns={sessionsColumns}
+                                    rowKey={(record) => record.id}
+                                    dataSource={sessions}
+                                    pagination={tableParams.pagination}
+                                    loading={loading}
+                                    onChange={handleTableChange}
+                                    scroll={{ y: 'calc(100vh - 220px)' }}
+                                />
                             )
                         },
                     ]}
@@ -720,7 +718,15 @@ export default function ClassDetail() {
                                     className={styles.input}
                                     placeholder="Giáo viên"
                                     onSelect={(data) => { setLecturer(data) }}
-                                    defaultValue={lecturer}
+                                    notFoundContent={
+                                        <Empty
+                                            image={Empty.PRESENTED_IMAGE_SIMPLE}
+                                            description={
+                                                <span>
+                                                    Không tìm thấy giáo viên
+                                                </span>
+                                            } />
+                                    }
                                     options={
                                         lecturersOptions
                                             .map((lecturer) => ({
@@ -755,6 +761,15 @@ export default function ClassDetail() {
                                     className={styles.input}
                                     placeholder="Phòng học"
                                     onSelect={(data) => { setRoom(data) }}
+                                    notFoundContent={
+                                        <Empty
+                                            image={Empty.PRESENTED_IMAGE_SIMPLE}
+                                            description={
+                                                <span>
+                                                    Không tìm thấy phòng học
+                                                </span>
+                                            } />
+                                    }
                                     options={roomsOptions.map((room) => ({
                                         value: room.id,
                                         label: room.name
@@ -813,16 +828,25 @@ export default function ClassDetail() {
                             <p className={styles.addTitle}><span>*</span> Ngày học:</p>
                         </Col>
                         <Col span={18}>
-                            <DatePicker
-                                className={styles.input}
-                                value={dateSession}
-                                disabledDate={(current) => {
-                                    return current && current < dayjs().add(1, 'day').startOf('day');
-                                }}
-                                onChange={(date) => setDateSession(date)}
-                                format={'DD/MM/YYYY'}
-                                allowClear={false}
-                                placeholder="Ngày học" />
+                            <ConfigProvider
+                                theme={{
+                                    components: {
+                                        DatePicker: {
+                                            activeBorderColor: '#f2c955'
+                                        },
+                                    },
+                                }}>
+                                <DatePicker
+                                    className={styles.input}
+                                    value={dateSession}
+                                    disabledDate={(current) => {
+                                        return current && current < dayjs().add(1, 'day').startOf('day');
+                                    }}
+                                    onChange={(date) => setDateSession(date)}
+                                    format={'DD/MM/YYYY'}
+                                    allowClear={false}
+                                    placeholder="Ngày học" />
+                            </ConfigProvider>
                             <div style={{ height: '24px', paddingLeft: '10px' }}>
                                 {dateSessionError && (<p style={{ color: 'red', fontSize: '14px', margin: '0' }}>{dateSessionError}</p>)}
                             </div>
@@ -924,7 +948,6 @@ export default function ClassDetail() {
                             Lưu
                         </Button>
                         <Button className={styles.cancelButton} onClick={() => {
-                            setSessionModalOpen(false)
                             setSessionModalOpen(false)
                             setLecturerSessionError(null)
                             setRoomSessionError(null)

@@ -1,10 +1,10 @@
 import React, { useEffect, useState } from 'react'
 import styles from './AttendanceDetail.module.css'
-import { Button, Input, Table, Avatar, Checkbox, Row, Col } from 'antd';
+import { Button, Input, Table, Avatar, Checkbox, ConfigProvider } from 'antd';
 import { SwapOutlined } from '@ant-design/icons';
 import Swal from 'sweetalert2';
-import { useLocation, useNavigate, useParams } from 'react-router-dom';
-import { formatDate, formatPhone } from '../../../utils/utils';
+import { useNavigate, useParams } from 'react-router-dom';
+import { formatPhone } from '../../../utils/utils';
 import { getListAttendance, takeAttendance } from '../../../api/attendance';
 
 const { Search } = Input;
@@ -68,16 +68,14 @@ export default function AttendanceDetail() {
         try {
             setLoading(true);
             const data = await getListAttendance({ scheduleId });
-            if (data) {
-                setAttendanceList(data);
-                setTableParams({
-                    pagination: {
-                        current: 1,
-                        pageSize: 10,
-                        total: data.length
-                    },
-                });
-            }
+            setAttendanceList(data);
+            setTableParams({
+                pagination: {
+                    current: 1,
+                    pageSize: 10,
+                    total: data.length
+                },
+            });
         } catch (error) {
             console.log(error);
         } finally {

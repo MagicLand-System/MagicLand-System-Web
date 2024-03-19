@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react'
 import styles from './AddCourse.module.css'
-import { Button, Col, Collapse, Input, Row, Select } from 'antd';
+import { Button, Col, Collapse, Empty, Input, Row, Select } from 'antd';
 import Swal from 'sweetalert2';
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
@@ -84,7 +84,7 @@ export default function AddCourse() {
                 courseName: data.name,
                 mainDescription: data.mainDescription,
                 minAge: data.minYearOldsStudent,
-                maxAge: data.minYearOldsStudent,
+                maxAge: data.maxYearOldsStudent,
             })
             const newSubDescriptions = [...data.subDescriptionTitles]
             console.log(data.subDescriptionTitles)
@@ -121,7 +121,7 @@ export default function AddCourse() {
             const hasNullDescriptions = subDescriptions.some((subDescription) => {
                 return subDescription.title === null || subDescription.subDescriptionContentRequests === null;
             });
-            if (!syllabusId || !image || hasNullDescriptions || !price) {
+            if (!syllabusId || !image || hasNullDescriptions || (!id && !price)) {
                 if (syllabusId === null) {
                     setSyllabusError("Hãy cung cấp hình ảnh khóa học")
                 } else {
@@ -137,13 +137,14 @@ export default function AddCourse() {
                 } else {
                     setSubDescriptionsError(null)
                 }
-                if (price === null) {
+                if (!id && !price) {
                     setPriceError("Hãy nhập chi phí khóa học")
                 } else {
                     setPriceError(null)
                 }
 
             } else {
+                setApiLoading(true)
                 setImageError(null)
                 setSubDescriptionsError(null)
                 setPriceError(null)
@@ -160,7 +161,7 @@ export default function AddCourse() {
                 //image
                 if (id && !image) {
                     try {
-                        await updateCourse(id, { ...values, subDescriptions: newSubDescriptions, syllabusId, price })
+                        await updateCourse(id, { ...values, subDescriptions: newSubDescriptions, syllabusId })
                             .then(() => {
                                 Swal.fire({
                                     position: "center",
@@ -170,16 +171,16 @@ export default function AddCourse() {
                                     timer: 2000
                                 })
                             }).then(() => {
+                                setApiLoading(false)
                                 navigate(-1)
                             })
                     } catch (error) {
+                        setApiLoading(false)
                         Swal.fire({
                             position: "center",
                             icon: "error",
                             title: error.response?.data?.Error,
                         })
-                    } finally {
-                        setApiLoading(true)
                     }
                 } else {
                     const imageRef = ref(storage, `courses/${formik.values.courseName}/${image.name + v4()}`);
@@ -188,7 +189,7 @@ export default function AddCourse() {
                             try {
                                 setApiLoading(true)
                                 if (id) {
-                                    await updateCourse(id, { ...values, subDescriptions: newSubDescriptions, syllabusId, price })
+                                    await updateCourse(id, { ...values, subDescriptions: newSubDescriptions, syllabusId })
                                         .then(() => {
                                             Swal.fire({
                                                 position: "center",
@@ -198,6 +199,7 @@ export default function AddCourse() {
                                                 timer: 2000
                                             })
                                         }).then(() => {
+                                            setApiLoading(false)
                                             navigate(-1)
                                         })
                                 } else {
@@ -211,23 +213,24 @@ export default function AddCourse() {
                                                 timer: 2000
                                             })
                                         }).then(() => {
+                                            setApiLoading(false)
                                             navigate(-1)
                                         })
                                 }
                             } catch (error) {
+                                setApiLoading(false)
                                 Swal.fire({
                                     position: "center",
                                     icon: "error",
                                     title: error.response?.data?.Error,
                                 })
-                            } finally {
-                                setApiLoading(false)
                             }
-
                         }).catch(error => {
+                            setApiLoading(false)
                             console.log(error.message, "error getting image url")
                         })
                     }).catch(error => {
+                        setApiLoading(false)
                         console.log(error.message)
                     })
                 }
@@ -261,6 +264,15 @@ export default function AddCourse() {
                                         filterOption={false}
                                         className={styles.input}
                                         placeholder="Chọn giáo trình"
+                                        notFoundContent={
+                                            <Empty
+                                                image={Empty.PRESENTED_IMAGE_SIMPLE}
+                                                description={
+                                                    <span>
+                                                        Không tìm thấy giáo trình
+                                                    </span>
+                                                } />
+                                        }
                                         onSelect={(data) => { setSyllabusId(data) }}
                                         options={
                                             syllabusesOptions
@@ -300,7 +312,7 @@ export default function AddCourse() {
                                     {formik.errors.courseName && formik.touched.courseName && (<p style={{ color: 'red', fontSize: '14px', margin: '0' }}>{formik.errors.courseName}</p>)}
                                 </div>
                             </Col>
-                            <Col xs={12} lg={6} className={styles.column}>
+                            <Col xs={id ? 24 : 12} lg={id ? 12 : 6} className={styles.column}>
                                 <p className={styles.addTitle}><span>*</span> Độ tuổi phù hợp (tối thiểu - tối đa):</p>
                                 <div style={{ display: 'flex', gap: '8px' }}>
                                     <Input
@@ -333,7 +345,7 @@ export default function AddCourse() {
                                     {formik.errors.maxAge && formik.touched.maxAge && (<p style={{ color: 'red', fontSize: '14px', margin: '0' }}>{formik.errors.maxAge}</p>)}
                                 </div>
                             </Col>
-                            <Col xs={12} lg={6} className={styles.column}>
+                            <Col xs={id ? 0 : 12} lg={id ? 0 : 6} className={styles.column}>
                                 <p className={styles.addTitle}><span>*</span> Chi phí:</p>
                                 <CurrencyInput
                                     className={`ant-input css-dev-only-do-not-override-1adbn6x ${styles.input}  ${styles.inputNumber}`}

@@ -85,7 +85,7 @@ export default function AttendanceManagement() {
         {
             title: 'Điểm danh',
             render: (_, record) => (
-                <Button type='link' onClick={() => navigate(`/check-attendance/${record.schedule.id}`)} icon={<EyeOutlined />} size='large' />
+                <Button type='link' onClick={() => navigate(`check-attendance/${record.schedule.id}`)} icon={<EyeOutlined />} size='large' />
             ),
             width: 120,
         },

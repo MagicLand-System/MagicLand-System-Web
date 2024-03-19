@@ -221,16 +221,26 @@ export default function Register() {
                 {formik.errors.email && formik.touched.email && (<p style={{ color: 'red', fontSize: '14px', margin: '0' }}>{formik.errors.email}</p>)}
               </div>
               <p className={styles.addTitle}><span>*</span> Ngày sinh:</p>
-              <DatePicker
-                allowClear={false}
-                className={styles.input}
-                disabledDate={(current) => {
-                  return (current > dayjs().subtract(3, 'year'))
-                }}
-                onChange={(date) => setDateOfBirth(date)}
-                defaultValue={dateOfBirth}
-                format={'DD/MM/YYYY'}
-                placeholder="Chọn ngày sinh" />
+
+              <ConfigProvider
+                theme={{
+                  components: {
+                    DatePicker: {
+                      activeBorderColor: '#f2c955'
+                    },
+                  },
+                }}>
+                <DatePicker
+                  allowClear={false}
+                  className={styles.input}
+                  disabledDate={(current) => {
+                    return (current > dayjs().subtract(3, 'year'))
+                  }}
+                  onChange={(date) => setDateOfBirth(date)}
+                  defaultValue={dateOfBirth}
+                  format={'DD/MM/YYYY'}
+                  placeholder="Chọn ngày sinh" />
+              </ConfigProvider>
               <div style={{ height: '24px', paddingLeft: '10px' }}>
                 {dateOfBirthError && (<p style={{ color: 'red', fontSize: '14px', margin: '0' }}>{dateOfBirthError}</p>)}
               </div>

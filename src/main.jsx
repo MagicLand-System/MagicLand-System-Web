@@ -9,23 +9,7 @@ import Login from './pages/login/Login.jsx'
 import AuthRoutes from './routes/AuthRoutes.jsx'
 import Register from './pages/register/Register.jsx'
 import UnLoginRoutes from './routes/UnLoginRoutes.jsx'
-import AddStudent from './pages/addStudent/AddStudent.jsx'
 import Error404 from './pages/error404/Error404.jsx'
-import Student from './pages/student/Student.jsx'
-import StudentSchedule from './pages/student/schedule/StudentSchedule.jsx'
-import StudentClasses from './pages/student/classes/StudentClasses.jsx'
-import StudentEvents from './pages/student/events/StudentEvents.jsx'
-import EditStudentInfo from './pages/student/editStudentInfo/EditStudentInfo.jsx'
-
-import HomePageComponent from './pages/User/HomePage'
-import CourseComponent from './pages/User/Course'
-import DetailCourseComponent from './pages/User/Course/Detail'
-import ListClassComponent from './pages/User/Course/ListClass'
-import DetailClassComponent from './pages/User/Course/ListClass/Detail'
-import PaymentComponent from './pages/User/Payment'
-import PaymentConfirmComponent from './pages/User/Payment/PaymentConfirm'
-import CartComponent from './pages/User/Cart'
-import { PrimeReactProvider } from 'primereact/api'
 
 import ClassManagement from './pages/classManagement/ClassManagement.jsx'
 import ClassDetail from './pages/classManagement/classDetail/ClassDetail.jsx'
@@ -40,11 +24,17 @@ import CourseDetail from './pages/courseManagement/courseDetail/CourseDetail.jsx
 import SyllabusManagement from './pages/syllabusManagement/SyllabusManagement.jsx'
 import AddSyllabus from './pages/syllabusManagement/addSyllabus/AddSyllabus.jsx'
 import SyllabusDetail from './pages/syllabusManagement/syllabusDetail/SyllabusDetail.jsx'
+import locale from 'antd/locale/vi_VN';
+import 'dayjs/locale/vi';
+import { ConfigProvider } from 'antd'
+import RoomManagement from './pages/roomManagement/RoomManagement.jsx'
+import LecturerManagement from './pages/lecturerManagement/LecturerManagement.jsx'
 
 const router = createBrowserRouter([
   //Route đã đăng nhập thì k vào được, k có header, footer
   {
-    element: <UnLoginRoutes />, children: [
+    element: <UnLoginRoutes />,
+    children: [
       {
         path: '/login',
         element: <Login />
@@ -66,37 +56,7 @@ const router = createBrowserRouter([
     element: <App />,
     errorElement: <Error404 />,
     children: [
-      { //các route phải đăng nhập mới vào được
-        element: <AuthRoutes role='PARENT' />,
-        children: [
-          {
-            path: '/add-student',
-            element: <AddStudent />
-          },
-          {
-            path: '/students/:id',
-            element: <Student />,
-            children: [
-              {
-                path: 'schedule',
-                element: <StudentSchedule />
-              },
-              {
-                path: 'classes/:status',
-                element: <StudentClasses />
-              },
-              {
-                path: 'events/:status',
-                element: <StudentEvents />
-              },
-              {
-                path: 'edit',
-                element: <EditStudentInfo />
-              },
-            ]
-          },
-        ]
-      },
+      //các route phải đăng nhập mới vào được
       {
         element: <AuthRoutes role='STAFF' />,
         children: [
@@ -121,11 +81,11 @@ const router = createBrowserRouter([
             element: <AttendanceManagement />
           },
           {
-            path: '/check-attendance/:id',
+            path: '/attendance-management/check-attendance/:id',
             element: <AttendanceDetail />
           },
           {
-            path: '/check-attendance/:scheduleId/make-up-class/:studentId',
+            path: '/attendance-management/check-attendance/:scheduleId/make-up-class/:studentId',
             element: <MakeUpClass />
           },
         ]
@@ -165,59 +125,25 @@ const router = createBrowserRouter([
             path: '/syllabus-management/update-syllabus/:id',
             element: <AddSyllabus />
           },
-        ]
-      },
-      // các route đăng nhập hay không vẫn vào được
-      {
-        element: <AuthRoutes role={null} />,
-        children: [
           {
-            path: '',
-            element: <HomePageComponent />
-          },
-          //courses
-          {
-            path: '/course',
-            element: <CourseComponent />
+            path: '/room-management',
+            element: <RoomManagement />
           },
           {
-            path: '/course/detail/:id',
-            element: <DetailCourseComponent />
-          },
-          {
-            path: '/course/listClass',
-            element: <ListClassComponent />
-          },
-          {
-            path: '/class/detail',
-            element: <DetailClassComponent />
-          },
-          //payment
-          {
-            path: '/payment',
-            element: <PaymentComponent />
-          },
-          {
-            path: '/payment/paymentConfirm',
-            element: <PaymentConfirmComponent />
-          },
-          //cart
-          {
-            path: '/cart',
-            element: <CartComponent />
+            path: '/lecturer-management',
+            element: <LecturerManagement />
           },
         ]
       },
-
     ]
   }
 ]
 )
 
 ReactDOM.createRoot(document.getElementById('root')).render(
-  <PrimeReactProvider>
-    <Provider store={store}>
+  <Provider store={store}>
+    <ConfigProvider locale={locale}>
       <RouterProvider router={router} />
-    </Provider>
-  </PrimeReactProvider>
+    </ConfigProvider>
+  </Provider>
 )

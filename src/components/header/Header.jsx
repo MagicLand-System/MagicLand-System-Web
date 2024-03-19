@@ -10,182 +10,26 @@ import { removeUser } from '../../store/features/authSlice';
 import { auth } from '../../../firebase.config';
 import logo from '../../assets/images/logo.png';
 
-const itemsNotLogin = [
-  {
-    label: (
-      <Link className={styles.label} to={'/'}>
-        Trang chủ
-      </Link>
-    ),
-    key: '/',
-    icon: <HomeOutlined />,
-  },
-  {
-    label: (
-      <Link className={styles.label} to={'/course'}>
-        Khóa học
-      </Link>
-    ),
-    key: '/course',
-  },
-  {
-    label: (
-      <Link className={styles.label} to={'#'}>
-        Sự kiện
-      </Link>
-    ),
-    key: '/events',
-  },
-  {
-    label: (
-      <Link className={styles.label} to={'#'}>
-        Về chúng tôi
-      </Link>
-    ),
-    key: '/about-us',
-  },
-  {
-    label: (
-      <Button style={{ paddingBottom: '5px' }}>
-        <Link to={'/login'}>
-          &nbsp;Đăng kí / Đăng nhập
-        </Link>
-      </Button>
-    ),
-    key: '/login',
-  },
-];
-
 export default function Header() {
   const location = useLocation();
   const currentPath = location.pathname;
   const user = useSelector(userSelector);
-  const [current, setCurrent] = useState(currentPath);
   const dispatch = useDispatch()
   const navigate = useNavigate()
-  const [items, setItems] = useState(itemsNotLogin)
+  const [items, setItems] = useState([])
+  const [selected, setSelected] = useState([])
   useEffect(() => {
-    if (user?.role.name === 'PARENT') {
-      setItems([
-        {
-          label: (
-            <Link className={styles.label} to={'/'}>
-              Trang chủ
-            </Link>
-          ),
-          key: '/',
-          icon: <HomeOutlined />,
-        },
-        {
-          label: (
-            <Link className={styles.label} to={'/course'}>
-              Khóa học
-            </Link>
-          ),
-          key: '/course',
-        },
-        {
-          label: (
-            <Link className={styles.label} to={'#'}>
-              Sự kiện
-            </Link>
-          ),
-          key: '/events',
-        },
-        {
-          label: (
-            <Link className={styles.label} to={'#'}>
-              Về chúng tôi
-            </Link>
-          ),
-          key: '/about-us',
-        },
-        {
-          label: <Link style={{ color: 'white' }} className={styles.label}>
-            Học viên
-          </Link>,
-          key: '/students',
-          children: [
-            user.students.length > 0 &&
-            {
-              type: 'group',
-              label: 'Học viên',
-              children: user?.students.map((student) => {
-                return {
-                  label: (
-                    <Link className={styles.label} to={`/students/${student.id}/classes/upcoming`}>
-                      {student.fullName}
-                    </Link>
-                  ),
-                  key: `/students/${student?.id}`,
-                }
-              })
-            }, {
-              label: (
-                <Link className={styles.label} to={'/add-student'}>
-                  Thêm học viên
-                </Link>
-              ),
-              key: '/add-student',
-            },
-          ]
-        },
-        {
-          label: (
-            <Link className={styles.label} to={'/cart'}>
-            </Link>
-          ),
-          key: '/cart',
-          icon: <ShoppingCartOutlined style={{ fontSize: 18 }} />,
-        },
-        {
-          label: (
-            <Button style={{ paddingBottom: '5px' }}>
-              {user?.fullName}
-            </Button>
-          ),
-          children: [
-            {
-              label: (
-                <Link className={styles.label} to={'#'}>
-                  Ví
-                </Link>
-              ),
-              key: '/wallet',
-            },
-            {
-              label: (
-                <Link className={styles.label} to={'#'}>
-                  Thông tin tài khoản
-                </Link>
-              ),
-              key: '/account',
-            },
-            {
-              label: (
-                <Link className={styles.label} to={'#'}>
-                  Đổi mật khẩu
-                </Link>
-              ),
-              key: '/change-password',
-            },
-            {
-              label: (
-                <Button style={{ border: 'none', width: '100%' }} onClick={async () => {
-                  await signOut(auth);
-                  dispatch(removeUser());
-                  localStorage.removeItem('accessToken');
-                  navigate('/login')
-                }}>
-                  Đăng xuất
-                </Button>
-              ),
-              key: 'logout',
-            }
-          ]
-        },
-      ]);
-    } else if (user?.role.name === 'STAFF') {
+    let selectedItems = items.filter(item => {
+      if (currentPath !== '' && currentPath.includes(item.key)) {
+        return currentPath.includes(item.key) && item.key !== '/';
+      } else {
+        return item.key === '/';
+      }
+    }).map(item => item.key);
+    setSelected(selectedItems);
+  }, [currentPath, items]);
+  useEffect(() => {
+    if (user?.role.name === 'STAFF') {
       setItems([
         {
           label: (
@@ -252,14 +96,6 @@ export default function Header() {
             },
             {
               label: (
-                <Link className={styles.label} to={'#'}>
-                  Đổi mật khẩu
-                </Link>
-              ),
-              key: '/change-password',
-            },
-            {
-              label: (
                 <Button style={{ border: 'none', width: '100%' }} onClick={async () => {
                   await signOut(auth);
                   dispatch(removeUser());
@@ -310,6 +146,22 @@ export default function Header() {
         },
         {
           label: (
+            <Link className={styles.label} to={'/room-management'}>
+              Phòng học
+            </Link>
+          ),
+          key: '/room-management',
+        },
+        {
+          label: (
+            <Link className={styles.label} to={'/lecturer-management'}>
+              Giáo viên
+            </Link>
+          ),
+          key: '/lecturer-management',
+        },
+        {
+          label: (
             <Link className={styles.label} to={'#'}>
               Nhân sự
             </Link>
@@ -330,14 +182,6 @@ export default function Header() {
                 </Link>
               ),
               key: '/account',
-            },
-            {
-              label: (
-                <Link className={styles.label} to={'#'}>
-                  Đổi mật khẩu
-                </Link>
-              ),
-              key: '/change-password',
             },
             {
               label: (
@@ -390,13 +234,7 @@ export default function Header() {
           }
         }}
       >
-        <Menu className={styles.menu} onClick={(e) => setCurrent(e.key)} selectedKeys={items.filter(item => {
-          if (current !== '' && current.includes(item.key)) {
-            return current.includes(item.key) && item.key !== '/'
-          } else {
-            return item.key === '/'
-          }
-        }).map(item => item.key)} mode="horizontal" items={items} />
+        <Menu className={styles.menu} selectedKeys={selected} mode="horizontal" items={items} />
       </ConfigProvider>
     </div>
   );

@@ -1,14 +1,10 @@
 import React, { useEffect, useState } from 'react'
 import styles from './ChangeClass.module.css'
-import { Button, Input, Table, Avatar, Checkbox, Select, Row, Col } from 'antd';
-import { SwapOutlined } from '@ant-design/icons';
+import { Button, Table, Checkbox } from 'antd';
 import Swal from 'sweetalert2';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
-import { formatDate, formatDayOfWeek, formatSlot } from '../../../utils/utils';
-import { changeClass, getSlots, getSuitableClass } from '../../../api/classesApi';
-import { compareAsc } from 'date-fns';
-
-const { Search } = Input;
+import { formatDate, formatDayOfWeek } from '../../../utils/utils';
+import { changeClass, getSuitableClass } from '../../../api/classesApi';
 
 export default function ChangeClass() {
     const navigate = useNavigate()
@@ -123,16 +119,14 @@ export default function ChangeClass() {
         try {
             setLoading(true);
             const data = await getSuitableClass({ classId, studentIdList: [studentId] });
-            if (data) {
-                setClasses(data);
-                setTableParams({
-                    pagination: {
-                        current: 1,
-                        pageSize: 10,
-                        total: data.length
-                    },
-                });
-            }
+            setClasses(data);
+            setTableParams({
+                pagination: {
+                    current: 1,
+                    pageSize: 10,
+                    total: data.length
+                },
+            });
         } catch (error) {
             console.log(error);
         } finally {

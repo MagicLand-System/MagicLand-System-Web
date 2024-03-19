@@ -4,12 +4,13 @@ import { Button, Input, Modal, Table, ConfigProvider } from 'antd';
 import { CloudUploadOutlined, PlusOutlined, CloudDownloadOutlined } from '@ant-design/icons';
 import Swal from 'sweetalert2';
 import { useNavigate } from 'react-router-dom';
-import { searchSyllabuses } from '../../api/syllabus';
+import { checkSyllabusInfo, searchSyllabuses } from '../../api/syllabus';
 import { getSubjects } from '../../api/courseApi';
 import { EyeOutlined } from '@ant-design/icons';
 import { formatDate } from '../../utils/utils';
 import { TEMPLATE_ADD_SYLLABUS_FILE } from '../../constants/constants';
 import * as XLSX from 'xlsx';
+import { parse } from 'date-fns';
 
 const { Search } = Input;
 
@@ -25,6 +26,7 @@ export default function SyllabusManagement() {
     const fileInputRef = useRef(null);
     const [fileInput, setFileInput] = useState(null);
     const [excelFile, setExcelFile] = useState(null);
+    const [apiLoading, setApiLoading] = useState(false)
 
     const [tableParams, setTableParams] = useState({
         pagination: {
@@ -55,9 +57,7 @@ export default function SyllabusManagement() {
     };
     async function getListsOfSubjects() {
         const data = await getSubjects();
-        if (data) {
-            setSubjects(data);
-        }
+        setSubjects(data);
     };
 
     useEffect(() => {
@@ -145,14 +145,13 @@ export default function SyllabusManagement() {
         let errors = []
         let syllabusDetail = null
         if (excelFile !== null) {
-            XLSX.SSF.is_date("dd/mm/yyyy");
+            setApiLoading(true)
             const workbook = XLSX.read(excelFile, { type: 'buffer' });
             //sheet general
             const worksheetGeneral = workbook.Sheets['Thông tin chung'];
             const dataGeneral = XLSX.utils.sheet_to_json(worksheetGeneral);
             let numOfSessions = 0;
             if (dataGeneral.length === 1) {
-                errors = errors.filter(error => error !== "Vui lòng điền đủ các thông tin chung");
                 let newDataGeneral = dataGeneral.map(row => ({
                     syllabusName: row['Tên giáo trình'] || null,
                     subjectCode: row['Mã giáo trình'] || null,
@@ -171,6 +170,30 @@ export default function SyllabusManagement() {
                 if (!generalData.syllabusName || !generalData.subjectCode || !generalData.type || !generalData.timePerSession || !generalData.numOfSessions || !generalData.description || !generalData.studentTasks || !generalData.scoringScale || !generalData.effectiveDate || !generalData.minAvgMarkToPass) {
                     errors.push("Vui lòng điền đủ các thông tin chung")
                 }
+                if (generalData.syllabusName && generalData.subjectCode) {
+                    try {
+                        const data = await checkSyllabusInfo(generalData.syllabusName, generalData.subjectCode)
+                        if (data !== "Thông Tin Giáo Trình Hợp Lệ") {
+                            errors.push(data)
+                        }
+                    } catch (error) {
+                        console.log(error)
+                    }
+                }
+                if (generalData.effectiveDate) {
+                    const today = new Date()
+                    today.setHours(0);
+                    today.setMinutes(0);
+                    today.setSeconds(0);
+
+                    const date = new parse(generalData.effectiveDate, "dd/MM/yyyy", new Date())
+                    date.setHours(12);
+                    date.setMinutes(0);
+                    date.setSeconds(0);
+                    if (date < today) {
+                        errors.push("Ngày hiệu lực không hợp lệ")
+                    }
+                }
                 newDataGeneral.forEach(data => {
                     const preRequisite = data.preRequisite?.split("\r\n");
                     data.preRequisite = preRequisite
@@ -184,7 +207,6 @@ export default function SyllabusManagement() {
             const dataSyllabus = XLSX.utils.sheet_to_json(worksheetSyllabus);
             let syllabusLength = 0
             if (dataSyllabus.length > 0) {
-                errors = errors.filter(error => error !== "Vui lòng điền đủ các thông tin giáo trình");
                 let newDataSyllabus = dataSyllabus.map(row => ({
                     index: row['STT'] || null,
                     topicName: row['Chủ đề'] || null,
@@ -222,14 +244,11 @@ export default function SyllabusManagement() {
                 if (!errors.includes("Vui lòng điền đủ các thông tin giáo trình")) {
                     errors.push("Thông tin số buổi và giáo trình không phù hợp");
                 }
-            } else {
-                errors = errors.filter(error => error !== "Thông tin số buổi và giáo trình không phù hợp");
             }
             //sheet assessment
             const worksheetAssessment = workbook.Sheets['Đánh giá'];
             const dataAssessment = XLSX.utils.sheet_to_json(worksheetAssessment);
             if (dataAssessment.length > 0) {
-                errors = errors.filter(error => error !== "Vui lòng điền đủ các thông tin đánh giá");
                 let newDataAssessment = dataAssessment.map(row => ({
                     type: row['Loại bài tập'] || null,
                     contentName: row['Nội dung'] || null,
@@ -245,9 +264,9 @@ export default function SyllabusManagement() {
                     const weight = data.weight.replace("%", "");
                     data.weight = weight
                     sumWeight = sumWeight + parseInt(weight);
-                    const duration = data.duration.toString();
+                    const duration = data.duration?.toString();
                     data.duration = duration
-                    if (!data.type || !data.contentName || !data.part || !data.weight || !(data.completionCriteria >= 0) || !data.method || !data.duration || !data.questionType) {
+                    if (!data.type || !data.contentName || !data.part || !data.weight || !(data.completionCriteria >= 0) || !data.method) {
                         if (!errors.includes("Vui lòng điền đủ các thông tin đánh giá")) {
                             errors.push("Vui lòng điền đủ các thông tin đánh giá");
                         }
@@ -255,8 +274,6 @@ export default function SyllabusManagement() {
                 });
                 if (sumWeight !== 100) {
                     errors.push("Vui lòng điền đúng đánh giá trọng số");
-                } else {
-                    errors = errors.filter(error => error !== "Vui lòng điền đúng đánh giá trọng số");
                 }
                 syllabusDetail = { ...syllabusDetail, examSyllabusRequests: newDataAssessment }
             } else {
@@ -273,6 +290,7 @@ export default function SyllabusManagement() {
                 })
             }
         }
+        setApiLoading(false)
     }
     function groupDataByOrder(inputData) {
         const groupedData = [];
@@ -348,17 +366,27 @@ export default function SyllabusManagement() {
                         <p>{fileInput ? fileInput.name : 'Chưa có tệp nào được chọn'}</p>
                     </div>
                     <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
-                        <Button onClick={handleImport} className={styles.saveButton}>
-                            Nạp tập tin
-                        </Button>
-                        <Button className={styles.cancelButton}
-                            onClick={() => {
-                                setFileInput(null)
-                                setExcelFile(null)
-                                setImportModalOpen(false)
-                            }}>
-                            Hủy
-                        </Button>
+                        {!apiLoading ?
+                            <>
+                                <Button onClick={handleImport} className={styles.saveButton}>
+                                    Nạp tập tin
+                                </Button>
+                                <Button className={styles.cancelButton}
+                                    onClick={() => {
+                                        setFileInput(null)
+                                        setExcelFile(null)
+                                        setImportModalOpen(false)
+                                    }}>
+                                    Hủy
+                                </Button>
+                            </> : <>
+                                <Button loading className={styles.saveButton}>
+                                    Nạp tập tin
+                                </Button>
+                                <Button disabled className={styles.cancelButton}>
+                                    Hủy
+                                </Button>
+                            </>}
                     </div>
                 </Modal>
             </ConfigProvider>

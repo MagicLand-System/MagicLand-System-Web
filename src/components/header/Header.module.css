@@ -6,7 +6,7 @@
   background-color: #3a0ca3;
   justify-content: space-between;
   position: sticky;
-  z-index: 2;
+  z-index: 1000;
   padding: 10px 20px 0px;
   top: 0;
 }

@@ -5,8 +5,7 @@ import { Button, Input, Table, DatePicker, ConfigProvider, Modal, Row, Col } fro
 import { EyeOutlined } from '@ant-design/icons';
 import dayjs from 'dayjs';
 import { useNavigate } from 'react-router-dom';
-import { getTransactions, getTransactionsDetail } from '../../api/transaction';
-import { current } from '@reduxjs/toolkit';
+import { getTransactions } from '../../api/transaction';
 
 const { Search } = Input;
 const { RangePicker } = DatePicker;
@@ -41,16 +40,14 @@ export default function TransactionManagement() {
     try {
       setLoading(true);
       const data = await getTransactions({ phone: search, startDate: startDate.toISOString(), endDate: endDate.toISOString() });
-      if (data) {
-        setTransactions(data);
-        setTableParams({
-          ...tableParams,
-          pagination: {
-            ...tableParams.pagination,
-            total: data.length,
-          },
-        });
-      }
+      setTransactions(data);
+      setTableParams({
+        ...tableParams,
+        pagination: {
+          ...tableParams.pagination,
+          total: data.length,
+        },
+      });
     } catch (error) {
       console.log(error);
     } finally {

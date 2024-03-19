@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react'
 import styles from './ClassManagement.module.css'
-import { Button, DatePicker, Radio, Input, Modal, Table, Select, Row, Col, Tabs, ConfigProvider, Alert } from 'antd';
+import { Button, DatePicker, Radio, Input, Modal, Table, Select, Row, Col, Tabs, ConfigProvider, Alert, Empty } from 'antd';
 import { CloudUploadOutlined, EyeOutlined, PlusOutlined, DeleteOutlined, CloudDownloadOutlined } from '@ant-design/icons';
 import Swal from 'sweetalert2';
 import { useFormik } from 'formik';
@@ -144,6 +144,7 @@ export default function ClassManagement() {
   const [excelFile, setExcelFile] = useState(null);
 
   const [apiLoading, setApiLoading] = useState(false)
+
   const [importRes, setImportRes] = useState(null)
 
   const handleFileChange = (e) => {
@@ -229,9 +230,9 @@ export default function ClassManagement() {
         const startDateWeekFormat = dayjs(startDate).format('dddd')
         const isStartDateCorrect = scheduleRequests.some((schedule) => schedule.dateOfWeek === startDateWeekFormat);
         if (isStartDateCorrect) {
+          setApiLoading(true)
           const stringStartDate = startDate.toISOString()
           try {
-            setApiLoading(true)
             await addClass({ ...values, startDate: stringStartDate, courseId: course, lecturerId: lecturer, method, scheduleRequests, roomId: room })
               .then(() => {
                 Swal.fire({
@@ -278,27 +279,25 @@ export default function ClassManagement() {
     },
     validationSchema: Yup.object({
       classCode: Yup.string().required("Vui lòng điền mã lớp học"),
-      leastNumberStudent: Yup.number().required("Vui lòng điền số học viên tối thiểu").min(1, "Số lượng học viên tối thiểu phải lớn hơn 1").max(25, "Số lượng học viên tối thiểu phải nhỏ hơn 25"),
+      leastNumberStudent: Yup.number().required("Vui lòng điền số học viên tối thiểu").min(1, "Số lượng học viên tối thiểu phải lớn hơn 1").max(30, "Số lượng học viên tối thiểu phải nhỏ hơn 30"),
       limitNumberStudent: Yup.number().required("Vui lòng điền số học viên tối đa").when(
         'leastNumberStudent',
         (minNum, schema) => schema.min(minNum, "Số lượng học viên tối đa phải lớn hơn hoặc bằng số tối thiểu")
-      ).max(25, "Số lượng học viên tối đa phải nhỏ hơn 25"),
+      ).max(30, "Số lượng học viên tối đa phải nhỏ hơn 30"),
     }),
   });
   async function getListOfClasses(searchString, status) {
     try {
       setLoading(true);
       const data = await getClasses({ searchString, status });
-      if (data) {
-        setClasses(data);
-        setTableParams({
-          pagination: {
-            current: 1,
-            pageSize: 10,
-            total: data.length
-          },
-        });
-      }
+      setClasses(data);
+      setTableParams({
+        pagination: {
+          current: 1,
+          pageSize: 10,
+          total: data.length
+        },
+      });
     } catch (error) {
       console.log(error);
     } finally {
@@ -317,6 +316,7 @@ export default function ClassManagement() {
   };
   async function getListsOfLecturer(startDate, schedules, courseId) {
     const data = await getLecturerBySchedule({ startDate, schedules, courseId });
+    data.sort((a, b) => a.numberOfClassesTeaching - b.numberOfClassesTeaching);
     setlecturers(data);
     setLecturersOptions(data);
   };
@@ -425,26 +425,23 @@ export default function ClassManagement() {
       const data = XLSX.utils.sheet_to_json(worksheet);
       let newData = []
       if (data.length > 0) {
-        errors = errors.filter(error => error !== "Vui lòng điền đủ các thông tin lớp học");
-        errors = errors.filter(error => error !== "Vui lòng điền thông tin lớp học");
         newData = data.map(row => ({
           index: row['STT'] || null,
-          courseName: row['Tên khóa học'] || null,
-          lecturerPhone: row['Số điện thoại giáo viên'] || null,
+          courseCode: row['Mã khóa học'] || null,
           leastNumberStudent: row['Số lượng học viên tối thiểu'] || null,
           limitNumberStudent: row['Số lượng học viên tối đa'] || null,
           startDate: row['Ngày bắt đầu'] || null,
           method: row['Hình thức'] || null,
-          roomName: row['Phòng học'] || null,
           scheduleRequests: row['Lịch học'] || null,
         }))
         newData.forEach(data => {
-          const scheduleTimes = data.scheduleRequests.split("\r\n");
-          data.scheduleRequests = scheduleTimes.map(time => ({ "scheduleTime": time.trim() }));
-          if (!data.index || !data.courseName || !data.lecturerPhone || !data.leastNumberStudent || !data.limitNumberStudent || !data.startDate || !data.method || !data.roomName || !data.scheduleRequests) {
+          if (!data.index || !data.courseCode || !data.leastNumberStudent || !data.limitNumberStudent || !data.startDate || !data.method || !data.scheduleRequests) {
             if (!errors.includes("Vui lòng điền đủ các thông tin lớp học")) {
               errors.push("Vui lòng điền đủ các thông tin lớp học");
             }
+          } else {
+            const scheduleTimes = data.scheduleRequests.split("\r\n");
+            data.scheduleRequests = scheduleTimes.map(time => ({ "scheduleTime": time.trim() }));
           }
         });
       } else {
@@ -454,14 +451,12 @@ export default function ClassManagement() {
         try {
           setApiLoading(true)
           const data = await importClass(newData)
-          if (data) {
-            setImportRes(data)
-            if (data.successRow > 0) {
-              getListOfClasses(search, status)
-            }
-            setExcelFile(null);
-            setFileInput(null);
+          setImportRes(data)
+          if (data?.successRow > 0) {
+            getListOfClasses(search, status)
           }
+          setExcelFile(null);
+          setFileInput(null);
         } catch (error) {
           Swal.fire({
             icon: "error",
@@ -533,7 +528,10 @@ export default function ClassManagement() {
       <h2 className={styles.title}>Quản lý lớp học</h2>
       <div style={{ display: 'flex', marginBottom: '16px' }}>
         <Button onClick={() => setImportModalOpen(true)} type='primary' className={styles.importButton} icon={<CloudUploadOutlined />}>Thêm nhiều lớp</Button>
-        <Button onClick={() => setAddModalOpen(true)} className={styles.addButton} icon={<PlusOutlined />}>Thêm lớp học</Button>
+        <Button onClick={() => {
+          getListsOfCourses();
+          setAddModalOpen(true)
+        }} className={styles.addButton} icon={<PlusOutlined />}>Thêm lớp học</Button>
       </div>
       <ConfigProvider
         theme={{
@@ -591,7 +589,7 @@ export default function ClassManagement() {
           <form onSubmit={formik.handleSubmit}>
             <Row>
               <Col span={6}>
-                <p className={styles.addTitle}><span>*</span> Khóa học:</p>
+                <p className={styles.addTitle} style={{ lineHeight: '18px' }}><span>*</span> Khóa học -<br /> mã giáo trình:</p>
               </Col>
               <Col span={18}>
                 <Select
@@ -602,17 +600,32 @@ export default function ClassManagement() {
                   className={styles.input}
                   placeholder="Chọn khóa học"
                   onSelect={(data) => { setCourse(data) }}
+                  notFoundContent={
+                    <Empty
+                      image={Empty.PRESENTED_IMAGE_SIMPLE}
+                      description={
+                        <span>
+                          Không tìm thấy khóa học
+                        </span>
+                      } />
+                  }
                   options={
                     coursesOptions
                       .sort((a, b) => a.courseDetail.courseName.toLowerCase().localeCompare(b.courseDetail.courseName.toLowerCase()))
                       .map((course) => ({
                         value: course.courseId,
-                        label: course.courseDetail.courseName,
+                        label: (
+                          <div>
+                            <span>{course.courseDetail.courseName}</span>
+                            <span style={{ float: 'right' }}>{course.courseDetail.subjectCode}</span>
+                          </div>
+                        ),
                       }))}
                   onSearch={(value) => {
                     if (value) {
                       const filteredOptions = courses.filter(
                         (course) => course.courseDetail.courseName.toLowerCase().includes(value?.toLowerCase())
+                          || course.courseDetail.subjectCode.toLowerCase().includes(value?.toLowerCase())
                       );
                       setCoursesOptions(filteredOptions);
                     } else {
@@ -620,28 +633,9 @@ export default function ClassManagement() {
                     }
                   }}
                 />
+                <p style={{ color: 'black', margin: 0 }}> Mã lớp học:&ensp;<span style={{ fontWeight: "bold" }}>{formik.values.classCode ? formik.values.classCode : "Chưa có"}</span></p>
                 <div style={{ height: '24px', paddingLeft: '10px' }}>
                   {courseError && (<p style={{ color: 'red', fontSize: '14px', margin: '0' }}>{courseError}</p>)}
-                </div>
-              </Col>
-            </Row>
-            <Row>
-              <Col span={6}>
-                <p className={styles.addTitle}><span>*</span> Mã lớp học:</p>
-              </Col>
-              <Col span={18}>
-                <Input
-                  readOnly
-                  className={styles.input}
-                  placeholder="Mã lớp học"
-                  name='classCode'
-                  value={formik.values.classCode}
-                  onChange={formik.handleChange}
-                  error={formik.touched.classCode && formik.errors.classCode}
-                  required
-                />
-                <div style={{ height: '24px', paddingLeft: '10px' }}>
-                  {formik.errors.classCode && formik.touched.classCode && (<p style={{ color: 'red', fontSize: '14px', margin: '0' }}>{formik.errors.classCode}</p>)}
                 </div>
               </Col>
             </Row>
@@ -656,7 +650,7 @@ export default function ClassManagement() {
                     name='leastNumberStudent'
                     type='number'
                     min={1}
-                    max={25}
+                    max={30}
                     value={formik.values.leastNumberStudent}
                     onChange={formik.handleChange}
                     error={formik.touched.leastNumberStudent && formik.errors.leastNumberStudent}
@@ -668,7 +662,7 @@ export default function ClassManagement() {
                     name='limitNumberStudent'
                     type='number'
                     min={1}
-                    max={25}
+                    max={30}
                     value={formik.values.limitNumberStudent}
                     onChange={formik.handleChange}
                     error={formik.touched.limitNumberStudent && formik.errors.limitNumberStudent}
@@ -698,7 +692,16 @@ export default function ClassManagement() {
                 <p style={{ color: '#999999', fontSize: '16px' }}>Lịch học hàng tuần:</p>
               </Col>
               <Col span={16} style={{ display: 'flex', alignItems: 'center', justifyContent: 'right' }}>
-                <Button style={{ marginRight: '24px' }} onClick={() => { setSchedulesRequests([...scheduleRequests, { dateOfWeek: null, slotId: null }]) }}>
+                <Button style={{ marginRight: '24px' }} onClick={() => {
+                  const filterSchedule = scheduleRequests.filter((schedule) => {
+                    return schedule.slotId !== null
+                  })
+                  if (scheduleRequests.length > 0 && filterSchedule.length > 0) {
+                    setSchedulesRequests([...scheduleRequests, { dateOfWeek: null, slotId: filterSchedule[filterSchedule.length - 1].slotId }])
+                  } else {
+                    setSchedulesRequests([...scheduleRequests, { dateOfWeek: null, slotId: null }])
+                  }
+                }}>
                   + Thêm lịch học
                 </Button>
               </Col>
@@ -760,11 +763,25 @@ export default function ClassManagement() {
                   className={styles.input}
                   placeholder="Giáo viên"
                   onSelect={(data) => { setLecturer(data) }}
+                  notFoundContent={
+                    <Empty
+                      image={Empty.PRESENTED_IMAGE_SIMPLE}
+                      description={
+                        <span>
+                          Không tìm thấy giáo viên
+                        </span>
+                      } />
+                  }
                   options={
                     lecturersOptions
                       .map((lecturer) => ({
                         value: lecturer.lectureId,
-                        label: `${lecturer.fullName} - ${lecturer.numberOfClassesTeaching}`,
+                        label: (
+                          <div>
+                            <span>{lecturer.fullName}</span>
+                            <span style={{ float: 'right' }}>{lecturer.numberOfClassesTeaching}</span>
+                          </div>
+                        )
                       }))}
                   onSearch={(value) => {
                     if (value) {
@@ -773,7 +790,7 @@ export default function ClassManagement() {
                       );
                       setLecturersOptions(filteredOptions);
                     } else {
-                      setCoursesOptions(courses);
+                      setLecturersOptions(lecturers);
                     }
                   }}
                 />
@@ -795,6 +812,15 @@ export default function ClassManagement() {
                   className={styles.input}
                   placeholder="Phòng học"
                   onSelect={(data) => { setRoom(data) }}
+                  notFoundContent={
+                    <Empty
+                      image={Empty.PRESENTED_IMAGE_SIMPLE}
+                      description={
+                        <span>
+                          Không tìm thấy phòng học
+                        </span>
+                      } />
+                  }
                   options={roomsOptions.map((room) => ({
                     value: room.id,
                     label: room.name
@@ -909,8 +935,21 @@ export default function ClassManagement() {
               <p style={{ color: 'red', marginTop: 0 }}>Số lớp tạo thất bại: <span>{importRes.failureRow}</span></p>
               {importRes.rowInsertResponse.map(row => (
                 <>
-                  {row.isSucess ? <Alert style={{ marginBottom: 5 }} message={`${row.index} - Tạo lớp thành công`} type="success" showIcon />
-                    : <Alert style={{ marginBottom: 5 }} message={`${row.index} - ${row.error}`} type="error" showIcon />}
+                  {row.isSucess
+                    ? <Alert style={{ marginBottom: 5 }} message={`${row.index} - Tạo lớp thành công`}
+                      description={
+                        <>
+                          <p style={{ margin: 0 }}><span style={{ fontWeight: 'bold' }}>Mã lớp học: </span>{row.successfulInformation.classCode}</p>
+                          <p style={{ margin: 0 }}><span style={{ fontWeight: 'bold' }}>Giáo viên: </span>{row.successfulInformation.lecturerName}</p>
+                          <p style={{ margin: 0 }}><span style={{ fontWeight: 'bold' }}>Phòng học: </span>{row.successfulInformation.roomName}</p>
+                        </>
+                      } type="success" showIcon />
+                    : <Alert style={{ marginBottom: 5 }} message={`${row.index} - Tạo lớp thất bại`}
+                      description={
+                        <>
+                          <p style={{ margin: 0 }}>{row.message}</p>
+                        </>
+                      } type="error" showIcon />}
                 </>
               ))}
             </>

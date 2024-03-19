@@ -1,12 +1,9 @@
 import React, { useState, useEffect } from 'react'
 import styles from './CourseManagement.module.css'
-import { Button, Input, Modal, Table, ConfigProvider } from 'antd';
-import { PlusOutlined } from '@ant-design/icons';
-import Swal from 'sweetalert2';
+import { Button, Input, Table } from 'antd';
+import { PlusOutlined, EyeOutlined } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
 import { getSubjects, searchCourses } from '../../api/courseApi';
-import { EyeOutlined } from '@ant-design/icons';
-import { formatDate } from '../../utils/utils';
 
 const { Search } = Input;
 
@@ -28,16 +25,14 @@ export default function CourseManagement() {
         try {
             setLoading(true);
             const data = await searchCourses(searchString);
-            if (data) {
-                setCourses(data);
-                setTableParams({
-                    pagination: {
-                        current: 1,
-                        pageSize: 10,
-                        total: data.length
-                    },
-                });
-            }
+            setCourses(data);
+            setTableParams({
+                pagination: {
+                    current: 1,
+                    pageSize: 10,
+                    total: data.length
+                },
+            });
         } catch (error) {
             console.log(error);
         } finally {
@@ -46,9 +41,7 @@ export default function CourseManagement() {
     };
     async function getListsOfSubjects() {
         const data = await getSubjects();
-        if (data) {
-            setSubjects(data);
-        }
+        setSubjects(data);
     };
 
     useEffect(() => {
@@ -91,9 +84,10 @@ export default function CourseManagement() {
             onFilter: (value, record) => record.courseDetail.subject === value,
         },
         {
-            title: 'Giá tiền',
-            dataIndex: 'price',
-            render: (price) => price.toLocaleString()
+            title: 'Mã giáo trình',
+            render: (_, record) => {
+                return `${record.courseDetail.subjectCode}`
+            },
         },
         {
             title: 'Số lớp học hiện tại',

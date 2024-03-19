@@ -27,3 +27,9 @@ export const updateSyllabusGeneral = async (id, credential) => {
   const response = await api.put(`/api/v1/Syllabus/${id}/updateOverall`, credential);
   return response.data;
 };
+export const checkSyllabusInfo = async (name, code) => {
+  const response = await api.get(`/api/v1/Syllabus/infor/checking`, {
+    params: { name, code }
+  });
+  return response.data;
+};

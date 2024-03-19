@@ -8,7 +8,6 @@ import { getDownloadURL, ref, uploadBytes } from 'firebase/storage';
 import { storage } from '../../../../firebase.config';
 import { importSyllabus, updateSyllabus } from '../../../api/syllabus';
 import Swal from 'sweetalert2';
-import DocViewer, { DocViewerRenderers } from '@cyntler/react-doc-viewer';
 
 const { Dragger } = Upload;
 
@@ -178,7 +177,7 @@ export default function AddSyllabus() {
             //files
             let promises = [];
             files.forEach((file, index) => {
-                const fileRef = ref(storage, `syllabusDetail.groupedSyllabus/${syllabusDetail.generalData.syllabusName}/${syllabusDetail.generalData.effectiveDate}/${file.file.name}`);
+                const fileRef = ref(storage, `syllabuses/${syllabusDetail.generalData.syllabusName}/${syllabusDetail.generalData.effectiveDate}/${file.file.name}`);
                 let uploadPromise = uploadBytes(fileRef, file.file.originFileObj)
                     .then(() => {
                         getDownloadURL(fileRef)
@@ -198,7 +197,7 @@ export default function AddSyllabus() {
             });
             Promise.all(promises)
                 .then(() => {
-                    const syllabusRef = ref(storage, `syllabusDetail.groupedSyllabus/${syllabusDetail.generalData.syllabusName}/${syllabusDetail.generalData.effectiveDate}/${syllabusDetail.syllabusFile.name}`);
+                    const syllabusRef = ref(storage, `syllabuses/${syllabusDetail.generalData.syllabusName}/${syllabusDetail.generalData.effectiveDate}/${syllabusDetail.syllabusFile.name}`);
                     uploadBytes(syllabusRef, syllabusDetail.syllabusFile).then(() => {
                         getDownloadURL(syllabusRef).then(async (url) => {
                             if (oldSyllabusId) {
@@ -210,6 +209,8 @@ export default function AddSyllabus() {
                                                 position: "center",
                                                 icon: "success",
                                                 title: "Chỉnh sửa giáo trình thành công",
+                                                showConfirmButton: false,
+                                                timer: 2000
                                             })
                                         }).then(() => {
                                             navigate(-2)
@@ -220,6 +221,8 @@ export default function AddSyllabus() {
                                         position: "center",
                                         icon: "error",
                                         title: "Chỉnh sửa giáo trình thất bại",
+                                        text: error.response.data.Error,
+                                        showConfirmButton: false
                                     })
                                 }
                             } else {
@@ -231,6 +234,7 @@ export default function AddSyllabus() {
                                                 position: "center",
                                                 icon: "success",
                                                 title: "Thêm giáo trình thành công",
+                                                showConfirmButton: false
                                             })
                                         }).then(() => {
                                             navigate(-1)
@@ -241,6 +245,8 @@ export default function AddSyllabus() {
                                         position: "center",
                                         icon: "error",
                                         title: "Thêm giáo trình thất bại",
+                                        text: error.response.data.Error,
+                                        showConfirmButton: false
                                     })
                                 }
                             }
@@ -493,7 +499,7 @@ export default function AddSyllabus() {
         {
             title: 'Loại câu hỏi',
             dataIndex: 'questionType',
-            render: (questionType) => questionType.split("\r\n").map((question, index) => <p key={index} style={{ margin: 0 }}>{question}</p>),
+            render: (questionType) => questionType?.split("\r\n").map((question, index) => <p key={index} style={{ margin: 0 }}>{question}</p>),
         },
     ];
     const exerciseColumns = [
@@ -656,10 +662,6 @@ export default function AddSyllabus() {
     const uploadProps = {
         name: 'file',
         multiple: true,
-        action: 'https://run.mocky.io/v3/435e224c-44fb-4773-9faf-380c5e6a2188',
-        headers: {
-            authorization: 'authorization-text',
-        },
         accept: 'application/msword, application/vnd.openxmlformats-officedocument.wordprocessingml.document, application/vnd.ms-powerpoint, application/vnd.openxmlformats-officedocument.presentationml.slideshow, application/vnd.openxmlformats-officedocument.presentationml.presentation, application/vnd.ms-excel, application/pdf, image/*',
         onChange({ file, fileList }) {
             const newFile = {
@@ -712,7 +714,7 @@ export default function AddSyllabus() {
                     </Col>
                     <Divider style={{ margin: 0 }} />
                     <Col span={4}>
-                        <p className={styles.syllabusTitle}>Mã môn:</p>
+                        <p className={styles.syllabusTitle}>Mã giáo trình:</p>
                     </Col>
                     <Col span={20} style={{ paddingLeft: 10 }}>
                         <p className={styles.syllabusDetail}>{syllabusDetail.generalData?.subjectCode}</p>
