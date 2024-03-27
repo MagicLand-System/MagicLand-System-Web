@@ -5,6 +5,8 @@ import { useNavigate } from 'react-router-dom';
 import { getLecturerSchedule } from '../../api/user';
 import { getLecturer, getSlots } from '../../api/classesApi';
 import dayjs from 'dayjs';
+import { formatDate, formatSlot } from '../../utils/utils';
+import { compareAsc } from 'date-fns';
 
 export default function LecturerManagement() {
     const navigate = useNavigate()
@@ -26,7 +28,25 @@ export default function LecturerManagement() {
         try {
             setLoading(true);
             const data = await getLecturerSchedule({ searchString: lecturer, startDate, endDate });
-            setSchedules(data);
+            const groupedData = []
+            data?.forEach(item => {
+                const check = groupedData.filter(group => item.startTime === group.startTime)
+                if (check.length === 0) {
+                    groupedData.push({
+                        startTime: item.startTime,
+                        endTime: item.endTime,
+                        lecturers: [item]
+                    })
+                } else {
+                    check[0].lecturers.push(item)
+                }
+            });
+            groupedData.sort((a, b) => {
+                const timeA = formatSlot(a.startTime);
+                const timeB = formatSlot(b.startTime);
+                return compareAsc(timeA, timeB);
+            })
+            setSchedules(groupedData);
         } catch (error) {
             console.log(error);
         } finally {
@@ -49,17 +69,16 @@ export default function LecturerManagement() {
     }, []);
 
     useEffect(() => {
-        if (lecturer) {
-            getListsOfSchedule(lecturer, startOfMonth(new Date(date)), endOfMonth(new Date(date)));
-        }
+        getListsOfSchedule(lecturer, startOfWeek(new Date(date)), endOfWeek(new Date(date)));
     }, [lecturer, date]);
     function startOfWeek(date) {
         var diff = date.getDate() - date.getDay() + (date.getDay() === 0 ? -6 : 1);
         return new Date(date.setDate(diff));
     }
     function endOfWeek(date) {
-        var lastday = date.getDate() - (date.getDay() - 1) + 6;
-        return new Date(date.setDate(lastday));
+        var diff = date.getDate() - date.getDay() + (date.getDay() === 0 ? -6 : 1);
+        diff = diff + 6
+        return new Date(date.setDate(diff));
     }
     function endOfMonth(date) {
         return new Date(date.getFullYear(), date.getMonth() + 1, 0);
@@ -78,53 +97,204 @@ export default function LecturerManagement() {
             setCourses([]);
         }
     };
-    // const columns = [
-    //     {
-    //         title: 'Tên khóa học',
-    //         render: (_, record) => {
-    //             return `${record.courseDetail.courseName}`
-    //         },
-    //         sorter: (a, b) => a.courseDetail.courseName.toLowerCase().localeCompare(b.courseDetail.courseName.toLowerCase()),
-    //     },
-    //     {
-    //         title: 'Loại khóa học',
-    //         render: (_, record) => {
-    //             return `${record.courseDetail.subject}`
-    //         },
-    //         sorter: (a, b) => a.courseDetail.subject.toLowerCase().localeCompare(b.courseDetail.subject.toLowerCase()),
-    //         filters: subjects.map((subject) => ({
-    //             text: subject.name,
-    //             value: subject.name
-    //         })),
-    //         onFilter: (value, record) => record.courseDetail.subject === value,
-    //     },
-    //     {
-    //         title: 'Giá tiền',
-    //         dataIndex: 'price',
-    //         render: (price) => price.toLocaleString()
-    //     },
-    //     {
-    //         title: 'Số lớp học hiện tại',
-    //         render: (_, record) => {
-    //             return `${record.numberClassOnGoing}`
-    //         }
-    //     },
-    //     {
-    //         title: 'Chi tiết',
-    //         render: (_, record) => (
-    //             <Button type='link' onClick={() => navigate(`detail/${record.courseId}`)} icon={<EyeOutlined />} size='large' />
-    //         ),
-    //         width: 120,
-    //     },
-    // ];
-    const timeColors = {
-        '7:00': '#3E618D',
-        '9:15': '#C83D64',
-        '12:00': '#FFB100',
-        '14:15': '#507E31',
-        '16:30': '#865FAB',
-        '19:00': '#FF782D'
-    };
+    const columns = [
+        {
+            title: 'Thời gian',
+            render: (_, record) => {
+                return `${record.startTime} - ${record.endTime}`
+            },
+            width: 120,
+        },
+        {
+            title: `Thứ 2 - ${formatDate(startOfWeek(new Date(date)))}`,
+            render: (_, record) => {
+                const schedules = record.lecturers?.filter((lecturer) => {
+                    const dateA = startOfWeek(new Date(date))
+                    dateA.setHours(0, 0, 0, 0)
+                    const dateB = new Date(lecturer.date)
+                    dateB.setHours(0, 0, 0, 0)
+                    return compareAsc(dateA, dateB) === 0
+                })
+                if (schedules) {
+                    return (
+                        <>
+                            {schedules.map(schedule => (
+                                <div style={{ margin: 10, textAlign: 'center' }}>
+                                    <p style={{ margin: 0, fontWeight: 'bold' }}>{schedule.fullName}</p>
+                                    <p style={{ margin: 0 }}>{schedule.classCode}</p>
+                                    <p style={{ margin: 0 }}>{schedule.classRoom}</p>
+                                </div>
+                            ))}
+                        </>
+                    )
+                } else {
+                    return null
+                }
+            }
+        }, {
+            title: `Thứ 3 - ${formatDate(new Date(new Date(startOfWeek(new Date(date))).getTime() + 24 * 60 * 60 * 1000))}`,
+            render: (_, record) => {
+                const schedules = record.lecturers?.filter((lecturer) => {
+                    const dateA = new Date(new Date(startOfWeek(new Date(date))).getTime() + 24 * 60 * 60 * 1000)
+                    dateA.setHours(0, 0, 0, 0)
+                    const dateB = new Date(lecturer.date)
+                    dateB.setHours(0, 0, 0, 0)
+                    return compareAsc(dateA, dateB) === 0
+                })
+                if (schedules) {
+                    return (
+                        <>
+                            {schedules.map(schedule => (
+                                <div style={{ margin: 10, textAlign: 'center' }}>
+                                    <p style={{ margin: 0, fontWeight: 'bold' }}>{schedule.fullName}</p>
+                                    <p style={{ margin: 0 }}>{schedule.classCode}</p>
+                                    <p style={{ margin: 0 }}>{schedule.classRoom}</p>
+                                </div>
+                            ))}
+                        </>
+                    )
+                } else {
+                    return null
+                }
+            }
+        },
+        {
+            title: `Thứ 4 - ${formatDate(new Date(new Date(startOfWeek(new Date(date))).getTime() + 2 * 24 * 60 * 60 * 1000))}`,
+            render: (_, record) => {
+                const schedules = record.lecturers?.filter((lecturer) => {
+                    const dateA = new Date(new Date(startOfWeek(new Date(date))).getTime() + 2 * 24 * 60 * 60 * 1000)
+                    dateA.setHours(0, 0, 0, 0)
+                    const dateB = new Date(lecturer.date)
+                    dateB.setHours(0, 0, 0, 0)
+                    return compareAsc(dateA, dateB) === 0
+                })
+                if (schedules) {
+                    return (
+                        <>
+                            {schedules.map(schedule => (
+                                <div style={{ margin: 10, textAlign: 'center' }}>
+                                    <p style={{ margin: 0, fontWeight: 'bold' }}>{schedule.fullName}</p>
+                                    <p style={{ margin: 0 }}>{schedule.classCode}</p>
+                                    <p style={{ margin: 0 }}>{schedule.classRoom}</p>
+                                </div>
+                            ))}
+                        </>
+                    )
+                } else {
+                    return null
+                }
+            }
+        },
+        {
+            title: `Thứ 5 - ${formatDate(new Date(new Date(startOfWeek(new Date(date))).getTime() + 3 * 24 * 60 * 60 * 1000))}`,
+            render: (_, record) => {
+                const schedules = record.lecturer?.filter((lecturer) => {
+                    const dateA = new Date(new Date(startOfWeek(new Date(date))).getTime() + 3 * 24 * 60 * 60 * 1000)
+                    dateA.setHours(0, 0, 0, 0)
+                    const dateB = new Date(lecturer.date)
+                    dateB.setHours(0, 0, 0, 0)
+                    return compareAsc(dateA, dateB) === 0
+                })
+                if (schedules) {
+                    return (
+                        <>
+                            {schedules.map(schedule => (
+                                <div style={{ margin: 10, textAlign: 'center' }}>
+                                    <p style={{ margin: 0, fontWeight: 'bold' }}>{schedule.fullName}</p>
+                                    <p style={{ margin: 0 }}>{schedule.classCode}</p>
+                                    <p style={{ margin: 0 }}>{schedule.classRoom}</p>
+                                </div>
+                            ))}
+                        </>
+                    )
+                } else {
+                    return null
+                }
+            }
+        },
+        {
+            title: `Thứ 6 - ${formatDate(new Date(new Date(startOfWeek(new Date(date))).getTime() + 4 * 24 * 60 * 60 * 1000))}`,
+            render: (_, record) => {
+                const schedules = record.lecturers?.filter((lecturer) => {
+                    const dateA = new Date(new Date(startOfWeek(new Date(date))).getTime() + 4 * 24 * 60 * 60 * 1000)
+                    dateA.setHours(0, 0, 0, 0)
+                    const dateB = new Date(lecturer.date)
+                    dateB.setHours(0, 0, 0, 0)
+                    return compareAsc(dateA, dateB) === 0
+                })
+                if (schedules) {
+                    return (
+                        <>
+                            {schedules.map(schedule => (
+                                <div style={{ margin: 10, textAlign: 'center' }}>
+                                    <p style={{ margin: 0, fontWeight: 'bold' }}>{schedule.fullName}</p>
+                                    <p style={{ margin: 0 }}>{schedule.classCode}</p>
+                                    <p style={{ margin: 0 }}>{schedule.classRoom}</p>
+                                </div>
+                            ))}
+                        </>
+                    )
+                } else {
+                    return null
+                }
+            }
+        },
+        {
+            title: `Thứ 7 - ${formatDate(new Date(new Date(startOfWeek(new Date(date))).getTime() + 5 * 24 * 60 * 60 * 1000))}`,
+            render: (_, record) => {
+                const schedules = record.lecturers?.filter((lecturer) => {
+                    const dateA = new Date(new Date(startOfWeek(new Date(date))).getTime() + 5 * 24 * 60 * 60 * 1000)
+                    dateA.setHours(0, 0, 0, 0)
+                    const dateB = new Date(lecturer.date)
+                    dateB.setHours(0, 0, 0, 0)
+                    return compareAsc(dateA, dateB) === 0
+                })
+                if (schedules) {
+                    return (
+                        <>
+                            {schedules.map(schedule => (
+                                <div style={{ margin: 10, textAlign: 'center' }}>
+                                    <p style={{ margin: 0, fontWeight: 'bold' }}>{schedule.fullName}</p>
+                                    <p style={{ margin: 0 }}>{schedule.classCode}</p>
+                                    <p style={{ margin: 0 }}>{schedule.classRoom}</p>
+                                </div>
+                            ))}
+                        </>
+                    )
+                } else {
+                    return null
+                }
+            }
+        },
+
+        {
+            title: `Chủ nhật - ${formatDate(endOfWeek(new Date(date)))}`,
+            render: (_, record) => {
+                const schedules = record.lecturers?.filter((lecturer) => {
+                    const dateA = endOfWeek(new Date(date))
+                    dateA.setHours(0, 0, 0, 0)
+                    const dateB = new Date(lecturer.date)
+                    dateB.setHours(0, 0, 0, 0)
+                    return compareAsc(dateA, dateB) === 0
+                })
+                if (schedules) {
+                    return (
+                        <>
+                            {schedules.map(schedule => (
+                                <div style={{ margin: 10, textAlign: 'center' }}>
+                                    <p style={{ margin: 0, fontWeight: 'bold' }}>{schedule.fullName}</p>
+                                    <p style={{ margin: 0 }}>{schedule.classCode}</p>
+                                    <p style={{ margin: 0 }}>{schedule.classRoom}</p>
+                                </div>
+                            ))}
+                        </>
+                    )
+                } else {
+                    return null
+                }
+            }
+        },
+    ];
 
     return (
         <div className={styles.container}>
@@ -140,7 +310,8 @@ export default function LecturerManagement() {
                     }}>
                     <DatePicker
                         value={date}
-                        picker="month"
+                        picker="week"
+                        format={`${formatDate(startOfWeek(new Date(date)))} ~ ${formatDate(endOfWeek(new Date(date)))}`}
                         allowClear={false}
                         className={styles.input}
                         onChange={(date) => setDate(date)}
@@ -182,37 +353,16 @@ export default function LecturerManagement() {
                 <div style={{ textAlign: 'center' }}>
                     <Spin />
                 </div>
-                : lecturer && schedules.length > 0 ?
-                    <Calendar
-                        value={date}
-                        cellRender={(value) => {
-                            const schedulesOnThisDay = schedules.filter(schedule => {
-                                const date = new Date(schedule.date).setHours(0, 0, 0, 0)
-                                const valueDate = new Date(value).setHours(0, 0, 0, 0)
-                                return date === valueDate
-                            });
-                            return (
-                                <ul>
-                                    {schedulesOnThisDay.map((schedule, index) => (
-                                        <li key={index} style={{ color: timeColors[schedule.startTime] }}>{schedule.classCode}: <br />{schedule.startTime} - {schedule.endTime}</li>
-                                    ))}
-                                </ul>
-                            );
-                        }}
-                        headerRender={() => { <></> }}
-                        onSelect={(date) => setDate(date)}
-                    />
-                    : <h5 style={{ textAlign: 'center', fontSize: '1.2rem' }}>Vui lòng chọn giáo viên</h5>
+                : <Table
+                    columns={columns}
+                    rowKey={(record) => record.startTime}
+                    dataSource={schedules}
+                    pagination={null}
+                    loading={loading}
+                    onChange={handleTableChange}
+                    scroll={{ y: 'calc(100vh - 220px)' }}
+                />
             }
-            {/* <Table
-                columns={columns}
-                rowKey={(record) => record.courseId}
-                dataSource={courses}
-                pagination={tableParams.pagination}
-                loading={loading}
-                onChange={handleTableChange}
-                scroll={{ y: 'calc(100vh - 220px)' }}
-            /> */}
         </div >
     )
 }

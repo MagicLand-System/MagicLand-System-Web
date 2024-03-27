@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react'
 import styles from './ClassManagement.module.css'
 import { Button, DatePicker, Radio, Input, Modal, Table, Select, Row, Col, Tabs, ConfigProvider, Alert, Empty } from 'antd';
-import { CloudUploadOutlined, EyeOutlined, PlusOutlined, DeleteOutlined, CloudDownloadOutlined } from '@ant-design/icons';
+import { CloudUploadOutlined, EyeOutlined, PlusOutlined, DeleteOutlined, CloudDownloadOutlined, EditOutlined } from '@ant-design/icons';
 import Swal from 'sweetalert2';
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
@@ -35,7 +35,7 @@ const statusList = [
   },
 ]
 
-const ScheduleInput = ({ index, schedule, onDateChange, onSlotChange, onDelete, slots }) => {
+const ScheduleInput = ({ index, schedule, onDateChange, onSlotChange, onDelete, slots, disabled }) => {
   const { dateOfWeek, slotId } = schedule;
   const sortedSlots = slots.sort((a, b) => {
     const timeA = formatSlot(a.startTime);
@@ -45,42 +45,44 @@ const ScheduleInput = ({ index, schedule, onDateChange, onSlotChange, onDelete, 
   return (
     <div style={{ display: 'flex', gap: '8px', marginBottom: '8px' }}>
       <Select
+        disabled={disabled}
         className={styles.input}
         placeholder={`Lịch học ${index + 1}`}
         value={dateOfWeek}
         onChange={(value) => onDateChange(index, value)}
         options={[
           {
-            value: 'Monday',
+            value: 'monday',
             label: 'Thứ 2',
           },
           {
-            value: 'Tuesday',
+            value: 'tuesday',
             label: 'Thứ 3',
           },
           {
-            value: 'Wednesday',
+            value: 'wednesday',
             label: 'Thứ 4',
           },
           {
-            value: 'Thursday',
+            value: 'thursday',
             label: 'Thứ 5',
           },
           {
-            value: 'Friday',
+            value: 'friday',
             label: 'Thứ 6',
           },
           {
-            value: 'Saturday',
+            value: 'saturday',
             label: 'Thứ 7',
           },
           {
-            value: 'Sunday',
+            value: 'sunday',
             label: 'Chủ nhật'
           }
         ]}
       />
       <Select
+        disabled={disabled}
         className={styles.input}
         value={slotId}
         placeholder="Giờ học"
@@ -91,8 +93,8 @@ const ScheduleInput = ({ index, schedule, onDateChange, onSlotChange, onDelete, 
         }))}
       />
       {index !== 0 ? (
-        <DeleteOutlined style={{ fontSize: '1rem' }} onClick={() => onDelete(index)} />
-      ) : (<DeleteOutlined style={{ fontSize: '1rem', color: '#e6e6e6' }} />)}
+        <DeleteOutlined disabled={disabled} style={{ fontSize: '1rem' }} onClick={() => onDelete(index)} />
+      ) : (<DeleteOutlined disabled={disabled} style={{ fontSize: '1rem', color: '#e6e6e6' }} />)}
     </div>
   );
 };
@@ -129,7 +131,7 @@ export default function ClassManagement() {
   const [startDate, setStartDate] = useState(null);
   const [startDateError, setStartDateError] = useState(null)
 
-  const [method, setMethod] = useState('OFFLINE')
+  const [method, setMethod] = useState('offline')
   const [room, setRoom] = useState(null)
   const [roomError, setRoomError] = useState(null)
 
@@ -227,8 +229,8 @@ export default function ClassManagement() {
         setStartDateError(null)
         setRoomError(null)
         setSchedulesError(null)
-        const startDateWeekFormat = dayjs(startDate).format('dddd')
-        const isStartDateCorrect = scheduleRequests.some((schedule) => schedule.dateOfWeek === startDateWeekFormat);
+        const startDateWeekFormat = dayjs(startDate).format('dddd').toLowerCase()
+        const isStartDateCorrect = scheduleRequests.some((schedule) => schedule.dateOfWeek.toLowerCase() === startDateWeekFormat);
         if (isStartDateCorrect) {
           setApiLoading(true)
           const stringStartDate = startDate.toISOString()
@@ -295,7 +297,7 @@ export default function ClassManagement() {
         pagination: {
           current: 1,
           pageSize: 10,
-          total: data.length
+          total: data?.length
         },
       });
     } catch (error) {
@@ -327,9 +329,7 @@ export default function ClassManagement() {
   };
   async function getClassCodeByCourseId(course) {
     const data = await getClassCode(course);
-    formik.setValues({
-      classCode: data.classCode
-    })
+    formik.setFieldValue("classCode", data.classCode)
   }
 
   useEffect(() => {
@@ -361,7 +361,9 @@ export default function ClassManagement() {
     getListOfClasses(search, status)
   }, [search, status])
   useEffect(() => {
-    getClassCodeByCourseId(course)
+    if (course) {
+      getClassCodeByCourseId(course)
+    }
   }, [course])
 
   const handleTableChange = (pagination, filters, sorter, extra) => {
@@ -415,6 +417,7 @@ export default function ClassManagement() {
   };
 
   const handleImport = async (e) => {
+    setImportRes(null)
     e.preventDefault();
     let errors = []
     if (excelFile !== null) {
@@ -428,8 +431,8 @@ export default function ClassManagement() {
         newData = data.map(row => ({
           index: row['STT'] || null,
           courseCode: row['Mã khóa học'] || null,
-          leastNumberStudent: row['Số lượng học viên tối thiểu'] || null,
-          limitNumberStudent: row['Số lượng học viên tối đa'] || null,
+          leastNumberStudent: row['Số lượng học viên tối thiểu'] >= 0 ? row['Số lượng học viên tối thiểu'] : null,
+          limitNumberStudent: row['Số lượng học viên tối đa'] >= 0 ? row['Số lượng học viên tối đa'] : null,
           startDate: row['Ngày bắt đầu'] || null,
           method: row['Hình thức'] || null,
           scheduleRequests: row['Lịch học'] || null,
@@ -477,6 +480,40 @@ export default function ClassManagement() {
     }
   }
 
+  const handleErrorImport = (dataClass) => {
+    formik.resetForm()
+    if (dataClass.courseId !== "00000000-0000-0000-0000-000000000000") {
+      setCourse(dataClass.courseId)
+    } else {
+      setCourse(null)
+    }
+    setCoursesOptions(courses)
+    setCourseError(null)
+
+    setLecturer(dataClass.lecturerId)
+    setlecturers([])
+    setLecturersOptions([])
+    setLecturerError(null)
+
+    setStartDate(dayjs(dataClass.startDate))
+
+    setRoom(dataClass.roomId)
+    setRoomError(null)
+
+    setMethod(dataClass.method)
+
+    formik.setValues({
+      leastNumberStudent: dataClass.leastNumberStudent,
+      limitNumberStudent: dataClass.limitNumberStudent,
+    })
+    getClassCodeByCourseId(dataClass.courseId)
+
+    setSchedulesRequests(dataClass.scheduleRequests)
+    setSchedulesError(null)
+    setImportModalOpen(false)
+    setAddModalOpen(true)
+  }
+
   const columns = [
     {
       title: 'Mã lớp học',
@@ -517,7 +554,7 @@ export default function ClassManagement() {
     }
 
     const validDates = scheduleRequests.map(schedule => schedule.dateOfWeek);
-    if (current && !validDates.includes(dayjs(current).format('dddd'))) {
+    if (current && !validDates.includes(dayjs(current).format('dddd').toLowerCase())) {
       return true;
     }
 
@@ -632,6 +669,7 @@ export default function ClassManagement() {
                       setCoursesOptions(courses);
                     }
                   }}
+                  disabled={apiLoading}
                 />
                 <p style={{ color: 'black', margin: 0 }}> Mã lớp học:&ensp;<span style={{ fontWeight: "bold" }}>{formik.values.classCode ? formik.values.classCode : "Chưa có"}</span></p>
                 <div style={{ height: '24px', paddingLeft: '10px' }}>
@@ -656,6 +694,7 @@ export default function ClassManagement() {
                     error={formik.touched.leastNumberStudent && formik.errors.leastNumberStudent}
                     className={styles.input}
                     required
+                    disabled={apiLoading}
                   />
                   <Input
                     placeholder="Tối đa"
@@ -668,6 +707,7 @@ export default function ClassManagement() {
                     error={formik.touched.limitNumberStudent && formik.errors.limitNumberStudent}
                     className={styles.input}
                     required
+                    disabled={apiLoading}
                   />
                 </div>
                 <div style={{ height: '24px', paddingLeft: '10px' }}>
@@ -681,9 +721,9 @@ export default function ClassManagement() {
                 <p className={styles.addTitle}><span>*</span> Hình thức:</p>
               </Col>
               <Col span={18} style={{ display: 'flex', alignItems: 'center' }}>
-                <Radio.Group onChange={(e) => { setMethod(e.target.value) }} value={method}>
-                  <Radio value='OFFLINE'>Offline</Radio>
-                  <Radio value='ONLINE'>Online</Radio>
+                <Radio.Group disabled={apiLoading} onChange={(e) => { setMethod(e.target.value) }} value={method}>
+                  <Radio value='offline'>Offline</Radio>
+                  <Radio value='online'>Online</Radio>
                 </Radio.Group>
               </Col>
             </Row>
@@ -692,7 +732,7 @@ export default function ClassManagement() {
                 <p style={{ color: '#999999', fontSize: '16px' }}>Lịch học hàng tuần:</p>
               </Col>
               <Col span={16} style={{ display: 'flex', alignItems: 'center', justifyContent: 'right' }}>
-                <Button style={{ marginRight: '24px' }} onClick={() => {
+                <Button disabled={apiLoading} style={{ marginRight: '24px' }} onClick={() => {
                   const filterSchedule = scheduleRequests.filter((schedule) => {
                     return schedule.slotId !== null
                   })
@@ -720,6 +760,7 @@ export default function ClassManagement() {
                     onSlotChange={handleSlotChange}
                     onDelete={handleDeleteSchedule}
                     slots={slotsOptions}
+                    disabled={apiLoading}
                   />
                 </Col>
               </Row>
@@ -744,7 +785,8 @@ export default function ClassManagement() {
                   disabledDate={disabledDate}
                   onChange={(date) => setStartDate(date)}
                   format={'DD/MM/YYYY'}
-                  placeholder="Ngày bắt đầu" />
+                  placeholder="Ngày bắt đầu"
+                  disabled={apiLoading} />
                 <div style={{ height: '24px', paddingLeft: '10px' }}>
                   {startDateError && (<p style={{ color: 'red', fontSize: '14px', margin: '0' }}>{startDateError}</p>)}
                 </div>
@@ -793,6 +835,7 @@ export default function ClassManagement() {
                       setLecturersOptions(lecturers);
                     }
                   }}
+                  disabled={apiLoading}
                 />
                 <div style={{ height: '24px', paddingLeft: '10px' }}>
                   {lecturerError && (<p style={{ color: 'red', fontSize: '14px', margin: '0' }}>{lecturerError}</p>)}
@@ -833,6 +876,7 @@ export default function ClassManagement() {
                       setRoomsOptions(filteredOptions);
                     }
                   }}
+                  disabled={apiLoading}
                 />
                 <div style={{ height: '24px', paddingLeft: '10px' }}>
                   {roomError && (<p style={{ color: 'red', fontSize: '14px', margin: '0' }}>{roomError}</p>)}
@@ -861,8 +905,10 @@ export default function ClassManagement() {
                     setCourseError(null)
 
                     setLecturer(null)
+                    setLecturersOptions(lecturers)
                     setLecturerError(null)
 
+                    setMethod("offline")
                     setStartDate(null)
 
                     setRoom(null)
@@ -933,23 +979,61 @@ export default function ClassManagement() {
             <>
               <p style={{ color: 'green', marginBottom: 0 }}>Số lớp tạo thành công: <span>{importRes.successRow}</span></p>
               <p style={{ color: 'red', marginTop: 0 }}>Số lớp tạo thất bại: <span>{importRes.failureRow}</span></p>
-              {importRes.rowInsertResponse.map(row => (
+              {importRes.rowInsertResponse.map((row, index) => (
                 <>
                   {row.isSucess
-                    ? <Alert style={{ marginBottom: 5 }} message={`${row.index} - Tạo lớp thành công`}
+                    ? <Alert key={index} style={{ marginBottom: 5 }} message={`${row.index} - Tạo lớp thành công`}
                       description={
-                        <>
-                          <p style={{ margin: 0 }}><span style={{ fontWeight: 'bold' }}>Mã lớp học: </span>{row.successfulInformation.classCode}</p>
-                          <p style={{ margin: 0 }}><span style={{ fontWeight: 'bold' }}>Giáo viên: </span>{row.successfulInformation.lecturerName}</p>
-                          <p style={{ margin: 0 }}><span style={{ fontWeight: 'bold' }}>Phòng học: </span>{row.successfulInformation.roomName}</p>
-                        </>
+                        <Row>
+                          <Col span={7}>
+                            <p style={{ margin: 0, fontWeight: 'bold' }}>Mã lớp học:</p>
+                          </Col>
+                          <Col span={17}>
+                            <p style={{ margin: 0 }}>{row.successfulInformation.classCode}</p>
+                          </Col>
+                          <Col span={7}>
+                            <p style={{ margin: 0, fontWeight: 'bold' }}>Giáo viên:</p>
+                          </Col>
+                          <Col span={17}>
+                            <p style={{ margin: 0 }}>{row.successfulInformation.lecturerName}</p>
+                          </Col>
+                          <Col span={7}>
+                            <p style={{ margin: 0, fontWeight: 'bold' }}>Phòng học:</p>
+                          </Col>
+                          <Col span={17}>
+                            <p style={{ margin: 0 }}>{row.successfulInformation.roomName}</p>
+                          </Col>
+                          <Col span={7}>
+                            <p style={{ margin: 0, fontWeight: 'bold' }}>Lịch học:</p>
+                          </Col>
+                          <Col span={17}>
+                            {row.successfulInformation.times?.map(time =>
+                              <p style={{ margin: 0 }}>{time}</p>
+                            )}
+                          </Col>
+                          <Col span={7}>
+                            <p style={{ margin: 0, fontWeight: 'bold' }}>Ngày bắt đầu:</p>
+                          </Col>
+                          <Col span={17}>
+                            <p style={{ margin: 0 }}>{row?.successfulInformation?.startDate && formatDate(new Date(row.successfulInformation.startDate))}</p>
+                          </Col>
+                        </Row>
                       } type="success" showIcon />
-                    : <Alert style={{ marginBottom: 5 }} message={`${row.index} - Tạo lớp thất bại`}
+                    : <Alert
+                      key={index}
+                      style={{ marginBottom: 5 }}
+                      message={`${row.index} - Tạo lớp thất bại`}
                       description={
                         <>
-                          <p style={{ margin: 0 }}>{row.message}</p>
+                          <p style={{ margin: 0 }}>{row?.messsage}</p>
                         </>
-                      } type="error" showIcon />}
+                      }
+                      type="error"
+                      showIcon
+                      action={
+                        <Button type='link' onClick={() => handleErrorImport(row.createClass)} icon={<EditOutlined />} size='large' />
+                      } />
+                  }
                 </>
               ))}
             </>

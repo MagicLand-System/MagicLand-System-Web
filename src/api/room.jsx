@@ -5,9 +5,9 @@ export const getRoomSchedule = async (credential) => {
     });
     return response.data;
 };
-export const getRoomDailySchedule = async (credential) => {
+export const getRoomDailySchedule = async (date, searchString) => {
     const response = await api.get("/api/v1/rooms/v2/admin/get", {
-        params: credential
+        params: { date, searchString }
     });
     return response.data;
 };

@@ -12,7 +12,7 @@ import { ref, uploadBytes, getDownloadURL } from 'firebase/storage'
 import { v4 } from 'uuid'
 import { CloudUploadOutlined, DeleteOutlined } from '@ant-design/icons';
 import { useNavigate, useParams } from 'react-router-dom';
-import { getAvailableSyllabuses, getSyllabus } from '../../../api/syllabus';
+import { getAvailableSyllabuses, getSyllabus, getSyllabusGeneral } from '../../../api/syllabus';
 
 
 export default function AddCourse() {
@@ -74,7 +74,7 @@ export default function AddCourse() {
         setSyllabusesOptions(data);
     };
     async function getSyllabusDetail(id) {
-        const data = await getSyllabus(id);
+        const data = await getSyllabusGeneral(id);
         setSyllabusDetail(data);
     };
     async function getCourseDetail(id) {
@@ -291,6 +291,7 @@ export default function AddCourse() {
                                                 setSyllabusesOptions(syllabuses);
                                             }
                                         }}
+                                        disabled={apiLoading}
                                     />
                                     <div style={{ height: '24px', paddingLeft: '10px' }}>
                                         {syllabusError && (<p style={{ color: 'red', fontSize: '14px', margin: '0' }}>{syllabusError}</p>)}
@@ -307,6 +308,7 @@ export default function AddCourse() {
                                     onChange={formik.handleChange}
                                     error={formik.touched.courseName && formik.errors.courseName}
                                     required
+                                    disabled={apiLoading}
                                 />
                                 <div style={{ height: '24px', paddingLeft: '10px' }}>
                                     {formik.errors.courseName && formik.touched.courseName && (<p style={{ color: 'red', fontSize: '14px', margin: '0' }}>{formik.errors.courseName}</p>)}
@@ -326,6 +328,7 @@ export default function AddCourse() {
                                         error={formik.touched.minAge && formik.errors.minAge}
                                         className={styles.input}
                                         required
+                                        disabled={apiLoading}
                                     />
                                     <Input
                                         placeholder="Tối đa"
@@ -338,6 +341,7 @@ export default function AddCourse() {
                                         error={formik.touched.maxAge && formik.errors.maxAge}
                                         className={styles.input}
                                         required
+                                        disabled={apiLoading}
                                     />
                                 </div>
                                 <div style={{ height: '24px', paddingLeft: '10px' }}>
@@ -348,7 +352,7 @@ export default function AddCourse() {
                             <Col xs={id ? 0 : 12} lg={id ? 0 : 6} className={styles.column}>
                                 <p className={styles.addTitle}><span>*</span> Chi phí:</p>
                                 <CurrencyInput
-                                    className={`ant-input css-dev-only-do-not-override-1adbn6x ${styles.input}  ${styles.inputNumber}`}
+                                    className={`ant-input css-dev-only-do-not-override-1wdnj1i ${styles.input} ${styles.inputNumber}`}
                                     placeholder="Chi phí"
                                     allowDecimals={false}
                                     value={price}
@@ -356,6 +360,7 @@ export default function AddCourse() {
                                     onValueChange={(value, name, values) => setPrice(parseInt(value))}
                                     required
                                     intlConfig={{ locale: 'vi-VN', currency: 'VND' }}
+                                    disabled={apiLoading}
                                 />
                                 <div style={{ height: '24px', paddingLeft: '10px' }}>
                                     {priceError && (<p style={{ color: 'red', fontSize: '14px', margin: '0' }}>{priceError}</p>)}
@@ -372,6 +377,7 @@ export default function AddCourse() {
                                     onChange={formik.handleChange}
                                     error={formik.touched.mainDescription && formik.errors.mainDescription}
                                     required
+                                    disabled={apiLoading}
                                 />
                                 <div style={{ height: '24px', paddingLeft: '10px' }}>
                                     {formik.errors.mainDescription && formik.touched.mainDescription && (<p style={{ color: 'red', fontSize: '14px', margin: '0' }}>{formik.errors.mainDescription}</p>)}
@@ -383,7 +389,7 @@ export default function AddCourse() {
                                         <p className={styles.addTitle}><span>*</span> Mô tả chi tiết:</p>
                                     </Col>
                                     <Col span={16} style={{ display: 'flex', alignItems: 'center', justifyContent: 'right', marginBottom: 8 }}>
-                                        <Button onClick={() => { setSubDescriptions([...subDescriptions, { title: null, subDescriptionContentRequests: null }]) }}>
+                                        <Button disabled={apiLoading} onClick={() => { setSubDescriptions([...subDescriptions, { title: null, subDescriptionContentRequests: null }]) }}>
                                             + Thêm mô tả
                                         </Button>
                                     </Col>
@@ -391,6 +397,7 @@ export default function AddCourse() {
                                 <Collapse items={subDescriptions.map((subDescription, index) => ({
                                     key: index,
                                     label: <Input
+                                        disabled={apiLoading}
                                         placeholder={`Mô tả ${index + 1}`}
                                         value={subDescription?.title}
                                         onChange={(e) => handleTitleChange(index, e.target.value)}
@@ -400,6 +407,7 @@ export default function AddCourse() {
                                     children:
                                         <div style={{ margin: '10px 0' }} key={index}>
                                             <TextArea
+                                                disabled={apiLoading}
                                                 className={styles.input}
                                                 placeholder={`Nội dung ${index + 1}`}
                                                 value={subDescription?.subDescriptionContentRequests}
@@ -408,8 +416,8 @@ export default function AddCourse() {
                                             />
                                         </div>,
                                     extra: index !== 0 ? (
-                                        <DeleteOutlined style={{ fontSize: '1rem' }} onClick={() => handleDeleteSubDescription(index)} />
-                                    ) : (<DeleteOutlined style={{ fontSize: '1rem', color: '#e6e6e6' }} />)
+                                        <DeleteOutlined disabled={apiLoading} style={{ fontSize: '1rem' }} onClick={() => handleDeleteSubDescription(index)} />
+                                    ) : (<DeleteOutlined disabled={apiLoading} style={{ fontSize: '1rem', color: '#e6e6e6' }} />)
                                 }))} />
                                 <div style={{ height: '24px', paddingLeft: '10px' }}>
                                     {subDescriptionsError && (<p style={{ color: 'red', fontSize: '14px', margin: '0' }}>{subDescriptionsError}</p>)}
@@ -417,8 +425,8 @@ export default function AddCourse() {
                             </Col>
                             <Col span={24} className={styles.imageCol}>
                                 <img className={styles.image} alt="image" src={imageUrl ? imageUrl : '../../src/assets/images/empty_image.jpg'} />
-                                <input type='file' accept='image/*' ref={imageInputRef} onChange={handleImageChange} style={{ display: 'none' }} />
-                                <Button style={{ width: '180px' }} onClick={() => imageInputRef.current.click()} icon={<CloudUploadOutlined />} className={styles.button}>
+                                <input type='file' disabled={apiLoading} accept='image/*' ref={imageInputRef} onChange={handleImageChange} style={{ display: 'none' }} />
+                                <Button disabled={apiLoading} style={{ width: '180px' }} onClick={() => imageInputRef.current.click()} icon={<CloudUploadOutlined />} className={styles.button}>
                                     Tải hình lên
                                 </Button>
                                 <div style={{ height: '24px', paddingLeft: '10px' }}>

@@ -1,12 +1,14 @@
 import React, { useEffect, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom';
-import { getCourse } from '../../../api/courseApi';
+import { getCourse, getCoursePrices, updateCoursePrice } from '../../../api/courseApi';
 import { getSyllabus } from '../../../api/syllabus';
-import { Button, Col, ConfigProvider, DatePicker, Modal, Row } from 'antd';
+import { Button, Col, ConfigProvider, DatePicker, Modal, Row, Table } from 'antd';
 import styles from './CourseDetail.module.css'
 import CurrencyInput from 'react-currency-input-field';
 import { compareAsc } from 'date-fns';
 import dayjs from 'dayjs';
+import { formatDateTime } from '../../../utils/utils';
+import Swal from 'sweetalert2';
 
 export default function CourseDetail() {
   const params = useParams();
@@ -23,6 +25,17 @@ export default function CourseDetail() {
   const [price, setPrice] = useState(null);
   const [priceError, setPriceError] = useState(null);
 
+  const [prices, setPrices] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [tableParams, setTableParams] = useState({
+    pagination: {
+      current: 1,
+      pageSize: 10,
+    },
+  });
+
+  const [apiLoading, setApiLoading] = useState(false);
+
   async function getCourseDetail(id) {
     const data = await getCourse(id);
     if (data) {
@@ -34,8 +47,20 @@ export default function CourseDetail() {
     const data = await getSyllabus(id);
     setSyllabusData(data)
   }
+  async function getPrices(id) {
+    try {
+      setLoading(true);
+      const data = await getCoursePrices(id);
+      setPrices(data);
+    } catch (error) {
+      console.log(error);
+    } finally {
+      setLoading(false)
+    }
+  }
   useEffect(() => {
     getCourseDetail(id)
+    getPrices(id)
   }, [id])
   const handleUpdatePrice = async () => {
     let flag = true;
@@ -51,47 +76,69 @@ export default function CourseDetail() {
     } else {
       setPriceError(null)
     }
-    if (start && end && compareAsc(start, end) >= 0) {
-      flag = false
-      setEndError("Thời gian kết thúc phải sau thời gian bắt đầu")
-    } else {
-      setEndError(null)
-    }
+    // if (start && end && compareAsc(start, end) >= 0) {
+    //   flag = false
+    //   setEndError("Thời gian kết thúc phải sau thời gian bắt đầu")
+    // } else {
+    //   setEndError(null)
+    // }
     if (flag) {
-      console.log({ id, start, end, price })
-      Swal.fire({
-        position: "center",
-        icon: "success",
-        title: "Chỉnh sửa chi phí thành công",
-        showConfirmButton: false,
-        timer: 2000
-      })
-      // try {
-      //   await updatePrice({id, start, end, price})
-      //     .then(() => {
-      //       Swal.fire({
-      //         position: "center",
-      //         icon: "success",
-      //         title: "Chỉnh sửa chi phí thành công",
-      //         showConfirmButton: false,
-      //         timer: 2000
-      //       })
-      //     })
-      //     .then(() => {
-      //       getCourseDetail(id)
-      //       setPriceModalOpen(false)
-      //     })
-      // } catch (error) {
-      //   Swal.fire({
-      //     position: "center",
-      //     icon: "error",
-      //     title: error.response?.data?.Error,
-      //     showConfirmButton: false,
-      //     timer: 2000
-      //   })
-      // }
+      try {
+        setApiLoading(true)
+        await updateCoursePrice({ courseId: id, effectiveDate: start, price })
+          .then(() => {
+            Swal.fire({
+              position: "center",
+              icon: "success",
+              title: "Chỉnh sửa chi phí thành công",
+              showConfirmButton: false,
+              timer: 2000
+            })
+          })
+          .then(() => {
+            getCourseDetail(id)
+            getCoursePrices(id)
+            setPriceModalOpen(false)
+          })
+      } catch (error) {
+        Swal.fire({
+          position: "center",
+          icon: "error",
+          title: error.response?.data?.Error,
+          showConfirmButton: false,
+          timer: 2000
+        })
+      } finally {
+        setApiLoading(false)
+      }
     }
   }
+  const handleTableChange = (pagination, filters, sorter, extra) => {
+    pagination.total = extra.currentDataSource.length
+    setTableParams({
+      pagination,
+      filters,
+      ...sorter,
+    });
+    if (pagination.pageSize !== tableParams.pagination?.pageSize) {
+      setPrices([]);
+    }
+  };
+  const columns = [
+    {
+      title: 'Chi phí',
+      render: (_, record) => {
+        return `${record.price?.toLocaleString()} đ`
+      },
+      sorter: (a, b) => a.price - b.price,
+    },
+    {
+      title: 'Thời gian áp dụng',
+      render: (_, record) => {
+        return `${formatDateTime(record.effectiveDate)}`
+      },
+    },
+  ];
   return (
     <div className={styles.container}>
       <h2 className={styles.title}>Chi tiết khóa học</h2>
@@ -226,10 +273,10 @@ export default function CourseDetail() {
           classNames={{ header: styles.modalHeader }}
         >
           <Row>
-            <Col span={6}>
-              <p className={styles.addTitle}><span>*</span> Thời gian bắt đầu:</p>
+            <Col span={8}>
+              <p className={styles.addTitle}><span>*</span> Thời gian áp dụng:</p>
             </Col>
-            <Col span={18}>
+            <Col span={16}>
               <ConfigProvider
                 theme={{
                   components: {
@@ -239,26 +286,28 @@ export default function CourseDetail() {
                   },
                 }}>
                 <DatePicker
-                  format="dd/MM/yyyy HH:mm:ss"
+                  format={"DD/MM/YYYY HH:mm:ss"}
+                  showTime
                   className={styles.input}
                   value={start}
                   disabledDate={(current) => {
-                    return current && current < dayjs().startOf('day');
+                    return current && current < dayjs();
                   }}
                   onChange={(date) => setStart(date)}
                   allowClear={false}
-                  placeholder="Thời gian bắt đầu" />
+                  placeholder="Thời gian áp dụng"
+                  disabled={apiLoading} />
               </ConfigProvider>
               <div style={{ height: '24px', paddingLeft: '10px' }}>
                 {startError && (<p style={{ color: 'red', fontSize: '14px', margin: '0' }}>{startError}</p>)}
               </div>
             </Col>
           </Row>
-          <Row>
-            <Col span={6}>
+          {/* <Row>
+            <Col span={8}>
               <p className={styles.addTitle}><span>*</span> Thời gian kết thúc:</p>
             </Col>
-            <Col span={18}>
+            <Col span={16}>
               <ConfigProvider
                 theme={{
                   components: {
@@ -268,28 +317,30 @@ export default function CourseDetail() {
                   },
                 }}>
                 <DatePicker
-                  format="dd/MM/yyyy HH:mm:ss"
+                  format="DD/MM/YYYY HH:mm:ss"
+                  showTime
                   className={styles.input}
                   value={end}
                   disabledDate={(current) => {
-                    return current && current < dayjs().startOf('day');
+                    return current && current < start;
                   }}
                   onChange={(date) => setEnd(date)}
                   allowClear={false}
-                  placeholder="Thời gian kết thúc" />
+                  placeholder="Thời gian kết thúc"
+                  disabled={apiLoading} />
               </ConfigProvider>
               <div style={{ height: '24px', paddingLeft: '10px' }}>
                 {endError && (<p style={{ color: 'red', fontSize: '14px', margin: '0' }}>{endError}</p>)}
               </div>
             </Col>
-          </Row>
+          </Row> */}
           <Row>
-            <Col span={6}>
+            <Col span={8}>
               <p className={styles.addTitle}><span>*</span> Chi phí:</p>
             </Col>
-            <Col span={18}>
+            <Col span={16}>
               <CurrencyInput
-                className={`ant-input css-dev-only-do-not-override-1adbn6x ${styles.input}  ${styles.inputNumber}`}
+                className={`ant-input css-dev-only-do-not-override-1wdnj1i ${styles.input}  ${styles.inputNumber}`}
                 placeholder="Chi phí"
                 allowDecimals={false}
                 value={price}
@@ -297,6 +348,7 @@ export default function CourseDetail() {
                 onValueChange={(value, name, values) => setPrice(parseInt(value))}
                 required
                 intlConfig={{ locale: 'vi-VN', currency: 'VND' }}
+                disabled={apiLoading}
               />
               <div style={{ height: '24px', paddingLeft: '10px' }}>
                 {priceError && (<p style={{ color: 'red', fontSize: '14px', margin: '0' }}>{priceError}</p>)}
@@ -304,10 +356,10 @@ export default function CourseDetail() {
             </Col>
           </Row>
           <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
-            <Button className={styles.saveButton} onClick={handleUpdatePrice}>
+            <Button loading={apiLoading} className={styles.saveButton} onClick={handleUpdatePrice}>
               Lưu
             </Button>
-            <Button className={styles.cancelButton} onClick={() => {
+            <Button disabled={apiLoading} className={styles.cancelButton} onClick={() => {
               setPriceModalOpen(false)
               setStart(null)
               setEnd(null)
@@ -318,6 +370,15 @@ export default function CourseDetail() {
           </div>
         </Modal>
       </ConfigProvider>
+      <Table
+        columns={columns}
+        rowKey={(record) => record.id}
+        dataSource={prices}
+        pagination={tableParams.pagination}
+        loading={loading}
+        onChange={handleTableChange}
+        scroll={{ y: 'calc(100vh - 220px)' }}
+      />
     </div>
   )
 }

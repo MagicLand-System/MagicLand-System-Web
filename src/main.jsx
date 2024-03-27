@@ -142,7 +142,20 @@ const router = createBrowserRouter([
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <Provider store={store}>
-    <ConfigProvider locale={locale}>
+    <ConfigProvider
+      locale={locale}
+      theme={{
+        components: {
+          Table: {
+            headerBg: "#430fbb",
+            headerColor: "#fff",
+            headerSortHoverBg: "#6d3ae6",
+            headerSortActiveBg: "#6d3ae6",
+            headerFilterHoverBg: "#6d3ae6",
+          },
+        },
+      }}
+    >
       <RouterProvider router={router} />
     </ConfigProvider>
   </Provider>

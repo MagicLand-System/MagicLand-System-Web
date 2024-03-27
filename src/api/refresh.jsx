@@ -1,16 +1,7 @@
-import axios from "axios";
 import Swal from "sweetalert2";
+import api from "./apiUnlogin";
 
-const URL = "https://magiclandapiv2.somee.com";
-
-const instance = axios.create({
-  baseURL: URL,
-  headers: {
-    "Content-Type": "application/json",
-  },
-});
-
-instance.interceptors.response.use(
+api.interceptors.response.use(
   (res) => {
     return res;
   },
@@ -31,6 +22,6 @@ instance.interceptors.response.use(
 );
 
 export const refresh = async (oldToken) => {
-  const response = await instance.post("/api/v1/auth/refreshToken", { oldToken: oldToken });
+  const response = await api.post("/api/v1/auth/refreshToken", { oldToken: oldToken });
   return response.data;
 };

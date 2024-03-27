@@ -279,6 +279,66 @@ export default function SyllabusManagement() {
             } else {
                 errors.push("Vui lòng điền đủ các thông tin đánh giá");
             }
+            //exercise
+            if (syllabusDetail?.syllabus && syllabusDetail?.examSyllabusRequests) {
+                const filteredExams = syllabusDetail?.examSyllabusRequests
+                    .filter(item => item.method.toLowerCase().includes('online') && !item.type.toLowerCase().includes('participation'));
+                const filteredSyllabus = syllabusDetail?.syllabus
+                    .filter(item =>
+                        filteredExams.some(exam => exam.contentName === item.content)
+                    )
+                    .map(item => ({
+                        contentName: item.content,
+                        title: item.detail,
+                        type: null,
+                        noOfSession: item.order,
+                        score: syllabusDetail.generalData?.scoringScale,
+                        questionRequests: null,
+                    }));
+
+                const filtered = syllabusDetail?.syllabus
+                    .filter(item => item.content.toLowerCase().includes('ôn tập'))
+                    .map(item => ({
+                        contentName: item.content,
+                        title: item.detail,
+                        type: null,
+                        noOfSession: item.order,
+                        score: syllabusDetail.generalData?.scoringScale,
+                        questionRequests: null,
+                    }));
+
+                const syllabusContentCount = syllabusDetail?.syllabus.reduce((acc, item) => {
+                    acc[item.content] = (acc[item.content] || 0) + 1;
+                    return acc;
+                }, {});
+
+                const examContentCount = filteredExams.reduce((acc, item) => {
+                    acc[item.contentName] = (acc[item.contentName] || 0) + item.part;
+                    return acc;
+                }, {});
+
+                for (const contentName in examContentCount) {
+                    const syllabusCount = syllabusContentCount[contentName] || 0;
+                    const examCount = examContentCount[contentName];
+                    if (syllabusCount !== examCount) {
+                        errors.push(`Số lượng bài "${contentName}" không khớp. Mong đợi ${examCount} bài, nhưng tìm thấy ${syllabusCount} bài.`);
+                    }
+                }
+                const exercisesData = [...filteredSyllabus, ...filtered];
+                exercisesData.sort((a, b) => {
+                    if (a.noOfSession === b.noOfSession) {
+                        if (a.contentName.toLowerCase().includes('ôn tập') && !b.contentName.toLowerCase().includes('ôn tập')) {
+                            return -1;
+                        } else if (!a.contentName.toLowerCase().includes('ôn tập') && b.contentName.toLowerCase().includes('ôn tập')) {
+                            return 1;
+                        } else {
+                            return 0;
+                        }
+                    }
+                    return a.noOfSession - b.noOfSession;
+                });
+                syllabusDetail = { ...syllabusDetail, exercises: exercisesData }
+            }
             if (errors.length === 0) {
                 syllabusDetail = { ...syllabusDetail, syllabusFile: fileInput }
                 navigate('add-syllabus', { state: { syllabusDetail } })
@@ -287,6 +347,7 @@ export default function SyllabusManagement() {
                     icon: "error",
                     title: 'Có lỗi xảy ra',
                     html: errors.map(err => `${err}<br/>`).join(''),
+                    showConfirmButton: false,
                 })
             }
         }

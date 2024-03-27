@@ -119,9 +119,9 @@ export default function AddSyllabus() {
             newExercises.map(exercise => {
                 let groupedData = [];
                 let currentGroupedItem = null;
-                exercise.questionRequests?.forEach(item => {
+                exercise.questionRequests?.forEach((item, id) => {
                     if (exercise.type === 'flashcard') {
-                        if (item.description) {
+                        if ((item.description && id === 0) || (item.description !== exercise.questionRequests[--id].description)) {
                             currentGroupedItem = {
                                 description: item.description,
                                 flashCardRequests: [{
@@ -187,11 +187,25 @@ export default function AddSyllabus() {
                             .catch(error => {
                                 console.error(error.message, "Error getting file URL");
                                 setApiLoading(false)
+                                Swal.fire({
+                                    position: "center",
+                                    icon: "error",
+                                    title: "Thêm giáo trình thất bại",
+                                    text: "Xin vui lòng thử lại sau",
+                                    showConfirmButton: false
+                                })
                             });
                     })
                     .catch(error => {
                         console.error(error.message, "Error uploading file");
                         setApiLoading(false)
+                        Swal.fire({
+                            position: "center",
+                            icon: "error",
+                            title: "Thêm giáo trình thất bại",
+                            text: "Xin vui lòng thử lại sau",
+                            showConfirmButton: false
+                        })
                     });
                 promises.push(uploadPromise);
             });
@@ -252,16 +266,37 @@ export default function AddSyllabus() {
                             }
                         }).catch(error => {
                             setApiLoading(false)
-                            console.log(error.message, "error getting image url")
+                            console.log(error.message, "error getting material url")
+                            Swal.fire({
+                                position: "center",
+                                icon: "error",
+                                title: "Thêm giáo trình thất bại",
+                                text: "Xin vui lòng thử lại sau",
+                                showConfirmButton: false
+                            })
                         })
                     }).catch(error => {
                         setApiLoading(false)
                         console.log(error.message)
+                        Swal.fire({
+                            position: "center",
+                            icon: "error",
+                            title: "Thêm giáo trình thất bại",
+                            text: "Xin vui lòng thử lại sau",
+                            showConfirmButton: false
+                        })
                     })
                 })
                 .catch(error => {
                     setApiLoading(false)
                     console.error(error.message, "Error occurred while uploading files or getting URLs");
+                    Swal.fire({
+                        position: "center",
+                        icon: "error",
+                        title: "Thêm giáo trình thất bại",
+                        text: "Xin vui lòng thử lại sau",
+                        showConfirmButton: false
+                    })
                 });
         }
     }
@@ -277,37 +312,8 @@ export default function AddSyllabus() {
         return false;
     };
 
-    function filterAndMapAssessment(examSyllabusRequests, syllabus) {
-        const filteredExams = examSyllabusRequests
-            .filter(item => item.method.toLowerCase().includes('online'));
-
-        const filteredSyllabus = syllabus
-            .filter(item =>
-                filteredExams.some(exam => exam.contentName === item.content)
-            )
-            .map(item => ({
-                contentName: item.content,
-                title: item.detail,
-                type: null,
-                noOfSession: item.order,
-                score: syllabusDetail.generalData?.scoringScale,
-                questionRequests: null,
-            }));
-        const filtered = syllabus
-            .filter(item => item.content.toLowerCase().includes('ôn tập'))
-            .map(item => ({
-                contentName: item.content,
-                title: item.detail,
-                type: null,
-                noOfSession: item.order,
-                score: syllabusDetail.generalData?.scoringScale,
-                questionRequests: null,
-            }));
-        return [...filteredSyllabus, ...filtered];
-    }
     useEffect(() => {
-        const exercises = filterAndMapAssessment(syllabusDetail.examSyllabusRequests, syllabusDetail.syllabus)
-        setExercises(exercises)
+        setExercises(syllabusDetail.exercises)
     }, [])
     const handleTableChange = (pagination, filters, sorter, extra) => {
         pagination.total = extra.currentDataSource.length
@@ -327,30 +333,53 @@ export default function AddSyllabus() {
                 const worksheetName = workbook.SheetNames[0];
                 const worksheet = workbook.Sheets[worksheetName];
                 const data = XLSX.utils.sheet_to_json(worksheet)
+                let check = true
+                let newDataQuestions = []
+                let type = null
+                let previousDescription = null;
                 if (data.length > 0) {
-                    let newDataQuestions = []
-                    if (worksheetName === "Ghép thẻ") {
-                        updatedExercises[index].type = 'flashcard';
-                        newDataQuestions = data.map(row => ({
-                            description: row['Câu hỏi'] || null,
-                            card1: row['Thẻ 1'] || null,
-                            card2: row['Thẻ 2'] || null,
-                            score: row['Số điểm'] || null,
-                        }))
-                    } else if (worksheetName === "Trắc nghiệm") {
-                        updatedExercises[index].type = 'multiple-choice';
-                        newDataQuestions = data.map(row => ({
-                            description: row['Câu hỏi'] || null,
-                            img: row['Hình ảnh mô tả (nếu có)'],
-                            answer1: row['Đáp án 1'],
-                            score1: row['Số điểm 1'],
-                            answer2: row['Đáp án 2'],
-                            score2: row['Số điểm 2'],
-                            answer3: row['Đáp án 3'],
-                            score3: row['Số điểm 3'],
-                            answer4: row['Đáp án 4'],
-                            score4: row['Số điểm 4'],
-                        }))
+                    if (data[0]?.['Thẻ 1']) {
+                        type = 'flashcard';
+                        newDataQuestions = data.map(row => {
+                            const description = row['Câu hỏi'] ? row['Câu hỏi'] : previousDescription
+                            previousDescription = description;
+                            const question = {
+                                description: description,
+                                card1: row['Thẻ 1'] || null,
+                                card2: row['Thẻ 2'] || null,
+                                score: row['Số điểm'] >= 0 ? row['Số điểm'] : null,
+                            }
+                            if (!question.description || !question.card1 || !question.card2 || !question.score) {
+                                check = false
+                                console.log("Sai mẫu ghép thẻ")
+                            }
+                            return question
+                        })
+                    } else {
+                        type = 'multiple-choice';
+                        newDataQuestions = data.map(row => {
+                            const question = {
+                                description: row['Câu hỏi'] || null,
+                                img: row['Hình ảnh mô tả (nếu có)'] || null,
+                                answer1: row['Đáp án 1'],
+                                score1: row['Số điểm 1'],
+                                answer2: row['Đáp án 2'],
+                                score2: row['Số điểm 2'],
+                                answer3: row['Đáp án 3'],
+                                score3: row['Số điểm 3'],
+                                answer4: row['Đáp án 4'],
+                                score4: row['Số điểm 4'],
+                            }
+                            if (!question.description
+                                || (!question.answer1 && question.score1) || (question.answer1 && !question.score1 && question.score1 !== 0)
+                                || (!question.answer2 && question.score2) || (question.answer2 && !question.score2 && question.score2 !== 0)
+                                || (!question.answer3 && question.score3) || (question.answer3 && !question.score3 && question.score3 !== 0)
+                                || (!question.answer4 && question.score4) || (question.answer4 && !question.score4 && question.score4 !== 0)) {
+                                check = false
+                                console.log("Sai mẫu trắc nghiệm")
+                            }
+                            return question
+                        })
                     }
                     newDataQuestions.forEach(item => {
                         Object.keys(item).forEach(key => {
@@ -360,14 +389,28 @@ export default function AddSyllabus() {
                             }
                         });
                     })
+                } else {
+                    check = false
+                    console.log("Không có câu hỏi")
+                }
+                if (check && type) {
+                    updatedExercises[index].type = type
                     updatedExercises[index].questionRequests = newDataQuestions;
                     updatedExercises[index].questionFiles = file;
                     setExercises(updatedExercises);
+                } else if (check && !type) {
+                    Swal.fire({
+                        icon: "error",
+                        title: 'Có lỗi xãy ra',
+                        text: 'Vui lòng chọn tệp câu hỏi phù hợp',
+                        showConfirmButton: false,
+                    })
                 } else {
                     Swal.fire({
                         icon: "error",
                         title: 'Có lỗi xãy ra',
-                        text: 'Vui lòng nhập đủ thông tin câu hỏi'
+                        text: 'Vui lòng nhập đủ thông tin câu hỏi',
+                        showConfirmButton: false,
                     })
                 }
             }
@@ -418,8 +461,8 @@ export default function AddSyllabus() {
         let newData = []
         let array = []
         let index = 0
-        data.forEach((card) => {
-            if (card.description !== null) {
+        data.forEach((card, id) => {
+            if ((card.description && id === 0) || (card.description !== data[--id].description)) {
                 array.forEach(arr => arr.questionsLength = questionsLength)
                 newData = [...newData, ...array]
                 array = []
@@ -530,7 +573,7 @@ export default function AddSyllabus() {
             render: (text, record, index) =>
             (<>
                 <input type='file' accept='application/vnd.ms-excel, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' ref={(el) => exerciseInputRefs.current[index] = el} onChange={(e) => handleUploadExercise(e.target.files[0], index)} style={{ display: 'none' }} />
-                {text ? <p style={{ margin: 0 }}>{text.name} <Button type='link' onClick={() => getQuesionList(index)} icon={<EyeOutlined />} size='large' /> <Button type='link' onClick={() => exerciseInputRefs.current[index].click()} icon={<EditOutlined />} size='large' /> </p> : <p style={{ margin: 0 }}>Chưa có <Button type='link' onClick={() => exerciseInputRefs.current[index].click()} icon={<CloudUploadOutlined />} size='large' /></p>}
+                {text ? <p style={{ margin: 0 }}>{text.name} <Button type='link' onClick={() => getQuesionList(index)} icon={<EyeOutlined />} size='large' /> <Button disabled={apiLoading} type='link' onClick={() => exerciseInputRefs.current[index].click()} icon={<EditOutlined />} size='large' /> </p> : <p style={{ margin: 0 }}>Chưa có <Button disabled={apiLoading} type='link' onClick={() => exerciseInputRefs.current[index].click()} icon={<CloudUploadOutlined />} size='large' /></p>}
             </>)
         },
     ]
@@ -638,6 +681,7 @@ export default function AddSyllabus() {
                     value={record.fileName}
                     onChange={(e) => handleChangeFileName(index, e.target.value)}
                     required
+                    disabled={apiLoading}
                 />
         },
         {
@@ -654,7 +698,7 @@ export default function AddSyllabus() {
         {
             title: 'Xóa',
             render: (record, _, index) => (
-                <Button type='link' onClick={() => handleDeleteFile(index)} icon={<DeleteOutlined />} size='large' />
+                <Button disabled={apiLoading} type='link' onClick={() => handleDeleteFile(index)} icon={<DeleteOutlined />} size='large' />
             ),
             width: 120
         },
@@ -673,7 +717,7 @@ export default function AddSyllabus() {
             }
         },
         showUploadList: false,
-        files: []
+        files: [],
     };
     const handleViewFile = (index) => {
         setFileModalOpen(false);
@@ -858,7 +902,7 @@ export default function AddSyllabus() {
                             children: (
                                 <>
                                     {filesError && <p style={{ color: 'red', fontSize: '14px', margin: '0' }}>{filesError}</p>}
-                                    <Dragger {...uploadProps} style={{ marginBottom: 10 }}>
+                                    <Dragger {...uploadProps} disabled={apiLoading} style={{ marginBottom: 10 }}>
                                         <p className="ant-upload-drag-icon">
                                             <InboxOutlined />
                                         </p>

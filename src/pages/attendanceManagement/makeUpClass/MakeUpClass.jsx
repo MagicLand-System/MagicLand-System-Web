@@ -3,7 +3,7 @@ import styles from './MakeUpClass.module.css'
 import { Button, Input, Table, Checkbox, Select, DatePicker, ConfigProvider } from 'antd';
 import Swal from 'sweetalert2';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
-import { formatDate, formatDayOfWeek, formatSlot } from '../../../utils/utils';
+import { formatDate, formatDayOfWeek, formatPhone, formatSlot } from '../../../utils/utils';
 import { arrangeMakeUpClass, getMakeUpClass, getSlots } from '../../../api/classesApi';
 import { compareAsc } from 'date-fns';
 import dayjs from 'dayjs';
@@ -93,7 +93,7 @@ export default function MakeUpClass() {
                 pagination: {
                     current: 1,
                     pageSize: 10,
-                    total: data.length
+                    total: data?.length
                 },
             });
         } catch (error) {

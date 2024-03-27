@@ -73,7 +73,7 @@ export default function AttendanceDetail() {
                 pagination: {
                     current: 1,
                     pageSize: 10,
-                    total: data.length
+                    total: data?.length
                 },
             });
         } catch (error) {

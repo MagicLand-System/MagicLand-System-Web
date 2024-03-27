@@ -43,7 +43,7 @@ export default function AttendanceManagement() {
                     pagination: {
                         current: 1,
                         pageSize: 10,
-                        total: data.length
+                        total: data?.length
                     },
                 });
             }

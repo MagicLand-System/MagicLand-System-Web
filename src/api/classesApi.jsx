@@ -75,6 +75,7 @@ export const getSuitableClass = async (credential) => {
   return response.data;
 };
 export const changeClass = async (credential) => {
+  console.log(credential)
   const response = await api.get(`/api/v1/classes/staff/change`, {
     params: credential
   });

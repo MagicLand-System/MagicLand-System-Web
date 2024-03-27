@@ -32,4 +32,15 @@ export const updateCourse = async (id, credential) => {
   // const response = await api.post("/api/v1/courses/add", credential);
   // return response.data;
 };
-
+export const getCoursePrices = async (courseId) => {
+  const response = await api.get("/api/v1/courses/getCoursePrice", {
+    params: {
+      courseId
+    }
+  });
+  return response.data;
+};
+export const updateCoursePrice = async (credential) => {
+  const response = await api.post("/api/v1/courses/addPrice", credential);
+  return response.data;
+};

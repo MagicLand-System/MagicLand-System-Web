@@ -124,7 +124,7 @@ export default function ChangeClass() {
                 pagination: {
                     current: 1,
                     pageSize: 10,
-                    total: data.length
+                    total: data?.length
                 },
             });
         } catch (error) {

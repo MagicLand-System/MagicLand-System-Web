@@ -4,7 +4,7 @@ import { Button, Table, Row, Col, Tabs, ConfigProvider, Divider, Modal, DatePick
 import { EditOutlined, CloudDownloadOutlined, CloudUploadOutlined, EyeOutlined } from '@ant-design/icons';
 import { useNavigate, useParams } from 'react-router-dom';
 import * as XLSX from 'xlsx';
-import { getSyllabus, updateSyllabusGeneral } from '../../../api/syllabus';
+import { getSyllabus, getSyllabusGeneral, updateSyllabusGeneral, getSyllabusMaterial, getSyllabusExam, getSyllabusSession, getSyllabusQuestion } from '../../../api/syllabus';
 import { getQuiz } from '../../../api/quiz';
 import { getSubjects } from '../../../api/courseApi';
 import { useFormik } from 'formik';
@@ -21,6 +21,10 @@ export default function SyllabusDetail() {
 
     const [importModalOpen, setImportModalOpen] = useState(false);
     const [syllabusDetail, setSyllabusDetail] = useState(null);
+    const [sessions, setSessions] = useState([])
+    const [exams, setExams] = useState([])
+    const [questionPackages, setQuestionPackages] = useState([])
+    const [materials, setMaterials] = useState([])
     const [tab, setTab] = useState("syllabus");
 
     const fileInputRef = useRef(null);
@@ -56,6 +60,7 @@ export default function SyllabusDetail() {
     const [effectiveDate, setEffectiveDate] = useState(null);
     const [effectiveDateError, setEffectiveDateError] = useState(null)
     const [apiLoading, setApiLoading] = useState(false)
+
     const formik = useFormik({
         initialValues: {
             syllabusName: "",
@@ -105,6 +110,7 @@ export default function SyllabusDetail() {
                         position: "center",
                         icon: "error",
                         title: error.response?.data?.Error,
+                        showConfirmButton: false,
                     })
                 } finally {
                     setApiLoading(false)
@@ -124,8 +130,24 @@ export default function SyllabusDetail() {
     useEffect(() => {
         getSyllabusDetail(id)
     }, [id])
+    useEffect(() => {
+        switch (tab) {
+            case "syllabus":
+                getSession(id)
+                break;
+            case "assessment":
+                getExam(id)
+                break;
+            case "exercise":
+                getQuestion(id)
+                break;
+            case "material":
+                getMaterial(id)
+                break;
+        }
+    }, [tab])
     async function getSyllabusDetail(id) {
-        const data = await getSyllabus(id);
+        const data = await getSyllabusGeneral(id);
         setSyllabusDetail(data);
         setCategory(data.category);
         setEffectiveDate(dayjs(data.effectiveDate, 'DD/MM/YYYY'));
@@ -135,6 +157,54 @@ export default function SyllabusDetail() {
             studentTasks: data.studentTasks,
             description: data.description
         })
+    }
+    async function getMaterial(id) {
+        const data = await getSyllabusMaterial(id);
+        setMaterials(data);
+        setTableParams({
+            ...tableParams,
+            pagination: {
+                current: 1,
+                pageSize: 10,
+                total: data?.length
+            },
+        });
+    }
+    async function getExam(id) {
+        const data = await getSyllabusExam(id);
+        setExams(data);
+        setTableParams({
+            ...tableParams,
+            pagination: {
+                current: 1,
+                pageSize: 10,
+                total: data?.length
+            },
+        });
+    }
+    async function getSession(id) {
+        const data = await getSyllabusSession(id);
+        setSessions(data);
+        setTableParams({
+            ...tableParams,
+            pagination: {
+                current: 1,
+                pageSize: 10,
+                total: data?.length
+            },
+        });
+    }
+    async function getQuestion(id) {
+        const data = await getSyllabusQuestion(id);
+        setQuestionPackages(data);
+        setTableParams({
+            ...tableParams,
+            pagination: {
+                current: 1,
+                pageSize: 10,
+                total: data?.length
+            },
+        });
     }
     async function getListOfCategory() {
         const data = await getSubjects();
@@ -327,6 +397,66 @@ export default function SyllabusDetail() {
             } else {
                 errors.push("Vui lòng điền đủ các thông tin đánh giá");
             }
+            //exercise
+            if (syllabusDetail?.syllabus && syllabusDetail?.examSyllabusRequests) {
+                const filteredExams = syllabusDetail?.examSyllabusRequests
+                    .filter(item => item.method.toLowerCase().includes('online') && !item.type.toLowerCase().includes('participation'));
+                const filteredSyllabus = syllabusDetail?.syllabus
+                    .filter(item =>
+                        filteredExams.some(exam => exam.contentName === item.content)
+                    )
+                    .map(item => ({
+                        contentName: item.content,
+                        title: item.detail,
+                        type: null,
+                        noOfSession: item.order,
+                        score: syllabusDetail.generalData?.scoringScale,
+                        questionRequests: null,
+                    }));
+
+                const filtered = syllabusDetail?.syllabus
+                    .filter(item => item.content.toLowerCase().includes('ôn tập'))
+                    .map(item => ({
+                        contentName: item.content,
+                        title: item.detail,
+                        type: null,
+                        noOfSession: item.order,
+                        score: syllabusDetail.generalData?.scoringScale,
+                        questionRequests: null,
+                    }));
+
+                const syllabusContentCount = syllabusDetail?.syllabus.reduce((acc, item) => {
+                    acc[item.content] = (acc[item.content] || 0) + 1;
+                    return acc;
+                }, {});
+
+                const examContentCount = filteredExams.reduce((acc, item) => {
+                    acc[item.contentName] = (acc[item.contentName] || 0) + item.part;
+                    return acc;
+                }, {});
+
+                for (const contentName in examContentCount) {
+                    const syllabusCount = syllabusContentCount[contentName] || 0;
+                    const examCount = examContentCount[contentName];
+                    if (syllabusCount !== examCount) {
+                        errors.push(`Số lượng bài "${contentName}" không khớp. Mong đợi ${examCount} bài, nhưng tìm thấy ${syllabusCount} bài.`);
+                    }
+                }
+                const exercisesData = [...filteredSyllabus, ...filtered];
+                exercisesData.sort((a, b) => {
+                    if (a.noOfSession === b.noOfSession) {
+                        if (a.contentName.toLowerCase().includes('ôn tập') && !b.contentName.toLowerCase().includes('ôn tập')) {
+                            return -1;
+                        } else if (!a.contentName.toLowerCase().includes('ôn tập') && b.contentName.toLowerCase().includes('ôn tập')) {
+                            return 1;
+                        } else {
+                            return 0;
+                        }
+                    }
+                    return a.noOfSession - b.noOfSession;
+                });
+                syllabusDetail = { ...syllabusDetail, exercises: exercisesData }
+            }
             if (errors.length === 0) {
                 syllabusDetail = { ...syllabusDetail, syllabusFile: fileInput }
                 navigate(`/syllabus-management/update-syllabus/${id}`, { state: { syllabusDetail } })
@@ -335,6 +465,7 @@ export default function SyllabusDetail() {
                     icon: "error",
                     title: 'Có lỗi xảy ra',
                     html: errors.map(err => `${err}<br/>`).join(''),
+                    showConfirmButton: false,
                 })
             }
         }
@@ -743,7 +874,7 @@ export default function SyllabusDetail() {
                                 <Table
                                     columns={syllabusColumns}
                                     rowKey={(record) => record.sessionId}
-                                    dataSource={syllabusDetail?.sessionResponses}
+                                    dataSource={sessions}
                                     pagination={tableParams.pagination}
                                     onChange={handleTableChange}
                                     scroll={{ y: 'calc(100vh - 220px)' }}
@@ -757,7 +888,7 @@ export default function SyllabusDetail() {
                                 <Table
                                     columns={assessmentColumns}
                                     rowKey={(record) => record.examSyllabusId}
-                                    dataSource={syllabusDetail?.exams}
+                                    dataSource={exams}
                                     pagination={tableParams.pagination}
                                     onChange={handleTableChange}
                                     scroll={{ y: 'calc(100vh - 220px)' }}
@@ -771,7 +902,7 @@ export default function SyllabusDetail() {
                                 <Table
                                     columns={exerciseColumns}
                                     rowKey={(record) => record.questionPackageId}
-                                    dataSource={syllabusDetail?.questionPackages}
+                                    dataSource={questionPackages}
                                     pagination={tableParams.pagination}
                                     onChange={handleTableChange}
                                     scroll={{ y: 'calc(100vh - 220px)' }}
@@ -785,7 +916,7 @@ export default function SyllabusDetail() {
                                 <Table
                                     columns={materialColumns}
                                     rowKey={(record) => record.materialId}
-                                    dataSource={syllabusDetail?.materials}
+                                    dataSource={materials}
                                     pagination={tableParams.pagination}
                                     onChange={handleTableChange}
                                     scroll={{ y: 'calc(100vh - 220px)' }}

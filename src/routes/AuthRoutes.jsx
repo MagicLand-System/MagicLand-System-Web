@@ -13,7 +13,7 @@ const AuthRoutes = ({ role }) => {
         if (!user) {
             dispatch(fetchUser());
         } else {
-            if (user.role.name === role) {
+            if (user?.role?.name === role) {
                 return <Outlet />;
             } else if (user.role.name === 'STAFF') {
                 return <Navigate to="/class-management" state={{ from: location }} replace />

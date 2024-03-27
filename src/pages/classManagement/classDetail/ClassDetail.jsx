@@ -61,6 +61,7 @@ export default function ClassDetail() {
     const [dateSession, setDateSession] = useState(null);
     const [dateSessionError, setDateSessionError] = useState(null)
 
+    const [apiLoading, setApiLoading] = useState(false)
 
     const formik = useFormik({
         initialValues: {
@@ -81,8 +82,10 @@ export default function ClassDetail() {
                 }
             } else {
                 try {
+                    setApiLoading(true)
                     await updateClass(id, { ...values, lecturerId: lecturer, roomId: room })
                         .then(() => {
+                            setApiLoading(false)
                             Swal.fire({
                                 position: "center",
                                 icon: "success",
@@ -100,6 +103,7 @@ export default function ClassDetail() {
                             formik.resetForm()
                         })
                 } catch (error) {
+                    setApiLoading(false)
                     Swal.fire({
                         position: "center",
                         icon: "error",
@@ -216,9 +220,10 @@ export default function ClassDetail() {
             }
         } else {
             try {
-                console.log(sessionId)
+                setApiLoading(true)
                 await updateSession(sessionId, { lecturerId: lecturerSession, roomId: roomSession, slotId: slotSession, dateTime: dateSession })
                     .then(() => {
+                        setApiLoading(false)
                         Swal.fire({
                             position: "center",
                             icon: "success",
@@ -236,6 +241,7 @@ export default function ClassDetail() {
                         setSlotSessionError(null)
                     })
             } catch (error) {
+                setApiLoading(false)
                 Swal.fire({
                     position: "center",
                     icon: "error",
@@ -369,6 +375,7 @@ export default function ClassDetail() {
             title: 'Buổi học',
             dataIndex: 'index',
             sorter: (a, b) => a.index - b.index,
+            width: 80
         },
         {
             title: 'Giáo viên',
@@ -684,6 +691,7 @@ export default function ClassDetail() {
                                             error={formik.touched.leastNumberStudent && formik.errors.leastNumberStudent}
                                             className={styles.input}
                                             required
+                                            disabled={apiLoading}
                                         />
                                         <Input
                                             placeholder="Tối đa"
@@ -696,6 +704,7 @@ export default function ClassDetail() {
                                             error={formik.touched.limitNumberStudent && formik.errors.limitNumberStudent}
                                             className={styles.input}
                                             required
+                                            disabled={apiLoading}
                                         />
                                     </div>
                                     <div style={{ height: '24px', paddingLeft: '10px' }}>
@@ -742,6 +751,7 @@ export default function ClassDetail() {
                                         );
                                         setLecturersOptions(filteredOptions);
                                     }}
+                                    disabled={apiLoading}
                                 />
                                 <div style={{ height: '24px', paddingLeft: '10px' }}>
                                     {lecturerError && (<p style={{ color: 'red', fontSize: '14px', margin: '0' }}>{lecturerError}</p>)}
@@ -782,6 +792,7 @@ export default function ClassDetail() {
                                             setRoomsOptions(filteredOptions);
                                         }
                                     }}
+                                    disabled={apiLoading}
                                 />
                                 <div style={{ height: '24px', paddingLeft: '10px' }}>
                                     {roomError && (<p style={{ color: 'red', fontSize: '14px', margin: '0' }}>{roomError}</p>)}
@@ -789,16 +800,19 @@ export default function ClassDetail() {
                             </Col>
                         </Row>
                         <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
-                            <Button className={styles.saveButton} htmlType='submit'>
+                            <Button loading={apiLoading} className={styles.saveButton} htmlType='submit'>
                                 Lưu
                             </Button>
-                            <Button className={styles.cancelButton} onClick={() => {
-                                setModifyModalOpen(false)
-                                setModifyModalOpen(false)
-                                setLecturerError(null)
-                                setRoomError(null)
-                                formik.resetForm()
-                            }}>
+                            <Button
+                                className={styles.cancelButton}
+                                onClick={() => {
+                                    setModifyModalOpen(false)
+                                    setModifyModalOpen(false)
+                                    setLecturerError(null)
+                                    setRoomError(null)
+                                    formik.resetForm()
+                                }}
+                                disabled={apiLoading}>
                                 Hủy
                             </Button>
                         </div>
@@ -845,7 +859,8 @@ export default function ClassDetail() {
                                     onChange={(date) => setDateSession(date)}
                                     format={'DD/MM/YYYY'}
                                     allowClear={false}
-                                    placeholder="Ngày học" />
+                                    placeholder="Ngày học"
+                                    disabled={apiLoading} />
                             </ConfigProvider>
                             <div style={{ height: '24px', paddingLeft: '10px' }}>
                                 {dateSessionError && (<p style={{ color: 'red', fontSize: '14px', margin: '0' }}>{dateSessionError}</p>)}
@@ -871,6 +886,7 @@ export default function ClassDetail() {
                                         value: slot.id,
                                         label: `${slot.startTime} - ${slot.endTime}`
                                     }))}
+                                disabled={apiLoading}
                             />
                             <div style={{ height: '24px', paddingLeft: '10px' }}>
                                 {slotSessionError && (<p style={{ color: 'red', fontSize: '14px', margin: '0' }}>{slotSessionError}</p>)}
@@ -906,6 +922,7 @@ export default function ClassDetail() {
                                     );
                                     setLecturersOptions(filteredOptions);
                                 }}
+                                disabled={apiLoading}
                             />
                             <div style={{ height: '24px', paddingLeft: '10px' }}>
                                 {lecturerSessionError && (<p style={{ color: 'red', fontSize: '14px', margin: '0' }}>{lecturerSessionError}</p>)}
@@ -937,6 +954,7 @@ export default function ClassDetail() {
                                         setRoomsOptions(filteredOptions);
                                     }
                                 }}
+                                disabled={apiLoading}
                             />
                             <div style={{ height: '24px', paddingLeft: '10px' }}>
                                 {roomSessionError && (<p style={{ color: 'red', fontSize: '14px', margin: '0' }}>{roomSessionError}</p>)}
@@ -944,16 +962,19 @@ export default function ClassDetail() {
                         </Col>
                     </Row>
                     <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
-                        <Button className={styles.saveButton} onClick={handleUpdateSession}>
+                        <Button loading={apiLoading} className={styles.saveButton} onClick={handleUpdateSession}>
                             Lưu
                         </Button>
-                        <Button className={styles.cancelButton} onClick={() => {
-                            setSessionModalOpen(false)
-                            setLecturerSessionError(null)
-                            setRoomSessionError(null)
-                            setDateSessionError(null)
-                            setSlotSessionError(null)
-                        }}>
+                        <Button
+                            className={styles.cancelButton}
+                            onClick={() => {
+                                setSessionModalOpen(false)
+                                setLecturerSessionError(null)
+                                setRoomSessionError(null)
+                                setDateSessionError(null)
+                                setSlotSessionError(null)
+                            }}
+                            disabled={apiLoading}>
                             Hủy
                         </Button>
                     </div>
