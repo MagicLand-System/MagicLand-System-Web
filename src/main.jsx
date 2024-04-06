@@ -5,6 +5,9 @@ import './index.css'
 import { RouterProvider, createBrowserRouter } from 'react-router-dom'
 import { Provider } from 'react-redux'
 import { store } from './store'
+import locale from 'antd/locale/vi_VN';
+import 'dayjs/locale/vi';
+import { ConfigProvider } from 'antd'
 import Login from './pages/login/Login.jsx'
 import AuthRoutes from './routes/AuthRoutes.jsx'
 import Register from './pages/register/Register.jsx'
@@ -24,11 +27,12 @@ import CourseDetail from './pages/courseManagement/courseDetail/CourseDetail.jsx
 import SyllabusManagement from './pages/syllabusManagement/SyllabusManagement.jsx'
 import AddSyllabus from './pages/syllabusManagement/addSyllabus/AddSyllabus.jsx'
 import SyllabusDetail from './pages/syllabusManagement/syllabusDetail/SyllabusDetail.jsx'
-import locale from 'antd/locale/vi_VN';
-import 'dayjs/locale/vi';
-import { ConfigProvider } from 'antd'
 import RoomManagement from './pages/roomManagement/RoomManagement.jsx'
 import LecturerManagement from './pages/lecturerManagement/LecturerManagement.jsx'
+import CourseRegister from './pages/courseRegister/CourseRegister.jsx'
+import CourseRegisterDetail from './pages/courseRegister/courseRegisterDetail/CourseRegisterDetail.jsx'
+import RegisterCourse from './pages/courseRegister/register/RegisterCourse.jsx'
+import NetworkStatusIndicator from './components/networkStatusIndicator/NetworkStatusIndicator.jsx'
 
 const router = createBrowserRouter([
   //Route đã đăng nhập thì k vào được, k có header, footer
@@ -87,6 +91,18 @@ const router = createBrowserRouter([
           {
             path: '/attendance-management/check-attendance/:scheduleId/make-up-class/:studentId',
             element: <MakeUpClass />
+          },
+          {
+            path: '/course-register',
+            element: <CourseRegister />
+          },
+          {
+            path: '/course-register/detail/:id',
+            element: <CourseRegisterDetail />
+          },
+          {
+            path: '/course-register/register',
+            element: <RegisterCourse />
           },
         ]
       },
@@ -156,6 +172,7 @@ ReactDOM.createRoot(document.getElementById('root')).render(
         },
       }}
     >
+      <NetworkStatusIndicator />
       <RouterProvider router={router} />
     </ConfigProvider>
   </Provider>

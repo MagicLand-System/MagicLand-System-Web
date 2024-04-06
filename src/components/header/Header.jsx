@@ -41,6 +41,14 @@ export default function Header() {
         },
         {
           label: (
+            <Link className={styles.label} to={'/course-register'}>
+              Đăng kí khóa học
+            </Link>
+          ),
+          key: '/course-register',
+        },
+        {
+          label: (
             <Link className={styles.label} to={'/transaction-management'}>
               Giao dịch
             </Link>

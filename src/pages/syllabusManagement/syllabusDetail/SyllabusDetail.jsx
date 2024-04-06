@@ -13,6 +13,7 @@ import dayjs from 'dayjs'
 
 import TextArea from 'antd/es/input/TextArea';
 import Swal from 'sweetalert2';
+import { handleImportSyllabus } from '../../../utils/utils';
 
 export default function SyllabusDetail() {
     const params = useParams();
@@ -31,7 +32,6 @@ export default function SyllabusDetail() {
     const [fileInput, setFileInput] = useState(null);
     const [excelFile, setExcelFile] = useState(null);
 
-    const [questionList, setQuestionList] = useState([]);
     const [flashcardList, setFlashCardList] = useState([]);
     const [multipleChoiceList, setMultipleChoiceList] = useState([]);
     const [questionListType, setQuestionListType] = useState(null);
@@ -236,7 +236,6 @@ export default function SyllabusDetail() {
         setQuestionListType(type)
         const data = await getQuiz(id);
         if (data) {
-            setQuestionList(data)
             if (type === 'flashcard') {
                 const newData = transformFlashCardData(data)
                 setFlashCardList(newData)
@@ -268,241 +267,21 @@ export default function SyllabusDetail() {
             ...sorter,
         });
         if (pagination.pageSize !== tableParams.pagination?.pageSize) {
-            setQuestionList([]);
+            setFlashCardList([]);
+            setMultipleChoiceList([])
         }
     };
 
     const handleImport = async (e) => {
         e.preventDefault();
-        let errors = []
-        let syllabusDetail = null
         if (excelFile !== null) {
-            XLSX.SSF.is_date("dd/mm/yyyy");
-            const workbook = XLSX.read(excelFile, { type: 'buffer' });
-            //sheet general
-            const worksheetGeneral = workbook.Sheets['Thông tin chung'];
-            const dataGeneral = XLSX.utils.sheet_to_json(worksheetGeneral);
-            let numOfSessions = 0;
-            if (dataGeneral.length === 1) {
-                let newDataGeneral = dataGeneral.map(row => ({
-                    syllabusName: row['Tên giáo trình'] || null,
-                    subjectCode: row['Mã giáo trình'] || null,
-                    type: row['Loại'] || null,
-                    timePerSession: row['Thời gian / buổi'] || null,
-                    numOfSessions: row['Số buổi học'] || null,
-                    preRequisite: row['Điều kiện tiên quyết'] || null,
-                    description: row['Mô tả'] || null,
-                    studentTasks: row['Nhiệm vụ học sinh'] || null,
-                    scoringScale: row['Thang điểm'] || null,
-                    effectiveDate: row['Ngày hiệu lực'] || null,
-                    minAvgMarkToPass: row['Số điểm hoàn thành'] || null,
-                }))
-                const generalData = newDataGeneral[0];
-                numOfSessions = generalData.numOfSessions;
-                if (!generalData.syllabusName || !generalData.subjectCode || !generalData.type || !generalData.timePerSession || !generalData.numOfSessions || !generalData.description || !generalData.studentTasks || !generalData.scoringScale || !generalData.effectiveDate || !generalData.minAvgMarkToPass) {
-                    errors.push("Vui lòng điền đủ các thông tin chung")
-                }
-                if (generalData.effectiveDate) {
-                    const today = new Date()
-                    today.setHours(0, 0, 0, 0)
-
-                    const date = new parse(generalData.effectiveDate, "dd/MM/yyyy", new Date())
-                    date.setHours(12, 0, 0, 0)
-                    if (date < today) {
-                        errors.push("Ngày hiệu lực không hợp lệ")
-                    }
-                }
-                newDataGeneral.forEach(data => {
-                    const preRequisite = data.preRequisite?.split("\r\n");
-                    data.preRequisite = preRequisite
-                });
-                syllabusDetail = { generalData }
-            } else {
-                errors.push("Vui lòng điền đủ các thông tin chung")
-            }
-            //sheet syllabus
-            const worksheetSyllabus = workbook.Sheets['Giáo trình'];
-            const dataSyllabus = XLSX.utils.sheet_to_json(worksheetSyllabus);
-            let syllabusLength = 0
-            if (dataSyllabus.length > 0) {
-                let newDataSyllabus = dataSyllabus.map(row => ({
-                    index: row['STT'] || null,
-                    topicName: row['Chủ đề'] || null,
-                    order: row['Buổi'] || null,
-                    content: row['Nội dung'] || null,
-                    detail: row['Chi tiết'] || null,
-                }))
-                newDataSyllabus.forEach((item, index) => {
-                    if (item.detail) {
-                        if (!item.index && index > 0) {
-                            item.index = newDataSyllabus[index - 1].index;
-                        }
-                        if (!item.topicName && index > 0) {
-                            item.topicName = newDataSyllabus[index - 1].topicName;
-                        }
-                        if (!item.order && index > 0) {
-                            item.order = newDataSyllabus[index - 1].order;
-                        }
-                        if (!item.content && index > 0) {
-                            item.content = newDataSyllabus[index - 1].content;
-                        }
-                    } else {
-                        if (!errors.includes("Vui lòng điền đủ các thông tin giáo trình")) {
-                            errors.push("Vui lòng điền đủ các thông tin giáo trình");
-                        }
-                    }
-                });
-                const groupedSyllabus = groupDataByOrder(newDataSyllabus)
-                syllabusLength = groupedSyllabus.length
-                syllabusDetail = { ...syllabusDetail, syllabus: newDataSyllabus, groupedSyllabus }
-            } else {
-                errors.push("Vui lòng điền đủ các thông tin giáo trình");
-            }
-            if (!syllabusLength > 0 && !numOfSessions > 0 || syllabusLength !== numOfSessions) {
-                if (!errors.includes("Vui lòng điền đủ các thông tin giáo trình")) {
-                    errors.push("Thông tin số buổi và giáo trình không phù hợp");
-                }
-            }
-            //sheet assessment
-            const worksheetAssessment = workbook.Sheets['Đánh giá'];
-            const dataAssessment = XLSX.utils.sheet_to_json(worksheetAssessment);
-            if (dataAssessment.length > 0) {
-                let newDataAssessment = dataAssessment.map(row => ({
-                    type: row['Loại bài tập'] || null,
-                    contentName: row['Nội dung'] || null,
-                    part: row['Số lượng'] || null,
-                    weight: row['Trọng số'] || null,
-                    completionCriteria: row['Điểm tối thiểu'] >= 0 ? row['Điểm tối thiểu'] : null,
-                    method: row['Phương thức'] || null,
-                    duration: row['Thời gian'] || null,
-                    questionType: row['Loại câu hỏi'] || null,
-                }))
-                let sumWeight = 0;
-                newDataAssessment.forEach(data => {
-                    const weight = data.weight.replace("%", "");
-                    data.weight = weight
-                    sumWeight = sumWeight + parseInt(weight);
-                    const duration = data.duration?.toString();
-                    data.duration = duration
-                    if (!data.type || !data.contentName || !data.part || !data.weight || !(data.completionCriteria >= 0) || !data.method) {
-                        if (!errors.includes("Vui lòng điền đủ các thông tin đánh giá")) {
-                            errors.push("Vui lòng điền đủ các thông tin đánh giá");
-                        }
-                    }
-                });
-                if (sumWeight !== 100) {
-                    errors.push("Vui lòng điền đúng đánh giá trọng số");
-                }
-                syllabusDetail = { ...syllabusDetail, examSyllabusRequests: newDataAssessment }
-            } else {
-                errors.push("Vui lòng điền đủ các thông tin đánh giá");
-            }
-            //exercise
-            if (syllabusDetail?.syllabus && syllabusDetail?.examSyllabusRequests) {
-                const filteredExams = syllabusDetail?.examSyllabusRequests
-                    .filter(item => item.method.toLowerCase().includes('online') && !item.type.toLowerCase().includes('participation'));
-                const filteredSyllabus = syllabusDetail?.syllabus
-                    .filter(item =>
-                        filteredExams.some(exam => exam.contentName === item.content)
-                    )
-                    .map(item => ({
-                        contentName: item.content,
-                        title: item.detail,
-                        type: null,
-                        noOfSession: item.order,
-                        score: syllabusDetail.generalData?.scoringScale,
-                        questionRequests: null,
-                    }));
-
-                const filtered = syllabusDetail?.syllabus
-                    .filter(item => item.content.toLowerCase().includes('ôn tập'))
-                    .map(item => ({
-                        contentName: item.content,
-                        title: item.detail,
-                        type: null,
-                        noOfSession: item.order,
-                        score: syllabusDetail.generalData?.scoringScale,
-                        questionRequests: null,
-                    }));
-
-                const syllabusContentCount = syllabusDetail?.syllabus.reduce((acc, item) => {
-                    acc[item.content] = (acc[item.content] || 0) + 1;
-                    return acc;
-                }, {});
-
-                const examContentCount = filteredExams.reduce((acc, item) => {
-                    acc[item.contentName] = (acc[item.contentName] || 0) + item.part;
-                    return acc;
-                }, {});
-
-                for (const contentName in examContentCount) {
-                    const syllabusCount = syllabusContentCount[contentName] || 0;
-                    const examCount = examContentCount[contentName];
-                    if (syllabusCount !== examCount) {
-                        errors.push(`Số lượng bài "${contentName}" không khớp. Mong đợi ${examCount} bài, nhưng tìm thấy ${syllabusCount} bài.`);
-                    }
-                }
-                const exercisesData = [...filteredSyllabus, ...filtered];
-                exercisesData.sort((a, b) => {
-                    if (a.noOfSession === b.noOfSession) {
-                        if (a.contentName.toLowerCase().includes('ôn tập') && !b.contentName.toLowerCase().includes('ôn tập')) {
-                            return -1;
-                        } else if (!a.contentName.toLowerCase().includes('ôn tập') && b.contentName.toLowerCase().includes('ôn tập')) {
-                            return 1;
-                        } else {
-                            return 0;
-                        }
-                    }
-                    return a.noOfSession - b.noOfSession;
-                });
-                syllabusDetail = { ...syllabusDetail, exercises: exercisesData }
-            }
-            if (errors.length === 0) {
-                syllabusDetail = { ...syllabusDetail, syllabusFile: fileInput }
+            setApiLoading(true)
+            const syllabusDetail = await handleImportSyllabus(excelFile, fileInput)
+            if (syllabusDetail) {
                 navigate(`/syllabus-management/update-syllabus/${id}`, { state: { syllabusDetail } })
-            } else {
-                Swal.fire({
-                    icon: "error",
-                    title: 'Có lỗi xảy ra',
-                    html: errors.map(err => `${err}<br/>`).join(''),
-                    showConfirmButton: false,
-                })
             }
         }
-
-    }
-    function groupDataByOrder(inputData) {
-        const groupedData = [];
-
-        inputData.forEach(item => {
-            const existingGroup = groupedData.find(group => group.order === item.order && group.topicName === item.topicName);
-
-            if (!existingGroup) {
-                groupedData.push({
-                    order: item.order,
-                    index: item.index,
-                    topicName: item.topicName,
-                    contents: [{
-                        content: item.content,
-                        details: item.detail ? [item.detail] : []
-                    }]
-                });
-            } else {
-                const existingContent = existingGroup.contents.find(content => content.content === item.content);
-                if (!existingContent) {
-                    existingGroup.contents.push({
-                        content: item.content,
-                        details: item.detail ? [item.detail] : []
-                    });
-                } else {
-                    if (item.detail) {
-                        existingContent.details.push(item.detail);
-                    }
-                }
-            }
-        });
-
-        return groupedData;
+        setApiLoading(false)
     }
     const handleFileChange = (e) => {
         let selectedFile = e.target.files[0];
@@ -836,26 +615,7 @@ export default function SyllabusDetail() {
                     type="card"
                     size="middle"
                     tabPosition='top'
-                    onChange={activeKey => {
-                        setTab(activeKey)
-                        let length = 0
-                        if (activeKey === 'syllabus') {
-                            length = syllabusDetail.sessionResponses?.length
-                        } else if (activeKey === 'assessment') {
-                            length = syllabusDetail.exams?.length
-                        } else if (activeKey === 'exercise') {
-                            length = syllabusDetail.questionPackages?.length
-                        } else if (activeKey === 'material') {
-                            length = syllabusDetail.materials?.length
-                        }
-                        setTableParams({
-                            pagination: {
-                                current: 1,
-                                pageSize: 10,
-                                total: length
-                            },
-                        });
-                    }}
+                    onChange={activeKey => { setTab(activeKey) }}
                     tabBarExtraContent={
                         <>
                             <Button onClick={() => setEditModalOpen(true)} className={styles.saveButton}>
@@ -1182,35 +942,22 @@ export default function SyllabusDetail() {
                             </Col>
                         </Row>
                         <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
-                            {apiLoading ? (
-                                <>
-                                    <Button loading className={styles.saveButton}>
-                                        Lưu
-                                    </Button>
-                                    <Button disabled className={styles.cancelButton}>
-                                        Hủy
-                                    </Button>
-                                </>
-                            ) : (
-                                <>
-                                    <Button className={styles.saveButton} htmlType='submit'>
-                                        Lưu
-                                    </Button>
-                                    <Button className={styles.cancelButton} onClick={() => {
-                                        setEditModalOpen(false)
-                                        setCategory(syllabusDetail.category);
-                                        setEffectiveDate(dayjs(syllabusDetail.effectiveDate, 'DD/MM/YYYY'));
-                                        formik.setValues({
-                                            syllabusName: syllabusDetail.syllabusName,
-                                            minAvgMarkToPass: syllabusDetail.minAvgMarkToPass,
-                                            studentTasks: syllabusDetail.studentTasks,
-                                            description: syllabusDetail.description
-                                        })
-                                    }}>
-                                        Hủy
-                                    </Button>
-                                </>
-                            )}
+                            <Button loading={apiLoading} className={styles.saveButton} htmlType='submit'>
+                                Lưu
+                            </Button>
+                            <Button disabled={apiLoading} className={styles.cancelButton} onClick={() => {
+                                setEditModalOpen(false)
+                                setCategory(syllabusDetail.category);
+                                setEffectiveDate(dayjs(syllabusDetail.effectiveDate, 'DD/MM/YYYY'));
+                                formik.setValues({
+                                    syllabusName: syllabusDetail.syllabusName,
+                                    minAvgMarkToPass: syllabusDetail.minAvgMarkToPass,
+                                    studentTasks: syllabusDetail.studentTasks,
+                                    description: syllabusDetail.description
+                                })
+                            }}>
+                                Hủy
+                            </Button>
                         </div>
                     </form>
                 </Modal>

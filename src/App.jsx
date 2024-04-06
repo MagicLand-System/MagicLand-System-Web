@@ -6,7 +6,6 @@ import Footer from "./components/footer/Footer";
 import { useDispatch } from 'react-redux';
 import { fetchUser } from "./store/features/authSlice";
 import AuthRoutes from "./routes/AuthRoutes";
-import NetworkStatusIndicator from "./components/networkStatusIndicator/NetworkStatusIndicator";
 
 export default function App() {
   const dispatch = useDispatch();
@@ -23,7 +22,6 @@ export default function App() {
   }
   return (
     <>
-      <NetworkStatusIndicator />
       <Header />
       <div className="body">
         <Outlet />

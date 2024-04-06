@@ -1,10 +1,10 @@
 import React, { useEffect, useRef, useState } from 'react'
 import styles from './AddCourse.module.css'
-import { Button, Col, Collapse, Empty, Input, Row, Select } from 'antd';
+import { Button, Col, Collapse, Empty, Input, Row, Select, Spin } from 'antd';
 import Swal from 'sweetalert2';
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
-import { addCourse, getCourse } from '../../../api/courseApi';
+import { addCourse, getCourse, updateCourse } from '../../../api/courseApi';
 import TextArea from 'antd/es/input/TextArea';
 import CurrencyInput from 'react-currency-input-field';
 import { storage } from '../../../../firebase.config';
@@ -16,7 +16,6 @@ import { getAvailableSyllabuses, getSyllabus, getSyllabusGeneral } from '../../.
 
 
 export default function AddCourse() {
-
     const params = useParams();
     const id = params.id;
     const navigate = useNavigate()
@@ -40,6 +39,7 @@ export default function AddCourse() {
     const [syllabusError, setSyllabusError] = useState(null)
 
     const [apiLoading, setApiLoading] = useState(false)
+    const [loading, setLoading] = useState(false)
 
     const handleImageChange = (e) => {
         if (e.target.files[0]) {
@@ -69,9 +69,16 @@ export default function AddCourse() {
         setSubDescriptions(updatedSubDescriptions);
     };
     async function getListOfSyllabuses() {
-        const data = await getAvailableSyllabuses();
-        setSyllabuses(data);
-        setSyllabusesOptions(data);
+        try {
+            const data = await getAvailableSyllabuses();
+            setSyllabuses(data);
+            setSyllabusesOptions(data);
+            setLoading(true)
+        } catch (error) {
+            console.log(error)
+        } finally {
+            setLoading(false);
+        }
     };
     async function getSyllabusDetail(id) {
         const data = await getSyllabusGeneral(id);
@@ -87,9 +94,8 @@ export default function AddCourse() {
                 maxAge: data.maxYearOldsStudent,
             })
             const newSubDescriptions = [...data.subDescriptionTitles]
-            console.log(data.subDescriptionTitles)
             newSubDescriptions.map((sub) => {
-                sub.subDescriptionContentRequests = sub.contents.map(content => `${content.content}: ${content.description}`).join('\n')
+                sub.subDescriptionContentRequests = sub.contents.map(content => `${content.content}${content.description ? `: ${content.description}` : ''}`).join('\n')
             })
             setImageUrl(data.image)
             setSubDescriptions(newSubDescriptions)
@@ -121,13 +127,13 @@ export default function AddCourse() {
             const hasNullDescriptions = subDescriptions.some((subDescription) => {
                 return subDescription.title === null || subDescription.subDescriptionContentRequests === null;
             });
-            if (!syllabusId || !image || hasNullDescriptions || (!id && !price)) {
-                if (syllabusId === null) {
-                    setSyllabusError("Hãy cung cấp hình ảnh khóa học")
+            if ((!syllabusId && !id) || (!image && !id) || hasNullDescriptions || !price) {
+                if (!syllabusId && !id) {
+                    setSyllabusError("Vui lòng chọn giáo trình")
                 } else {
                     setSyllabusError(null)
                 }
-                if (image === null) {
+                if (!image && !id) {
                     setImageError("Hãy cung cấp hình ảnh khóa học")
                 } else {
                     setImageError(null)
@@ -137,7 +143,7 @@ export default function AddCourse() {
                 } else {
                     setSubDescriptionsError(null)
                 }
-                if (!id && !price) {
+                if (!price) {
                     setPriceError("Hãy nhập chi phí khóa học")
                 } else {
                     setPriceError(null)
@@ -161,7 +167,7 @@ export default function AddCourse() {
                 //image
                 if (id && !image) {
                     try {
-                        await updateCourse(id, { ...values, subDescriptions: newSubDescriptions, syllabusId })
+                        await updateCourse(id, { ...values, subDescriptions: newSubDescriptions, price })
                             .then(() => {
                                 Swal.fire({
                                     position: "center",
@@ -187,9 +193,8 @@ export default function AddCourse() {
                     uploadBytes(imageRef, image).then(() => {
                         getDownloadURL(imageRef).then(async (url) => {
                             try {
-                                setApiLoading(true)
                                 if (id) {
-                                    await updateCourse(id, { ...values, subDescriptions: newSubDescriptions, syllabusId })
+                                    await updateCourse(id, { ...values, subDescriptions: newSubDescriptions, price })
                                         .then(() => {
                                             Swal.fire({
                                                 position: "center",
@@ -265,13 +270,17 @@ export default function AddCourse() {
                                         className={styles.input}
                                         placeholder="Chọn giáo trình"
                                         notFoundContent={
-                                            <Empty
-                                                image={Empty.PRESENTED_IMAGE_SIMPLE}
-                                                description={
-                                                    <span>
-                                                        Không tìm thấy giáo trình
-                                                    </span>
-                                                } />
+                                            loading
+                                                ? <div style={{ width: '100%', textAlign: 'center' }}>
+                                                    <Spin size='small' />
+                                                </div>
+                                                : <Empty
+                                                    image={Empty.PRESENTED_IMAGE_SIMPLE}
+                                                    description={
+                                                        <span>
+                                                            Không tìm thấy giáo trình
+                                                        </span>
+                                                    } />
                                         }
                                         onSelect={(data) => { setSyllabusId(data) }}
                                         options={
@@ -314,7 +323,7 @@ export default function AddCourse() {
                                     {formik.errors.courseName && formik.touched.courseName && (<p style={{ color: 'red', fontSize: '14px', margin: '0' }}>{formik.errors.courseName}</p>)}
                                 </div>
                             </Col>
-                            <Col xs={id ? 24 : 12} lg={id ? 12 : 6} className={styles.column}>
+                            <Col xs={12} lg={6} className={styles.column}>
                                 <p className={styles.addTitle}><span>*</span> Độ tuổi phù hợp (tối thiểu - tối đa):</p>
                                 <div style={{ display: 'flex', gap: '8px' }}>
                                     <Input
@@ -349,10 +358,10 @@ export default function AddCourse() {
                                     {formik.errors.maxAge && formik.touched.maxAge && (<p style={{ color: 'red', fontSize: '14px', margin: '0' }}>{formik.errors.maxAge}</p>)}
                                 </div>
                             </Col>
-                            <Col xs={id ? 0 : 12} lg={id ? 0 : 6} className={styles.column}>
+                            <Col xs={12} lg={6} className={styles.column}>
                                 <p className={styles.addTitle}><span>*</span> Chi phí:</p>
                                 <CurrencyInput
-                                    className={`ant-input css-dev-only-do-not-override-1wdnj1i ${styles.input} ${styles.inputNumber}`}
+                                    className={`ant-input ${styles.currencyInput} ${styles.input} ${styles.inputNumber}`}
                                     placeholder="Chi phí"
                                     allowDecimals={false}
                                     value={price}
@@ -432,26 +441,15 @@ export default function AddCourse() {
                                 <div style={{ height: '24px', paddingLeft: '10px' }}>
                                     {imageError && (<p style={{ color: 'red', fontSize: '14px', margin: '0' }}>{imageError}</p>)}
                                 </div>
-                                <div style={{ display: 'flex' }}>
+                                <div style={{ display: 'flex', marginBottom: 20 }}>
                                     {id ?
-                                        apiLoading ? (
-                                            <Button loading className={styles.saveButton}>
-                                                Lưu
-                                            </Button>
-                                        ) : (
-                                            <Button htmlType='submit' className={styles.saveButton}>
-                                                Lưu
-                                            </Button>
-                                        )
-                                        : apiLoading ? (
-                                            <Button loading className={styles.saveButton}>
-                                                Tạo khóa học
-                                            </Button>
-                                        ) : (
-                                            <Button htmlType='submit' className={styles.saveButton}>
-                                                Tạo khóa học
-                                            </Button>
-                                        )}
+                                        <Button loading={apiLoading} htmlType='submit' className={styles.saveButton}>
+                                            Lưu
+                                        </Button>
+                                        : <Button loading={apiLoading} htmlType='submit' className={styles.saveButton}>
+                                            Tạo khóa học
+                                        </Button>
+                                    }
                                 </div>
                             </Col>
                         </Row>

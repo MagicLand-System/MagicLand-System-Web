@@ -153,16 +153,18 @@ export default function AddSyllabus() {
                             const answerKey = 'answer' + i;
                             const scoreKey = 'score' + i;
                             if (item.hasOwnProperty(answerKey) && item.hasOwnProperty(scoreKey)) {
-                                if (item[answerKey]?.toLowerCase().includes('https://')) {
-                                    newItem.mutipleChoiceAnswerRequests.push({
-                                        img: item[answerKey],
-                                        score: item[scoreKey]
-                                    });
-                                } else {
-                                    newItem.mutipleChoiceAnswerRequests.push({
-                                        description: item[answerKey],
-                                        score: item[scoreKey]
-                                    });
+                                if (item[answerKey] !== null) {
+                                    if (item[answerKey]?.toLowerCase().includes('https://')) {
+                                        newItem.mutipleChoiceAnswerRequests.push({
+                                            img: item[answerKey],
+                                            score: item[scoreKey]
+                                        });
+                                    } else {
+                                        newItem.mutipleChoiceAnswerRequests.push({
+                                            description: item[answerKey],
+                                            score: item[scoreKey]
+                                        });
+                                    }
                                 }
                             }
                         }
@@ -185,7 +187,7 @@ export default function AddSyllabus() {
                                 files[index].url = url;
                             })
                             .catch(error => {
-                                console.error(error.message, "Error getting file URL");
+                                console.log(error.message, "Error getting file URL");
                                 setApiLoading(false)
                                 Swal.fire({
                                     position: "center",
@@ -197,7 +199,7 @@ export default function AddSyllabus() {
                             });
                     })
                     .catch(error => {
-                        console.error(error.message, "Error uploading file");
+                        console.log(error.message, "Error uploading file");
                         setApiLoading(false)
                         Swal.fire({
                             position: "center",
@@ -289,7 +291,7 @@ export default function AddSyllabus() {
                 })
                 .catch(error => {
                     setApiLoading(false)
-                    console.error(error.message, "Error occurred while uploading files or getting URLs");
+                    console.log(error.message, "Error occurred while uploading files or getting URLs");
                     Swal.fire({
                         position: "center",
                         icon: "error",
@@ -361,21 +363,22 @@ export default function AddSyllabus() {
                             const question = {
                                 description: row['Câu hỏi'] || null,
                                 img: row['Hình ảnh mô tả (nếu có)'] || null,
-                                answer1: row['Đáp án 1'],
-                                score1: row['Số điểm 1'],
-                                answer2: row['Đáp án 2'],
-                                score2: row['Số điểm 2'],
-                                answer3: row['Đáp án 3'],
-                                score3: row['Số điểm 3'],
-                                answer4: row['Đáp án 4'],
-                                score4: row['Số điểm 4'],
+                                answer1: row['Đáp án 1'] || null,
+                                score1: row['Số điểm 1'] !== undefined ? row['Số điểm 1'] : null,
+                                answer2: row['Đáp án 2'] || null,
+                                score2: row['Số điểm 2'] !== undefined ? row['Số điểm 2'] : null,
+                                answer3: row['Đáp án 3'] || null,
+                                score3: row['Số điểm 3'] !== undefined ? row['Số điểm 3'] : null,
+                                answer4: row['Đáp án 4'] || null,
+                                score4: row['Số điểm 4'] !== undefined ? row['Số điểm 4'] : null,
                             }
                             if (!question.description
-                                || (!question.answer1 && question.score1) || (question.answer1 && !question.score1 && question.score1 !== 0)
-                                || (!question.answer2 && question.score2) || (question.answer2 && !question.score2 && question.score2 !== 0)
-                                || (!question.answer3 && question.score3) || (question.answer3 && !question.score3 && question.score3 !== 0)
-                                || (!question.answer4 && question.score4) || (question.answer4 && !question.score4 && question.score4 !== 0)) {
+                                || (!question.answer1 && (question.score1 !== null)) || (question.answer1 && (question.score1 === null))
+                                || (!question.answer2 && (question.score2 !== null)) || (question.answer2 && (question.score1 === null))
+                                || (!question.answer3 && (question.score3 !== null)) || (question.answer3 && (question.score1 === null))
+                                || (!question.answer4 && (question.score4 !== null)) || (question.answer4 && (question.score1 === null))) {
                                 check = false
+                                console.log(question.answer3 && !question.score3 && question.score3 !== 0)
                                 console.log("Sai mẫu trắc nghiệm")
                             }
                             return question
@@ -926,25 +929,12 @@ export default function AddSyllabus() {
                 />
             </ConfigProvider>
             <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 20 }}>
-                {apiLoading ? (
-                    <>
-                        <Button loading className={styles.saveButton}>
-                            Lưu
-                        </Button>
-                        <Button disabled className={styles.cancelButton}>
-                            Hủy
-                        </Button>
-                    </>
-                ) : (
-                    <>
-                        <Button onClick={handleAddSyllabus} className={styles.saveButton}>
-                            Lưu
-                        </Button>
-                        <Button className={styles.cancelButton} onClick={() => { navigate(-1) }}>
-                            Hủy
-                        </Button>
-                    </>
-                )}
+                <Button loading={apiLoading} onClick={handleAddSyllabus} className={styles.saveButton}>
+                    Lưu
+                </Button>
+                <Button disabled={apiLoading} className={styles.cancelButton} onClick={() => { navigate(-1) }}>
+                    Hủy
+                </Button>
             </div>
             <ConfigProvider
                 theme={{

@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react'
 import styles from './ClassManagement.module.css'
-import { Button, DatePicker, Radio, Input, Modal, Table, Select, Row, Col, Tabs, ConfigProvider, Alert, Empty } from 'antd';
+import { Button, DatePicker, Radio, Input, Modal, Table, Select, Row, Col, Tabs, ConfigProvider, Alert, Empty, Spin } from 'antd';
 import { CloudUploadOutlined, EyeOutlined, PlusOutlined, DeleteOutlined, CloudDownloadOutlined, EditOutlined } from '@ant-design/icons';
 import Swal from 'sweetalert2';
 import { useFormik } from 'formik';
@@ -37,11 +37,6 @@ const statusList = [
 
 const ScheduleInput = ({ index, schedule, onDateChange, onSlotChange, onDelete, slots, disabled }) => {
   const { dateOfWeek, slotId } = schedule;
-  const sortedSlots = slots.sort((a, b) => {
-    const timeA = formatSlot(a.startTime);
-    const timeB = formatSlot(b.startTime);
-    return compareAsc(timeA, timeB);
-  });
   return (
     <div style={{ display: 'flex', gap: '8px', marginBottom: '8px' }}>
       <Select
@@ -87,10 +82,16 @@ const ScheduleInput = ({ index, schedule, onDateChange, onSlotChange, onDelete, 
         value={slotId}
         placeholder="Giờ học"
         onChange={(value) => onSlotChange(index, value)}
-        options={sortedSlots.map((slot) => ({
-          value: slot.id,
-          label: `${slot.startTime} - ${slot.endTime}`
-        }))}
+        options={
+          slots.sort((a, b) => {
+            const timeA = formatSlot(a.startTime);
+            const timeB = formatSlot(b.startTime);
+            return compareAsc(timeA, timeB);
+          }).map((slot) => ({
+            value: slot.id,
+            label: `${slot.startTime} - ${slot.endTime}`
+          }))
+        }
       />
       {index !== 0 ? (
         <DeleteOutlined disabled={disabled} style={{ fontSize: '1rem' }} onClick={() => onDelete(index)} />
@@ -127,6 +128,7 @@ export default function ClassManagement() {
 
   const [lecturer, setLecturer] = useState(null)
   const [lecturerError, setLecturerError] = useState(null)
+  const [lecturerLoading, setLecturerLoading] = useState(false)
 
   const [startDate, setStartDate] = useState(null);
   const [startDateError, setStartDateError] = useState(null)
@@ -134,6 +136,7 @@ export default function ClassManagement() {
   const [method, setMethod] = useState('offline')
   const [room, setRoom] = useState(null)
   const [roomError, setRoomError] = useState(null)
+  const [roomLoading, setRoomLoading] = useState(false)
 
   const [slots, setSlots] = useState([])
   const [slotsOptions, setSlotsOptions] = useState(slots)
@@ -148,6 +151,7 @@ export default function ClassManagement() {
   const [apiLoading, setApiLoading] = useState(false)
 
   const [importRes, setImportRes] = useState(null)
+  const [importRow, setImportRow] = useState(null)
 
   const handleFileChange = (e) => {
     let selectedFile = e.target.files[0];
@@ -236,7 +240,22 @@ export default function ClassManagement() {
           const stringStartDate = startDate.toISOString()
           try {
             await addClass({ ...values, startDate: stringStartDate, courseId: course, lecturerId: lecturer, method, scheduleRequests, roomId: room })
-              .then(() => {
+              .then((data) => {
+                if (importRow) {
+                  importRow.isSucess = true
+                  importRow.successfulInformation = data
+                  let index = -1;
+
+                  for (let i = 0; i < importRes.length; i++) {
+                    if (importRes[i].index === importRow.index) {
+                      index = i;
+                      break;
+                    }
+                  }
+                  if (index !== -1) {
+                    importRes.splice(index, 1, importRow);
+                  }
+                }
                 Swal.fire({
                   position: "center",
                   icon: "success",
@@ -246,7 +265,7 @@ export default function ClassManagement() {
                 })
               })
               .then(() => {
-                getListOfClasses()
+                getListOfClasses(search, status)
                 setAddModalOpen(false)
                 setCourse(null)
                 setCoursesOptions(courses)
@@ -263,6 +282,10 @@ export default function ClassManagement() {
                 setSchedulesRequests([{ dateOfWeek: null, slotId: null }])
                 setSchedulesError(null)
                 formik.resetForm()
+                if (importRow) {
+                  setImportModalOpen(true)
+                  setImportRow(null)
+                }
               })
           } catch (error) {
             console.log(error)
@@ -317,15 +340,29 @@ export default function ClassManagement() {
     setSlotsOptions(data);
   };
   async function getListsOfLecturer(startDate, schedules, courseId) {
-    const data = await getLecturerBySchedule({ startDate, schedules, courseId });
-    data.sort((a, b) => a.numberOfClassesTeaching - b.numberOfClassesTeaching);
-    setlecturers(data);
-    setLecturersOptions(data);
+    try {
+      setLecturerLoading(true)
+      const data = await getLecturerBySchedule({ startDate, schedules, courseId });
+      data.sort((a, b) => a.numberOfClassesTeaching - b.numberOfClassesTeaching);
+      setlecturers(data);
+      setLecturersOptions(data);
+    } catch (error) {
+      console.log(error);
+    } finally {
+      setLecturerLoading(false);
+    }
   };
   async function getListsOfRooms(startDate, schedules, courseId) {
-    const data = await getRoomsBySchedule({ startDate, schedules, courseId });
-    setRooms(data);
-    setRoomsOptions(data);
+    try {
+      setRoomLoading(true)
+      const data = await getRoomsBySchedule({ startDate, schedules, courseId });
+      setRooms(data);
+      setRoomsOptions(data);
+    } catch (error) {
+      console.log(error);
+    } finally {
+      setRoomLoading(false);
+    }
   };
   async function getClassCodeByCourseId(course) {
     const data = await getClassCode(course);
@@ -427,6 +464,7 @@ export default function ClassManagement() {
       const worksheet = workbook.Sheets[worksheetName];
       const data = XLSX.utils.sheet_to_json(worksheet);
       let newData = []
+      const indexValues = [];
       if (data.length > 0) {
         newData = data.map(row => ({
           index: row['STT'] || null,
@@ -443,6 +481,13 @@ export default function ClassManagement() {
               errors.push("Vui lòng điền đủ các thông tin lớp học");
             }
           } else {
+            if (indexValues.includes(data.index)) {
+              if (!errors.includes("Số thứ tự trùng lặp")) {
+                errors.push("Số thứ tự trùng lặp");
+              }
+            } else {
+              indexValues.push(data.index);
+            }
             const scheduleTimes = data.scheduleRequests.split("\r\n");
             data.scheduleRequests = scheduleTimes.map(time => ({ "scheduleTime": time.trim() }));
           }
@@ -481,6 +526,7 @@ export default function ClassManagement() {
   }
 
   const handleErrorImport = (dataClass) => {
+    getListsOfCourses()
     formik.resetForm()
     if (dataClass.courseId !== "00000000-0000-0000-0000-000000000000") {
       setCourse(dataClass.courseId)
@@ -566,6 +612,7 @@ export default function ClassManagement() {
       <div style={{ display: 'flex', marginBottom: '16px' }}>
         <Button onClick={() => setImportModalOpen(true)} type='primary' className={styles.importButton} icon={<CloudUploadOutlined />}>Thêm nhiều lớp</Button>
         <Button onClick={() => {
+          setImportRow(null)
           getListsOfCourses();
           setAddModalOpen(true)
         }} className={styles.addButton} icon={<PlusOutlined />}>Thêm lớp học</Button>
@@ -732,7 +779,7 @@ export default function ClassManagement() {
                 <p style={{ color: '#999999', fontSize: '16px' }}>Lịch học hàng tuần:</p>
               </Col>
               <Col span={16} style={{ display: 'flex', alignItems: 'center', justifyContent: 'right' }}>
-                <Button disabled={apiLoading} style={{ marginRight: '24px' }} onClick={() => {
+                <Button disabled={apiLoading || scheduleRequests.length >= 3} style={{ marginRight: '24px' }} onClick={() => {
                   const filterSchedule = scheduleRequests.filter((schedule) => {
                     return schedule.slotId !== null
                   })
@@ -806,13 +853,17 @@ export default function ClassManagement() {
                   placeholder="Giáo viên"
                   onSelect={(data) => { setLecturer(data) }}
                   notFoundContent={
-                    <Empty
-                      image={Empty.PRESENTED_IMAGE_SIMPLE}
-                      description={
-                        <span>
-                          Không tìm thấy giáo viên
-                        </span>
-                      } />
+                    lecturerLoading
+                      ? <div style={{ width: '100%', textAlign: 'center' }}>
+                        <Spin size='small' />
+                      </div>
+                      : <Empty
+                        image={Empty.PRESENTED_IMAGE_SIMPLE}
+                        description={
+                          <span>
+                            Không tìm thấy giáo viên
+                          </span>
+                        } />
                   }
                   options={
                     lecturersOptions
@@ -856,13 +907,17 @@ export default function ClassManagement() {
                   placeholder="Phòng học"
                   onSelect={(data) => { setRoom(data) }}
                   notFoundContent={
-                    <Empty
-                      image={Empty.PRESENTED_IMAGE_SIMPLE}
-                      description={
-                        <span>
-                          Không tìm thấy phòng học
-                        </span>
-                      } />
+                    roomLoading
+                      ? <div style={{ width: '100%', textAlign: 'center' }}>
+                        <Spin size='small' />
+                      </div>
+                      : <Empty
+                        image={Empty.PRESENTED_IMAGE_SIMPLE}
+                        description={
+                          <span>
+                            Không tìm thấy phòng học
+                          </span>
+                        } />
                   }
                   options={roomsOptions.map((room) => ({
                     value: room.id,
@@ -884,44 +939,32 @@ export default function ClassManagement() {
               </Col>
             </Row>
             <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
-              {apiLoading ? (
-                <>
-                  <Button loading className={styles.saveButton}>
-                    Lưu
-                  </Button>
-                  <Button disabled className={styles.cancelButton}>
-                    Hủy
-                  </Button>
-                </>
-              ) : (
-                <>
-                  <Button className={styles.saveButton} htmlType='submit'>
-                    Lưu
-                  </Button>
-                  <Button className={styles.cancelButton} onClick={() => {
-                    setAddModalOpen(false)
-                    setCourse(null)
-                    setCoursesOptions(courses)
-                    setCourseError(null)
+              <Button loading={apiLoading} className={styles.saveButton} htmlType='submit'>
+                Lưu
+              </Button>
+              <Button disabled={apiLoading} className={styles.cancelButton} onClick={() => {
+                setAddModalOpen(false)
+                setImportRow(null)
+                setCourse(null)
+                setCoursesOptions(courses)
+                setCourseError(null)
 
-                    setLecturer(null)
-                    setLecturersOptions(lecturers)
-                    setLecturerError(null)
+                setLecturer(null)
+                setLecturersOptions(lecturers)
+                setLecturerError(null)
 
-                    setMethod("offline")
-                    setStartDate(null)
+                setMethod("offline")
+                setStartDate(null)
 
-                    setRoom(null)
-                    setRoomError(null)
+                setRoom(null)
+                setRoomError(null)
 
-                    setSchedulesRequests([{ dateOfWeek: null, slotId: null }])
-                    setSchedulesError(null)
-                    formik.resetForm()
-                  }}>
-                    Hủy
-                  </Button>
-                </>
-              )}
+                setSchedulesRequests([{ dateOfWeek: null, slotId: null }])
+                setSchedulesError(null)
+                formik.resetForm()
+              }}>
+                Hủy
+              </Button>
             </div>
           </form>
         </Modal>
@@ -950,30 +993,17 @@ export default function ClassManagement() {
             <p>{fileInput ? fileInput.name : 'Chưa có tệp nào được chọn'}</p>
           </div>
           <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
-            {apiLoading ? (
-              <>
-                <Button loading className={styles.saveButton}>
-                  Nạp tập tin
-                </Button>
-                <Button disabled className={styles.cancelButton}>
-                  Hủy
-                </Button>
-              </>
-            ) : (
-              <>
-                <Button onClick={handleImport} className={styles.saveButton}>
-                  Nạp tập tin
-                </Button>
-                <Button className={styles.cancelButton}
-                  onClick={() => {
-                    setFileInput(null)
-                    setExcelFile(null)
-                    setImportModalOpen(false)
-                  }}>
-                  Hủy
-                </Button>
-              </>
-            )}
+            <Button loading={apiLoading} onClick={handleImport} className={styles.saveButton}>
+              Nạp tập tin
+            </Button>
+            <Button disabled={apiLoading} className={styles.cancelButton}
+              onClick={() => {
+                setFileInput(null)
+                setExcelFile(null)
+                setImportModalOpen(false)
+              }}>
+              Hủy
+            </Button>
           </div>
           {importRes && (
             <>
@@ -1031,7 +1061,10 @@ export default function ClassManagement() {
                       type="error"
                       showIcon
                       action={
-                        <Button type='link' onClick={() => handleErrorImport(row.createClass)} icon={<EditOutlined />} size='large' />
+                        <Button type='link' onClick={() => {
+                          setImportRow(row)
+                          handleErrorImport(row.createClass)
+                        }} icon={<EditOutlined />} size='large' />
                       } />
                   }
                 </>

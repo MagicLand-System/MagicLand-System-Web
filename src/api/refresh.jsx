@@ -1,7 +1,29 @@
 import Swal from "sweetalert2";
-import api from "./apiUnlogin";
+import axios from "axios";
+import { getTime } from "./time";
+import MockDate from "mockdate";
 
-api.interceptors.response.use(
+const url = "https://a792-118-69-69-187.ngrok-free.app";
+const instance = axios.create({
+  baseURL: url,
+  headers: {
+    "Content-Type": "application/json",
+    "ngrok-skip-browser-warning": true,
+  },
+});
+instance.interceptors.request.use(
+  async (config) => {
+    if (config.url !== "/System/GetTime") {
+      const time = await getTime();
+      MockDate.set(new Date(time))
+    }
+    return config;
+  },
+  (error) => {
+    return Promise.reject(error);
+  }
+)
+instance.interceptors.response.use(
   (res) => {
     return res;
   },
@@ -11,6 +33,7 @@ api.interceptors.response.use(
         Swal.fire({
           icon: 'error',
           title: 'Hãy đăng nhập để tiếp tục!',
+          showConfirmButton: false
         }).then(() => {
           localStorage.removeItem('accessToken');
           window.location.replace("/login")
@@ -22,6 +45,6 @@ api.interceptors.response.use(
 );
 
 export const refresh = async (oldToken) => {
-  const response = await api.post("/api/v1/auth/refreshToken", { oldToken: oldToken });
+  const response = await instance.post("/api/v1/auth/refreshToken", { oldToken: oldToken });
   return response.data;
 };

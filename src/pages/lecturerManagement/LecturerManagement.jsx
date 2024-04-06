@@ -14,6 +14,7 @@ export default function LecturerManagement() {
     const [lecturers, setLecturers] = useState([]);
     const [lecturersOptions, setLecturersOptions] = useState(lecturers)
     const [schedules, setSchedules] = useState([]);
+    const [lecturerLoading, setLecturerLoading] = useState(false);
     const [loading, setLoading] = useState(false);
     const [date, setDate] = useState(dayjs())
     const [slots, setSlots] = useState([])
@@ -54,9 +55,16 @@ export default function LecturerManagement() {
         }
     };
     async function getListsOfLecturers() {
-        const data = await getLecturer();
-        setLecturers(data);
-        setLecturersOptions(data);
+        try {
+            setLecturerLoading(true)
+            const data = await getLecturer();
+            setLecturers(data);
+            setLecturersOptions(data);
+        } catch (error) {
+            console.log(error);
+        } finally {
+            setLecturerLoading(false);
+        }
     };
     async function getListsOfSlots() {
         const data = await getSlots();
@@ -69,7 +77,9 @@ export default function LecturerManagement() {
     }, []);
 
     useEffect(() => {
-        getListsOfSchedule(lecturer, startOfWeek(new Date(date)), endOfWeek(new Date(date)));
+        if (lecturer) {
+            getListsOfSchedule(lecturer, startOfWeek(new Date(date)), endOfWeek(new Date(date)));
+        }
     }, [lecturer, date]);
     function startOfWeek(date) {
         var diff = date.getDate() - date.getDay() + (date.getDay() === 0 ? -6 : 1);
@@ -119,11 +129,10 @@ export default function LecturerManagement() {
                     return (
                         <>
                             {schedules.map(schedule => (
-                                <div style={{ margin: 10, textAlign: 'center' }}>
-                                    <p style={{ margin: 0, fontWeight: 'bold' }}>{schedule.fullName}</p>
-                                    <p style={{ margin: 0 }}>{schedule.classCode}</p>
+                                <>
+                                    <p style={{ margin: 0, fontWeight: 'bold' }}>{schedule.classCode}</p>
                                     <p style={{ margin: 0 }}>{schedule.classRoom}</p>
-                                </div>
+                                </>
                             ))}
                         </>
                     )
@@ -145,11 +154,10 @@ export default function LecturerManagement() {
                     return (
                         <>
                             {schedules.map(schedule => (
-                                <div style={{ margin: 10, textAlign: 'center' }}>
-                                    <p style={{ margin: 0, fontWeight: 'bold' }}>{schedule.fullName}</p>
-                                    <p style={{ margin: 0 }}>{schedule.classCode}</p>
+                                <>
+                                    <p style={{ margin: 0, fontWeight: 'bold' }}>{schedule.classCode}</p>
                                     <p style={{ margin: 0 }}>{schedule.classRoom}</p>
-                                </div>
+                                </>
                             ))}
                         </>
                     )
@@ -172,11 +180,10 @@ export default function LecturerManagement() {
                     return (
                         <>
                             {schedules.map(schedule => (
-                                <div style={{ margin: 10, textAlign: 'center' }}>
-                                    <p style={{ margin: 0, fontWeight: 'bold' }}>{schedule.fullName}</p>
-                                    <p style={{ margin: 0 }}>{schedule.classCode}</p>
+                                <>
+                                    <p style={{ margin: 0, fontWeight: 'bold' }}>{schedule.classCode}</p>
                                     <p style={{ margin: 0 }}>{schedule.classRoom}</p>
-                                </div>
+                                </>
                             ))}
                         </>
                     )
@@ -199,11 +206,10 @@ export default function LecturerManagement() {
                     return (
                         <>
                             {schedules.map(schedule => (
-                                <div style={{ margin: 10, textAlign: 'center' }}>
-                                    <p style={{ margin: 0, fontWeight: 'bold' }}>{schedule.fullName}</p>
-                                    <p style={{ margin: 0 }}>{schedule.classCode}</p>
+                                <>
+                                    <p style={{ margin: 0, fontWeight: 'bold' }}>{schedule.classCode}</p>
                                     <p style={{ margin: 0 }}>{schedule.classRoom}</p>
-                                </div>
+                                </>
                             ))}
                         </>
                     )
@@ -226,11 +232,10 @@ export default function LecturerManagement() {
                     return (
                         <>
                             {schedules.map(schedule => (
-                                <div style={{ margin: 10, textAlign: 'center' }}>
-                                    <p style={{ margin: 0, fontWeight: 'bold' }}>{schedule.fullName}</p>
-                                    <p style={{ margin: 0 }}>{schedule.classCode}</p>
+                                <>
+                                    <p style={{ margin: 0, fontWeight: 'bold' }}>{schedule.classCode}</p>
                                     <p style={{ margin: 0 }}>{schedule.classRoom}</p>
-                                </div>
+                                </>
                             ))}
                         </>
                     )
@@ -253,11 +258,10 @@ export default function LecturerManagement() {
                     return (
                         <>
                             {schedules.map(schedule => (
-                                <div style={{ margin: 10, textAlign: 'center' }}>
-                                    <p style={{ margin: 0, fontWeight: 'bold' }}>{schedule.fullName}</p>
-                                    <p style={{ margin: 0 }}>{schedule.classCode}</p>
+                                <>
+                                    <p style={{ margin: 0, fontWeight: 'bold' }}>{schedule.classCode}</p>
                                     <p style={{ margin: 0 }}>{schedule.classRoom}</p>
-                                </div>
+                                </>
                             ))}
                         </>
                     )
@@ -281,11 +285,10 @@ export default function LecturerManagement() {
                     return (
                         <>
                             {schedules.map(schedule => (
-                                <div style={{ margin: 10, textAlign: 'center' }}>
-                                    <p style={{ margin: 0, fontWeight: 'bold' }}>{schedule.fullName}</p>
-                                    <p style={{ margin: 0 }}>{schedule.classCode}</p>
+                                <>
+                                    <p style={{ margin: 0, fontWeight: 'bold' }}>{schedule.classCode}</p>
                                     <p style={{ margin: 0 }}>{schedule.classRoom}</p>
-                                </div>
+                                </>
                             ))}
                         </>
                     )
@@ -327,13 +330,17 @@ export default function LecturerManagement() {
                     placeholder="Giáo viên"
                     onSelect={(data) => { setLecturer(data) }}
                     notFoundContent={
-                        <Empty
-                            image={Empty.PRESENTED_IMAGE_SIMPLE}
-                            description={
-                                <span>
-                                    Không tìm thấy giáo viên
-                                </span>
-                            } />
+                        lecturerLoading
+                            ? <div style={{ width: '100%', textAlign: 'center' }}>
+                                <Spin size='small' />
+                            </div>
+                            : <Empty
+                                image={Empty.PRESENTED_IMAGE_SIMPLE}
+                                description={
+                                    <span>
+                                        Không tìm thấy giáo viên
+                                    </span>
+                                } />
                     }
                     options={lecturersOptions.map((lecturer) => ({
                         value: lecturer.fullName,
@@ -349,19 +356,18 @@ export default function LecturerManagement() {
                     }}
                 />
             </div>
-            {loading ?
-                <div style={{ textAlign: 'center' }}>
-                    <Spin />
-                </div>
-                : <Table
-                    columns={columns}
-                    rowKey={(record) => record.startTime}
-                    dataSource={schedules}
-                    pagination={null}
-                    loading={loading}
-                    onChange={handleTableChange}
-                    scroll={{ y: 'calc(100vh - 220px)' }}
-                />
+            {
+                lecturer
+                    ? <Table
+                        columns={columns}
+                        rowKey={(record) => record.startTime}
+                        dataSource={schedules}
+                        pagination={null}
+                        loading={loading}
+                        onChange={handleTableChange}
+                        scroll={{ y: 'calc(100vh - 220px)' }}
+                    />
+                    : <h5 style={{ textAlign: 'center', fontSize: '1.2rem' }}>Vui lòng chọn giáo viên</h5>
             }
         </div >
     )

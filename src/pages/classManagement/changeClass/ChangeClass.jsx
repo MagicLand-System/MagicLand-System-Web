@@ -10,6 +10,7 @@ export default function ChangeClass() {
     const navigate = useNavigate()
     const location = useLocation()
     const { student } = location.state
+    const [apiLoading, setApiLoading] = useState(false);
     const [classes, setClasses] = useState([])
     const [loading, setLoading] = useState(false);
 
@@ -38,6 +39,7 @@ export default function ChangeClass() {
     };
     const handleSaveChangeClass = async () => {
         try {
+            setApiLoading(true)
             if (!newClassId) {
                 Swal.fire({
                     position: "center",
@@ -47,19 +49,17 @@ export default function ChangeClass() {
                     timer: 2000
                 })
             } else {
-                await changeClass({
-                    fromClassId: classId,
-                    toClassId: newClassId,
-                    studentIdList: [studentId]
-                }).then(() => Swal.fire({
-                    position: "center",
-                    icon: "success",
-                    title: "Chuyển lớp thành công",
-                    showConfirmButton: false,
-                    timer: 2000
-                })).then(() => {
-                    navigate(-1)
-                })
+                const studentIdList = [studentId]
+                await changeClass(fromClassId, newClassId, studentIdList)
+                    .then(() => Swal.fire({
+                        position: "center",
+                        icon: "success",
+                        title: "Chuyển lớp thành công",
+                        showConfirmButton: false,
+                        timer: 2000
+                    })).then(() => {
+                        navigate(-1)
+                    })
             }
         } catch (error) {
             Swal.fire({
@@ -69,6 +69,8 @@ export default function ChangeClass() {
                 showConfirmButton: false,
                 timer: 2000
             })
+        } finally {
+            setApiLoading(false)
         }
     }
     const classesColumn = [
@@ -153,11 +155,11 @@ export default function ChangeClass() {
                 onChange={handleTableChange}
                 scroll={{ y: 'calc(100vh - 220px)' }}
             />
-            <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
-                <Button onClick={handleSaveChangeClass} className={styles.saveButton}>
+            <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 20 }}>
+                <Button loading={apiLoading} disabled={!newClassId} onClick={handleSaveChangeClass} className={styles.saveButton}>
                     Lưu
                 </Button>
-                <Button className={styles.cancelButton} onClick={() => { navigate(-1) }}>
+                <Button disabled={apiLoading} className={styles.cancelButton} onClick={() => { navigate(-1) }}>
                     Hủy
                 </Button>
             </div>

@@ -173,6 +173,11 @@ export default function ClassDetail() {
     };
     async function getListsOfSlots() {
         const data = await getSlots();
+        data?.sort((a, b) => {
+            const timeA = formatSlot(a.startTime);
+            const timeB = formatSlot(b.startTime);
+            return compareAsc(timeA, timeB);
+        })
         setSlots(data);
     };
     useEffect(() => {
@@ -311,7 +316,7 @@ export default function ClassDetail() {
         {
             title: 'Tuổi',
             dataIndex: 'dateOfBirth',
-            render: (_, record) => (new Date().getFullYear() - new Date(record.dateOfBirth).getFullYear()),
+            render: (_, record) => (record.dateOfBirth && (new Date().getFullYear() - new Date(record.dateOfBirth).getFullYear())),
             sorter: (a, b) => a.age - b.age,
         },
         {
@@ -344,7 +349,8 @@ export default function ClassDetail() {
         },
         {
             title: 'Số điện thoại phụ huynh',
-            dataIndex: 'parentPhoneNumber'
+            dataIndex: 'parentPhoneNumber',
+            render: (parentPhoneNumber) => parentPhoneNumber && formatPhone(parentPhoneNumber)
         },
         {
             title: 'Chuyển lớp',
@@ -877,15 +883,10 @@ export default function ClassDetail() {
                                 value={slotSession}
                                 placeholder="Giờ học"
                                 onChange={(value) => setSlotSession(value)}
-                                options={slots
-                                    .sort((a, b) => {
-                                        const timeA = formatSlot(a.startTime);
-                                        const timeB = formatSlot(b.startTime);
-                                        return compareAsc(timeA, timeB);
-                                    }).map((slot) => ({
-                                        value: slot.id,
-                                        label: `${slot.startTime} - ${slot.endTime}`
-                                    }))}
+                                options={slots.map((slot) => ({
+                                    value: slot.id,
+                                    label: `${slot.startTime} - ${slot.endTime}`
+                                }))}
                                 disabled={apiLoading}
                             />
                             <div style={{ height: '24px', paddingLeft: '10px' }}>

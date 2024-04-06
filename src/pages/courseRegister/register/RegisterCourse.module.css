@@ -16,11 +16,9 @@
   padding: 2px 15px;
 }
 .importButton {
-  margin-top: 24px;
   background-color: #f2c955;
   color: black !important;
-  font-size: 1rem;
-  height: 40px;
+  margin-right: 8px;
 }
 .importButton:hover {
   background: #ffd766 !important;
@@ -35,6 +33,9 @@
   background: #ffeebc !important;
   color: black !important;
 }
+.searchBar {
+  min-width: 500px;
+}
 .searchBar input:hover {
   border-color: #ffd766 !important;
 }
@@ -48,57 +49,6 @@
 .searchBar button:hover {
   background: #ffd766 !important;
   color: black !important;
-}
-.addTitle span {
-  color: red;
-}
-.classTitle {
-  color: #888888;
-  margin: 0;
-  font-size: 1rem;
-}
-.classDetail {
-  margin: 0;
-  text-align: right;
-  font-size: 1rem;
-}
-.classPart {
-  padding: 12px 12px 6px;
-  border: 1px solid #f2c955;
-  background-color: #fffcf4;
-  height: 100%;
-  width: 100%;
-  box-sizing: border-box;
-  border-radius: 10px;
-}
-.classPartTitle {
-  font-size: 1.2rem;
-  margin: 8px 0;
-}
-.saveButton {
-  background-color: #f2c955;
-  color: black !important;
-  margin-right: 8px;
-}
-.saveButton:hover {
-  background: #ffd766 !important;
-  color: black !important;
-  border: 1px solid #ffd766 !important;
-}
-.cancelButton {
-  background-color: #ff6868;
-  margin-right: 8px;
-  color: white !important;
-}
-.cancelButton:hover {
-  background: #fb5959 !important;
-  color: white !important;
-  border: 1px solid #ff6868 !important;
-}
-.modalHeader {
-  padding-bottom: 5px;
-  margin-bottom: 12px !important;
-  border-bottom: 1px solid #f2c955 !important;
 }
 .input {
   width: 100%;
@@ -117,19 +67,83 @@
 .input div:hover {
   border-color: #f2c955 !important;
 }
+.saveButton {
+  background-color: #f2c955;
+  color: black !important;
+}
+.saveButton:hover {
+  background: #ffd766 !important;
+  color: black !important;
+  border: 1px solid #ffd766 !important;
+}
+.cancelButton {
+  background-color: #FF6868;
+  margin-right: 8px;
+  color: white !important;
+}
+.cancelButton:hover {
+  background: #fb5959 !important;
+  color: white !important;
+  border: 1px solid #FF6868 !important;
+}
 .addTitle {
-  text-align: right;
+  margin: 0 0 4px;
+  font-size: 14px;
+}
+.addTitle span {
+  color: red;
+}
+.modalHeader {
+  padding-bottom: 5px;
+  margin-bottom: 12px !important;
+  border-bottom: 1px solid #f2c955 !important;
+}
+.column {
+  padding: 0 10px;
+}
+.button {
+  margin-bottom: 20px;
+  width: 100%;
   height: 40px;
+  background-color: #f2c955;
+  color: black;
+  border-radius: 20px;
+  font-size: 1.2rem;
+}
+.button:hover {
+  background: #ffd766 !important;
+  color: black !important;
+  border: 1px solid #f2c955 !important;
+}
+.button:focus,
+.button:focus-visible {
+  outline: none !important;
+}
+.button:disabled {
+  background-color: #f9e4aa !important;
+  color: #808080 !important;
+}
+.imageCol {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 10px;
+}
+.image {
+  width: 80px;
+  height: 80px;
+}
+.steps {
+  width: 40%;
+  margin: 20px auto 30px
+}
+.syllabusInfo {
+  text-align: right;
   margin: 0;
-  line-height: 40px;
-  margin-right: 16px;
+  font-size: 1rem;
 }
-.currencyInput {
-  border: 1px solid #d9d9d9;
-  box-sizing: border-box;
-  border-radius: 6px;
-  padding: 4px 11px 4px;
-}
-.currencyInput::placeholder {
-  color: #bfbfbf;
+.syllabusTitle {
+  color: #888888;
+  margin: 0;
+  font-size: 1rem;
 }

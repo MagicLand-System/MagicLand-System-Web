@@ -88,7 +88,9 @@ export default function RoomManagement() {
     }, []);
     useEffect(() => {
         if (tab === "weekly") {
-            getListsOfSchedule(room, startOfWeek(new Date(date)), endOfWeek(new Date(date)));
+            if (room) {
+                getListsOfSchedule(room, startOfWeek(new Date(date)), endOfWeek(new Date(date)));
+            }
         } else {
             getListsOfDailySchedule(dailyDate, search)
         }
@@ -244,11 +246,10 @@ export default function RoomManagement() {
                     return (
                         <>
                             {schedules.map(schedule => (
-                                <div style={{ margin: 10, textAlign: 'center' }}>
-                                    <p style={{ margin: 0, fontWeight: 'bold' }}>{schedule.name}</p>
-                                    <p style={{ margin: 0 }}>{schedule.classCode}</p>
+                                <>
+                                    <p style={{ margin: 0, fontWeight: 'bold' }}>{schedule.classCode}</p>
                                     <p style={{ margin: 0 }}>{schedule.lecturerName}</p>
-                                </div>
+                                </>
                             ))}
                         </>
                     )
@@ -270,11 +271,10 @@ export default function RoomManagement() {
                     return (
                         <>
                             {schedules.map(schedule => (
-                                <div style={{ margin: 10, textAlign: 'center' }}>
-                                    <p style={{ margin: 0, fontWeight: 'bold' }}>{schedule.name}</p>
-                                    <p style={{ margin: 0 }}>{schedule.classCode}</p>
+                                <>
+                                    <p style={{ margin: 0, fontWeight: 'bold' }}>{schedule.classCode}</p>
                                     <p style={{ margin: 0 }}>{schedule.lecturerName}</p>
-                                </div>
+                                </>
                             ))}
                         </>
                     )
@@ -297,11 +297,10 @@ export default function RoomManagement() {
                     return (
                         <>
                             {schedules.map(schedule => (
-                                <div style={{ margin: 10, textAlign: 'center' }}>
-                                    <p style={{ margin: 0, fontWeight: 'bold' }}>{schedule.name}</p>
-                                    <p style={{ margin: 0 }}>{schedule.classCode}</p>
+                                <>
+                                    <p style={{ margin: 0, fontWeight: 'bold' }}>{schedule.classCode}</p>
                                     <p style={{ margin: 0 }}>{schedule.lecturerName}</p>
-                                </div>
+                                </>
                             ))}
                         </>
                     )
@@ -324,11 +323,10 @@ export default function RoomManagement() {
                     return (
                         <>
                             {schedules.map(schedule => (
-                                <div style={{ margin: 10, textAlign: 'center' }}>
-                                    <p style={{ margin: 0, fontWeight: 'bold' }}>{schedule.name}</p>
-                                    <p style={{ margin: 0 }}>{schedule.classCode}</p>
+                                <>
+                                    <p style={{ margin: 0, fontWeight: 'bold' }}>{schedule.classCode}</p>
                                     <p style={{ margin: 0 }}>{schedule.lecturerName}</p>
-                                </div>
+                                </>
                             ))}
                         </>
                     )
@@ -351,11 +349,10 @@ export default function RoomManagement() {
                     return (
                         <>
                             {schedules.map(schedule => (
-                                <div style={{ margin: 10, textAlign: 'center' }}>
-                                    <p style={{ margin: 0, fontWeight: 'bold' }}>{schedule.name}</p>
-                                    <p style={{ margin: 0 }}>{schedule.classCode}</p>
+                                <>
+                                    <p style={{ margin: 0, fontWeight: 'bold' }}>{schedule.classCode}</p>
                                     <p style={{ margin: 0 }}>{schedule.lecturerName}</p>
-                                </div>
+                                </>
                             ))}
                         </>
                     )
@@ -378,11 +375,10 @@ export default function RoomManagement() {
                     return (
                         <>
                             {schedules.map(schedule => (
-                                <div style={{ margin: 10, textAlign: 'center' }}>
-                                    <p style={{ margin: 0, fontWeight: 'bold' }}>{schedule.name}</p>
-                                    <p style={{ margin: 0 }}>{schedule.classCode}</p>
+                                <>
+                                    <p style={{ margin: 0, fontWeight: 'bold' }}>{schedule.classCode}</p>
                                     <p style={{ margin: 0 }}>{schedule.lecturerName}</p>
-                                </div>
+                                </>
                             ))}
                         </>
                     )
@@ -406,11 +402,10 @@ export default function RoomManagement() {
                     return (
                         <>
                             {schedules.map(schedule => (
-                                <div style={{ margin: 10, textAlign: 'center' }}>
-                                    <p style={{ margin: 0, fontWeight: 'bold' }}>{schedule.name}</p>
-                                    <p style={{ margin: 0 }}>{schedule.classCode}</p>
+                                <>
+                                    <p style={{ margin: 0, fontWeight: 'bold' }}>{schedule.classCode}</p>
                                     <p style={{ margin: 0 }}>{schedule.lecturerName}</p>
-                                </div>
+                                </>
                             ))}
                         </>
                     )
@@ -464,22 +459,15 @@ export default function RoomManagement() {
                                         </ConfigProvider>
                                         <Search className={styles.searchBar} placeholder="Tìm kiếm mã lớp, tên giáo viên" onSearch={(value, e) => { setSearch(value) }} enterButton />
                                     </div>
-                                    {
-                                        loading ?
-                                            <div style={{ textAlign: 'center' }}>
-                                                <Spin />
-                                            </div>
-                                            :
-                                            <Table
-                                                columns={columns}
-                                                rowKey={(record) => record.name}
-                                                dataSource={dailySchedules}
-                                                pagination={tableParams.pagination}
-                                                loading={loading}
-                                                onChange={handleTableChange}
-                                                scroll={{ y: 'calc(100vh - 220px)' }}
-                                            />
-                                    }
+                                    {<Table
+                                        columns={columns}
+                                        rowKey={(record) => record.name}
+                                        dataSource={dailySchedules}
+                                        pagination={tableParams.pagination}
+                                        loading={loading}
+                                        onChange={handleTableChange}
+                                        scroll={{ y: 'calc(100vh - 220px)' }}
+                                    />}
                                 </>
                             )
                         },
@@ -539,11 +527,8 @@ export default function RoomManagement() {
                                         />
                                     </div>
                                     {
-                                        loading ?
-                                            <div style={{ textAlign: 'center' }}>
-                                                <Spin />
-                                            </div>
-                                            : <Table
+                                        room
+                                            ? <Table
                                                 columns={weeklyColumns}
                                                 rowKey={(record) => record.startTime}
                                                 dataSource={schedules}
@@ -552,6 +537,7 @@ export default function RoomManagement() {
                                                 onChange={handleTableChange}
                                                 scroll={{ y: 'calc(100vh - 220px)' }}
                                             />
+                                            : <h5 style={{ textAlign: 'center', fontSize: '1.2rem' }}>Vui lòng chọn phòng học</h5>
                                     }
                                 </>
                             )

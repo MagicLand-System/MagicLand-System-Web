@@ -52,6 +52,13 @@ export default function CourseDetail() {
       setLoading(true);
       const data = await getCoursePrices(id);
       setPrices(data);
+      setTableParams({
+        pagination: {
+          current: 1,
+          pageSize: 10,
+          total: data?.length
+        },
+      });
     } catch (error) {
       console.log(error);
     } finally {
@@ -74,18 +81,24 @@ export default function CourseDetail() {
       flag = false
       setStartError("Hãy chọn thời gian bắt đầu")
     } else {
-      setPriceError(null)
+      setStartError(null)
     }
-    // if (start && end && compareAsc(start, end) >= 0) {
-    //   flag = false
-    //   setEndError("Thời gian kết thúc phải sau thời gian bắt đầu")
-    // } else {
-    //   setEndError(null)
-    // }
+    if (!end) {
+      flag = false
+      setEndError("Hãy chọn thời gian bắt đầu")
+    } else {
+      setEndError(null)
+    }
+    if (start && end && compareAsc(start, end) >= 0) {
+      flag = false
+      setEndError("Thời gian kết thúc phải sau thời gian bắt đầu")
+    } else {
+      setEndError(null)
+    }
     if (flag) {
       try {
         setApiLoading(true)
-        await updateCoursePrice({ courseId: id, effectiveDate: start, price })
+        await updateCoursePrice({ courseId: id, startTime: start, endTime: end, price })
           .then(() => {
             Swal.fire({
               position: "center",
@@ -97,7 +110,7 @@ export default function CourseDetail() {
           })
           .then(() => {
             getCourseDetail(id)
-            getCoursePrices(id)
+            getPrices(id)
             setPriceModalOpen(false)
           })
       } catch (error) {
@@ -135,17 +148,23 @@ export default function CourseDetail() {
     {
       title: 'Thời gian áp dụng',
       render: (_, record) => {
-        return `${formatDateTime(record.effectiveDate)}`
+        return record.startDate && `${formatDateTime(record.startDate)}`
+      },
+    },
+    {
+      title: 'Thời gian kết thúc',
+      render: (_, record) => {
+        return record.endDate && `${formatDateTime(record.endDate)}`
       },
     },
   ];
   return (
     <div className={styles.container}>
       <h2 className={styles.title}>Chi tiết khóa học</h2>
-      {courseData && (
+      {courseData && syllabusData && (
         <>
           <Row>
-            <Col xs={12} md={8} style={{ marginBottom: '40px' }}>
+            <Col xs={24} lg={8} style={{ marginBottom: '20px', boxSizing: 'border-box', padding: '0px 8px' }}>
               <div className={styles.classPart}>
                 <h5 className={styles.classPartTitle}>Thông tin khóa học:</h5>
                 <Row style={{ marginTop: 12 }}>
@@ -190,54 +209,52 @@ export default function CourseDetail() {
                 </Row>
               </div>
             </Col>
-            {syllabusData &&
-              <Col xs={12} md={8} style={{ marginBottom: '40px' }}>
-                <div className={styles.classPart}>
-                  <h5 className={styles.classPartTitle}>Giáo trình:</h5>
-                  <Row style={{ marginTop: 12 }}>
-                    <Col span={8}>
-                      <p className={styles.classTitle}>Mã giáo trình:</p>
-                    </Col>
-                    <Col span={16}>
-                      <p className={styles.classDetail}>{syllabusData.subjectCode}</p>
-                    </Col>
-                  </Row>
-                  <Row style={{ marginTop: 12 }}>
-                    <Col span={8}>
-                      <p className={styles.classTitle}>Tên giáo trình:</p>
-                    </Col>
-                    <Col span={16}>
-                      <p className={styles.classDetail}>{syllabusData.syllabusName}</p>
-                    </Col>
-                  </Row>
-                  <Row style={{ marginTop: 12 }}>
-                    <Col span={8}>
-                      <p className={styles.classTitle}>Ngày hiệu lực:</p>
-                    </Col>
-                    <Col span={16}>
-                      <p className={styles.classDetail}>{syllabusData.effectiveDate}</p>
-                    </Col>
-                  </Row>
-                  <Row style={{ marginTop: 12 }}>
-                    <Col span={24}>
-                      <p className={styles.classTitle}>Mô tả:</p>
-                    </Col>
-                    <Col span={24}>
-                      <p className={styles.classDetail} style={{ textAlign: 'left' }}>{syllabusData.description}</p>
-                    </Col>
-                  </Row>
-                  <Row style={{ marginTop: 12 }}>
-                    <Col span={8}>
-                      <p className={styles.classTitle}>Chi tiết:</p>
-                    </Col>
-                    <Col span={16}>
-                      <Link to={`/syllabus-management/detail/${courseData.syllabusId}`} className={styles.classDetail} style={{ display: 'inline-block', width: '100%' }}>Xem tại đây</Link>
-                    </Col>
-                  </Row>
-                </div>
-              </Col>
-            }
-            <Col xs={12} md={8} style={{ marginBottom: '40px' }}>
+            <Col xs={24} lg={8} style={{ marginBottom: '20px', boxSizing: 'border-box', padding: '0px 8px' }}>
+              <div className={styles.classPart}>
+                <h5 className={styles.classPartTitle}>Giáo trình:</h5>
+                <Row style={{ marginTop: 12 }}>
+                  <Col span={8}>
+                    <p className={styles.classTitle}>Mã giáo trình:</p>
+                  </Col>
+                  <Col span={16}>
+                    <p className={styles.classDetail}>{syllabusData.subjectCode}</p>
+                  </Col>
+                </Row>
+                <Row style={{ marginTop: 12 }}>
+                  <Col span={8}>
+                    <p className={styles.classTitle}>Tên giáo trình:</p>
+                  </Col>
+                  <Col span={16}>
+                    <p className={styles.classDetail}>{syllabusData.syllabusName}</p>
+                  </Col>
+                </Row>
+                <Row style={{ marginTop: 12 }}>
+                  <Col span={8}>
+                    <p className={styles.classTitle}>Ngày hiệu lực:</p>
+                  </Col>
+                  <Col span={16}>
+                    <p className={styles.classDetail}>{syllabusData.effectiveDate}</p>
+                  </Col>
+                </Row>
+                <Row style={{ marginTop: 12 }}>
+                  <Col span={24}>
+                    <p className={styles.classTitle}>Mô tả:</p>
+                  </Col>
+                  <Col span={24}>
+                    <p className={styles.classDetail} style={{ textAlign: 'left' }}>{syllabusData.description}</p>
+                  </Col>
+                </Row>
+                <Row style={{ marginTop: 12 }}>
+                  <Col span={8}>
+                    <p className={styles.classTitle}>Chi tiết:</p>
+                  </Col>
+                  <Col span={16}>
+                    <Link to={`/syllabus-management/detail/${courseData.syllabusId}`} className={styles.classDetail} style={{ display: 'inline-block', width: '100%' }}>Xem tại đây</Link>
+                  </Col>
+                </Row>
+              </div>
+            </Col>
+            <Col xs={24} lg={8} style={{ marginBottom: '20px', boxSizing: 'border-box', padding: '0px 8px' }}>
               <div className={styles.classPart}>
                 <h5 className={styles.classPartTitle}>Hình ảnh:</h5>
                 <img style={{ width: '100%' }} src={courseData.image} alt="Hình ảnh" />
@@ -253,7 +270,8 @@ export default function CourseDetail() {
             </Button>
           </div>
         </>
-      )}
+      )
+      }
       <ConfigProvider
         theme={{
           components: {
@@ -303,7 +321,7 @@ export default function CourseDetail() {
               </div>
             </Col>
           </Row>
-          {/* <Row>
+          <Row>
             <Col span={8}>
               <p className={styles.addTitle}><span>*</span> Thời gian kết thúc:</p>
             </Col>
@@ -322,7 +340,7 @@ export default function CourseDetail() {
                   className={styles.input}
                   value={end}
                   disabledDate={(current) => {
-                    return current && current < start;
+                    return current && current <= start;
                   }}
                   onChange={(date) => setEnd(date)}
                   allowClear={false}
@@ -333,14 +351,14 @@ export default function CourseDetail() {
                 {endError && (<p style={{ color: 'red', fontSize: '14px', margin: '0' }}>{endError}</p>)}
               </div>
             </Col>
-          </Row> */}
+          </Row>
           <Row>
             <Col span={8}>
               <p className={styles.addTitle}><span>*</span> Chi phí:</p>
             </Col>
             <Col span={16}>
               <CurrencyInput
-                className={`ant-input css-dev-only-do-not-override-1wdnj1i ${styles.input}  ${styles.inputNumber}`}
+                className={`ant-input ${styles.currencyInput} ${styles.input}  ${styles.inputNumber}`}
                 placeholder="Chi phí"
                 allowDecimals={false}
                 value={price}
@@ -379,6 +397,6 @@ export default function CourseDetail() {
         onChange={handleTableChange}
         scroll={{ y: 'calc(100vh - 220px)' }}
       />
-    </div>
+    </div >
   )
 }

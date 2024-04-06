@@ -74,11 +74,17 @@ export const getSuitableClass = async (credential) => {
   });
   return response.data;
 };
-export const changeClass = async (credential) => {
-  console.log(credential)
-  const response = await api.get(`/api/v1/classes/staff/change`, {
-    params: credential
-  });
+export const changeClass = async (fromClassId, toClassId, studentIdList) => {
+  const params = {
+    fromClassId,
+    toClassId,
+  };
+  if (studentIdList.length > 0) {
+    studentIdList.forEach((id, index) => {
+      params[`studentIdList[${index}]`] = id;
+    });
+  }
+  const response = await api.get(`/api/v1/classes/staff/change`, { params });
   return response.data;
 };
 export const cancelClass = async (id) => {

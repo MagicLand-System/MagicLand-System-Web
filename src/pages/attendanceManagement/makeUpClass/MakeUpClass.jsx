@@ -14,6 +14,7 @@ export default function MakeUpClass() {
     const navigate = useNavigate()
     const location = useLocation()
     const { student } = location.state
+    const [apiLoading, setApiLoading] = useState(false);
     const [classes, setClasses] = useState([])
     const [loading, setLoading] = useState(false);
     const [slots, setSlots] = useState([])
@@ -45,6 +46,7 @@ export default function MakeUpClass() {
     };
     const handleSaveMakeUpClass = async () => {
         try {
+            setApiLoading(true)
             if (!makeUpScheduleId) {
                 Swal.fire({
                     position: "center",
@@ -73,6 +75,8 @@ export default function MakeUpClass() {
                 showConfirmButton: false,
                 timer: 2000
             })
+        } finally {
+            setApiLoading(false)
         }
     }
     async function getListsOfSlots() {
@@ -200,10 +204,10 @@ export default function MakeUpClass() {
                 scroll={{ y: 'calc(100vh - 220px)' }}
             />
             <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
-                <Button onClick={handleSaveMakeUpClass} className={styles.saveButton}>
+                <Button loading={apiLoading} disabled={!makeUpScheduleId} onClick={handleSaveMakeUpClass} className={styles.saveButton}>
                     Lưu
                 </Button>
-                <Button className={styles.cancelButton} onClick={() => { navigate(-1) }}>
+                <Button disabled={apiLoading} className={styles.cancelButton} onClick={() => { navigate(-1) }}>
                     Hủy
                 </Button>
             </div>

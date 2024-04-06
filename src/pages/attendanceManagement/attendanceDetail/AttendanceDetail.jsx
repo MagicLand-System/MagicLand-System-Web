@@ -11,6 +11,7 @@ const { Search } = Input;
 
 export default function AttendanceDetail() {
     const navigate = useNavigate()
+    const [apiLoading, setApiLoading] = useState(false);
     const [attendanceList, setAttendanceList] = useState([])
     const [loading, setLoading] = useState(false);
     const [search, setSearch] = useState(null)
@@ -44,6 +45,7 @@ export default function AttendanceDetail() {
     }
     const handleSaveAttendance = async (e) => {
         try {
+            setApiLoading(true);
             console.log(attendanceList)
             await takeAttendance(attendanceList)
                 .then(() =>
@@ -62,6 +64,8 @@ export default function AttendanceDetail() {
                 showConfirmButton: false,
                 timer: 2000
             })
+        } finally {
+            setApiLoading(false)
         }
     }
     async function getListOfStudents(searchString, scheduleId) {
@@ -101,7 +105,7 @@ export default function AttendanceDetail() {
         },
         {
             title: 'Số điện thoại',
-            render: (_, record) => (formatPhone(record.student.user.phone))
+            render: (_, record) => (record.student?.user?.phone && formatPhone(record.student.user.phone))
         },
         {
             title: 'Có mặt',
@@ -134,10 +138,10 @@ export default function AttendanceDetail() {
                 scroll={{ y: 'calc(100vh - 220px)' }}
             />
             <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
-                <Button onClick={handleSaveAttendance} className={styles.saveButton}>
+                <Button loading={apiLoading} onClick={handleSaveAttendance} className={styles.saveButton}>
                     Lưu
                 </Button>
-                <Button className={styles.cancelButton} onClick={() => { navigate(-1) }}>
+                <Button disabled={apiLoading} className={styles.cancelButton} onClick={() => { navigate(-1) }}>
                     Hủy
                 </Button>
             </div>
