@@ -1,12 +1,11 @@
 import React, { useState, useEffect } from 'react'
 import styles from './CourseRegister.module.css'
-import { Button, Card, Col, ConfigProvider, Empty, Input, Row, Select, Slider, Spin, Table, Transfer } from 'antd';
-import { PlusOutlined, SearchOutlined } from '@ant-design/icons';
+import { Button, Card, Col, ConfigProvider, Empty, Input, Row, Select, Slider, Spin, Pagination } from 'antd';
+import { SearchOutlined } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
-import { getCoursesForRegister, getSubjects } from '../../api/courseApi';
+import { getCourses, getCoursesForRegister, getSubjects, searchCourses } from '../../api/courseApi';
 import { formatDate } from '../../utils/utils';
 
-const { Search } = Input;
 const { Meta } = Card;
 
 export default function CourseRegister() {
@@ -19,11 +18,18 @@ export default function CourseRegister() {
     const [loading, setLoading] = useState(false);
     const [age, setAge] = useState([]);
 
+    const [currentPage, setCurrentPage] = useState(0);
+    const pageSize = 9;
+    const [currentCourses, setCurrentCourses] = useState([]);
+
     async function getListsOfCourses(search, findSubjects, age) {
         try {
             setLoading(true);
             const data = await getCoursesForRegister(search, findSubjects, age[0], age[1]);
             setCourses(data);
+            setCurrentPage(1)
+            const currentCourses = data.slice(0, Math.min(9, data.length));
+            setCurrentCourses(currentCourses);
         } catch (error) {
             console.log(error);
         } finally {
@@ -37,6 +43,12 @@ export default function CourseRegister() {
     };
 
     useEffect(() => {
+        const startIndex = (currentPage - 1) * pageSize;
+        const endIndex = Math.min(startIndex + pageSize, courses.length);
+        const currentCourses = courses.slice(startIndex, endIndex);
+        setCurrentCourses(currentCourses);
+    }, [currentPage])
+    useEffect(() => {
         getListsOfSubjects();
         getListsOfCourses(search, findSubjects, age);
     }, []);
@@ -49,7 +61,7 @@ export default function CourseRegister() {
                         <h5 style={{ fontSize: '1.2rem', margin: 0 }}>Tìm khóa học</h5>
                         <Row style={{ marginTop: 10 }}>
                             <Col span={24} >
-                                <p className={styles.searchTitle}> Loại khóa học:</p>
+                                <p className={styles.searchTitle}>Loại khóa học:</p>
                             </Col>
                             <Col span={24}>
                                 <Select
@@ -113,7 +125,7 @@ export default function CourseRegister() {
                                         },
                                     }}
                                 >
-                                    <Slider tooltip={{ open: true, placement: "bottom", color: 'transparent', overlayInnerStyle: { textAlign: 'center', color: 'black', padding: 0, boxShadow: 'none' } }} value={age} onChange={(value) => setAge(value)} range min={4} max={10} />
+                                    <Slider tooltip={{ open: true, placement: "bottom", color: 'transparent', overlayInnerStyle: { textAlign: 'center', color: 'black', padding: 0, boxShadow: 'none' }, overlayStyle: { zIndex: 1 } }} value={age} onChange={(value) => setAge(value)} range min={4} max={10} />
                                 </ConfigProvider>
                             </Col>
                         </Row>
@@ -138,26 +150,35 @@ export default function CourseRegister() {
                             <Spin />
                         </div>
                         : courses.length > 0 ?
-                            <Row>
-                                {courses.map(course => (
-                                    <Col span={8} key={course.id}>
-                                        <Card
-                                            hoverable
-                                            style={{ width: "calc(100% - 10px)", margin: "20px 0" }}
-                                            cover={<img alt="course image" src={course.image} style={{ aspectRatio: '8/5' }} />}
-                                            onClick={() => navigate(`detail/${course.id}`)}
-                                        >
-                                            <Meta title={course.name} description={
-                                                <>
-                                                    <p style={{ margin: 0 }}><span style={{ fontWeight: 'bold' }}>Loại khóa học:&ensp;</span>{course.subjectName}</p>
-                                                    <p style={{ margin: 0 }}><span style={{ fontWeight: 'bold' }}>Độ tuổi phù hợp:&ensp;</span>{course.minYearOldsStudent} - {course.maxYearOldsStudent} tuổi</p>
-                                                    <p style={{ margin: 0 }}><span style={{ fontWeight: 'bold' }}>Ngày mở lớp gần nhất:&ensp;</span>{course.earliestClassTime && formatDate(course.earliestClassTime)}</p>
-                                                </>
-                                            } />
-                                        </Card>
-                                    </Col>
-                                ))}
-                            </Row>
+                            <>
+                                <Row>
+                                    {currentCourses.map(course => (
+                                        <Col span={8} key={course.id}>
+                                            <Card
+                                                hoverable
+                                                style={{ width: "calc(100% - 10px)", margin: "20px 0" }}
+                                                cover={<img alt="course image" src={course.image} style={{ aspectRatio: '8/5' }} />}
+                                                onClick={() => navigate(`detail/${course.id}`)}
+                                            >
+                                                <Meta title={course.name} description={
+                                                    <>
+                                                        <p style={{ margin: 0 }}><span style={{ fontWeight: 'bold' }}>Loại khóa học:&ensp;</span>{course.subjectName}</p>
+                                                        <p style={{ margin: 0 }}><span style={{ fontWeight: 'bold' }}>Độ tuổi phù hợp:&ensp;</span>{course.minYearOldsStudent} - {course.maxYearOldsStudent} tuổi</p>
+                                                        <p style={{ margin: 0 }}><span style={{ fontWeight: 'bold' }}>Ngày mở lớp gần nhất:&ensp;</span>{course.earliestClassTime && formatDate(course.earliestClassTime)}</p>
+                                                    </>
+                                                } />
+                                            </Card>
+                                        </Col>
+                                    ))}
+                                </Row>
+                                <Pagination
+                                    style={{ marginTop: '20px', textAlign: 'center' }}
+                                    current={currentPage}
+                                    pageSize={pageSize}
+                                    total={courses.length}
+                                    onChange={(page) => setCurrentPage(page)}
+                                />
+                            </>
                             : <h5 style={{ textAlign: 'center', fontSize: '1.2rem' }}>Không có khóa học phù hợp</h5>
                     }
                 </Col>

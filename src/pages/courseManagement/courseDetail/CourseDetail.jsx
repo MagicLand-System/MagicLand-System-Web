@@ -166,7 +166,7 @@ export default function CourseDetail() {
           <Row>
             <Col xs={24} lg={8} style={{ marginBottom: '20px', boxSizing: 'border-box', padding: '0px 8px' }}>
               <div className={styles.classPart}>
-                <h5 className={styles.classPartTitle}>Thông tin khóa học:</h5>
+                <h5 className={styles.classPartTitle}>Thông tin khóa học</h5>
                 <Row style={{ marginTop: 12 }}>
                   <Col span={8}>
                     <p className={styles.classTitle}>Tên khóa học:</p>
@@ -211,7 +211,7 @@ export default function CourseDetail() {
             </Col>
             <Col xs={24} lg={8} style={{ marginBottom: '20px', boxSizing: 'border-box', padding: '0px 8px' }}>
               <div className={styles.classPart}>
-                <h5 className={styles.classPartTitle}>Giáo trình:</h5>
+                <h5 className={styles.classPartTitle}>Giáo trình</h5>
                 <Row style={{ marginTop: 12 }}>
                   <Col span={8}>
                     <p className={styles.classTitle}>Mã giáo trình:</p>
@@ -256,7 +256,7 @@ export default function CourseDetail() {
             </Col>
             <Col xs={24} lg={8} style={{ marginBottom: '20px', boxSizing: 'border-box', padding: '0px 8px' }}>
               <div className={styles.classPart}>
-                <h5 className={styles.classPartTitle}>Hình ảnh:</h5>
+                <h5 className={styles.classPartTitle}>Hình ảnh</h5>
                 <img style={{ width: '100%' }} src={courseData.image} alt="Hình ảnh" />
               </div>
             </Col>

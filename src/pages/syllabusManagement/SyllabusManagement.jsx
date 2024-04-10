@@ -24,6 +24,7 @@ export default function SyllabusManagement() {
     const [fileInput, setFileInput] = useState(null);
     const [excelFile, setExcelFile] = useState(null);
     const [apiLoading, setApiLoading] = useState(false)
+    const [numberOfSyllabus, setNumberOfSyllabus] = useState(null)
 
     const [tableParams, setTableParams] = useState({
         pagination: {
@@ -36,16 +37,15 @@ export default function SyllabusManagement() {
         try {
             setLoading(true);
             const data = await searchSyllabuses(searchString);
-            if (data) {
-                setSyllabuses(data);
-                setTableParams({
-                    ...tableParams,
-                    pagination: {
-                        ...tableParams.pagination,
-                        total: data.length,
-                    },
-                });
-            }
+            setNumberOfSyllabus(data?.numberOfSyllabus)
+            setSyllabuses(data?.syllabuses);
+            setTableParams({
+                ...tableParams,
+                pagination: {
+                    ...tableParams.pagination,
+                    total: data.length,
+                },
+            });
         } catch (error) {
             console.log(error)
         } finally {
@@ -143,7 +143,6 @@ export default function SyllabusManagement() {
             setApiLoading(true)
             const syllabusDetail = await handleImportSyllabus(excelFile, fileInput)
             if (syllabusDetail) {
-                console.log(!syllabusDetail)
                 navigate('add-syllabus', { state: { syllabusDetail } })
             }
         }
@@ -157,6 +156,7 @@ export default function SyllabusManagement() {
                 <Button onClick={() => setImportModalOpen(true)} className={styles.importButton} icon={<PlusOutlined />}>Thêm giáo trình</Button>
                 <Search className={styles.searchBar} placeholder="Tìm kiếm mã giáo trình, tên giáo trình" onSearch={(value, e) => { setSearch(value) }} enterButton />
             </div>
+            <h5 style={{ fontSize: '1rem', color: '#888888', fontWeight: 'normal', margin: '0 10px 10px' }}>Số lượng giáo trình: {numberOfSyllabus}</h5>
             <Table
                 columns={columns}
                 rowKey={(record) => record.syllabusId}

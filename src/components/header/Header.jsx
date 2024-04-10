@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from 'react'
-import { HomeOutlined, ShoppingCartOutlined } from '@ant-design/icons';
 import { Button, ConfigProvider, Menu } from 'antd';
 import styles from './Header.module.css'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
@@ -33,7 +32,7 @@ export default function Header() {
       setItems([
         {
           label: (
-            <Link className={styles.label} to={'#'}>
+            <Link className={styles.label} to={'/dashboard'}>
               Thống kê
             </Link>
           ),
@@ -70,14 +69,6 @@ export default function Header() {
             </Link>
           ),
           key: '/class-management',
-        },
-        {
-          label: (
-            <Link className={styles.label} to={'#'}>
-              Sự kiện
-            </Link>
-          ),
-          key: '/event-management',
         },
         {
           label: (
@@ -122,7 +113,7 @@ export default function Header() {
       setItems([
         {
           label: (
-            <Link className={styles.label} to={'#'}>
+            <Link className={styles.label} to={'/dashboard'}>
               Thống kê
             </Link>
           ),
@@ -143,14 +134,6 @@ export default function Header() {
             </Link>
           ),
           key: '/course-management',
-        },
-        {
-          label: (
-            <Link className={styles.label} to={'#'}>
-              Sự kiện
-            </Link>
-          ),
-          key: '/event-management',
         },
         {
           label: (

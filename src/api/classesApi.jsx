@@ -103,7 +103,12 @@ export const arrangeMakeUpClass = async (scheduleId, studentId, makeUpScheduleId
 };
 
 export const importClass = async (credential) => {
-  const response = await api.post("/api/v1/classes/insertClasses", credential);
+  const response = await api.post("/api/v1/classes/insertClassesV2", credential);
+  return response.data;
+};
+
+export const saveImport = async (credential) => {
+  const response = await api.post("/api/v1/classes/insertClasses/save", credential);
   return response.data;
 };
 

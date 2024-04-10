@@ -439,7 +439,7 @@ export default function ClassDetail() {
                     <Row>
                         <Col md={6} xs={12} style={{ marginBottom: '40px' }}>
                             <div className={styles.classPart}>
-                                <h5 className={styles.classPartTitle}>Thông tin chung:</h5>
+                                <h5 className={styles.classPartTitle}>Thông tin chung</h5>
                                 <Row>
                                     <Col span={8}>
                                         <p className={styles.classTitle}>Mã lớp:</p>
@@ -488,7 +488,7 @@ export default function ClassDetail() {
                         </Col>
                         <Col md={6} xs={12} style={{ marginBottom: '40px' }}>
                             <div className={styles.classPart}>
-                                <h5 className={styles.classPartTitle}>Học vụ:</h5>
+                                <h5 className={styles.classPartTitle}>Học vụ</h5>
                                 <Row>
                                     <Col span={8}>
                                         <p className={styles.classTitle}>Ngày bắt đầu:</p>
@@ -537,7 +537,7 @@ export default function ClassDetail() {
                         </Col>
                         <Col md={6} xs={12} style={{ marginBottom: '40px' }}>
                             <div className={styles.classPart}>
-                                <h5 className={styles.classPartTitle}>Khóa học:</h5>
+                                <h5 className={styles.classPartTitle}>Khóa học</h5>
                                 <Row>
                                     <Col span={8}>
                                         <p className={styles.classTitle}>Tên khóa học:</p>
@@ -566,7 +566,7 @@ export default function ClassDetail() {
                         </Col>
                         <Col md={6} xs={12} style={{ marginBottom: '40px' }}>
                             <div className={styles.classPart}>
-                                <h5 className={styles.classPartTitle}>Giáo viên:</h5>
+                                <h5 className={styles.classPartTitle}>Giáo viên</h5>
                                 <Row>
                                     <Col span={8}>
                                         <p className={styles.classTitle}>Tên giáo viên:</p>

@@ -1,7 +1,7 @@
 import api from "./api";
 
 export const getCourses = async () => {
-  const response = await api.get("/api/v1/courses");
+  const response = await api.get("/api/v1/staff/courses");
   return response.data;
 };
 export const getCourse = async (id) => {
@@ -17,7 +17,7 @@ export const getSubjects = async () => {
   return response.data;
 };
 export const searchCourses = async (keyWord) => {
-  const response = await api.get("/api/v1/courses/search", {
+  const response = await api.get("/api/v1/staff/courses/search", {
     params: {
       keyWord: keyWord
     }

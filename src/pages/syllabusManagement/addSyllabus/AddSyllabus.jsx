@@ -372,13 +372,12 @@ export default function AddSyllabus() {
                                 answer4: row['Đáp án 4'] || null,
                                 score4: row['Số điểm 4'] !== undefined ? row['Số điểm 4'] : null,
                             }
-                            if (!question.description
+                            if (!question.description || !question.answer1 || !question.score1
                                 || (!question.answer1 && (question.score1 !== null)) || (question.answer1 && (question.score1 === null))
                                 || (!question.answer2 && (question.score2 !== null)) || (question.answer2 && (question.score1 === null))
                                 || (!question.answer3 && (question.score3 !== null)) || (question.answer3 && (question.score1 === null))
                                 || (!question.answer4 && (question.score4 !== null)) || (question.answer4 && (question.score1 === null))) {
                                 check = false
-                                console.log(question.answer3 && !question.score3 && question.score3 !== 0)
                                 console.log("Sai mẫu trắc nghiệm")
                             }
                             return question

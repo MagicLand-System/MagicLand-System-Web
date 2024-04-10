@@ -61,6 +61,7 @@ export function handleDownloadExcelFile(base64file, downloadName) {
 export async function handleImportSyllabus(excelFile, fileInput) {
     let errors = []
     let syllabusDetail = null
+    XLSX.SSF.is_date("dd/mm/yyyy");
     const workbook = XLSX.read(excelFile, { type: 'buffer' });
     //sheet general
     const worksheetGeneral = workbook.Sheets['Thông tin chung'];
@@ -96,18 +97,27 @@ export async function handleImportSyllabus(excelFile, fileInput) {
             }
         }
         if (generalData.effectiveDate) {
-            const today = new Date()
-            today.setHours(0);
-            today.setMinutes(0);
-            today.setSeconds(0);
+            const dateRegex = /^\d{2}\/\d{2}\/\d{4}$/;
+            if (!dateRegex.test(generalData.effectiveDate)) {
+                errors.push("Ngày hiệu lực không đúng định dạng (dd/mm/yyyy)");
+            } else {
+                const today = new Date();
+                today.setHours(0);
+                today.setMinutes(0);
+                today.setSeconds(0);
 
-            const date = new parse(generalData.effectiveDate, "dd/MM/yyyy", new Date())
-            date.setHours(12);
-            date.setMinutes(0);
-            date.setSeconds(0);
-            if (date < today) {
-                errors.push("Ngày hiệu lực không hợp lệ")
+                const date = parse(generalData.effectiveDate, "dd/MM/yyyy", new Date());
+                date.setHours(12);
+                date.setMinutes(0);
+                date.setSeconds(0);
+
+                if (date < today) {
+                    errors.push("Ngày hiệu lực không hợp lệ");
+                }
             }
+        }
+        if (generalData.numOfSessions <= 0) {
+            errors.push("Số lượng buổi học không hợp lệ");
         }
         newDataGeneral.forEach(data => {
             const preRequisite = data.preRequisite?.split("\r\n");
@@ -115,7 +125,7 @@ export async function handleImportSyllabus(excelFile, fileInput) {
         });
         syllabusDetail = { generalData }
     } else {
-        errors.push("Vui lòng điền đủ các thông tin chung")
+        errors.push("Vui lòng điền đúng các thông tin chung")
     }
     //sheet syllabus
     const worksheetSyllabus = workbook.Sheets['Giáo trình'];
@@ -155,8 +165,8 @@ export async function handleImportSyllabus(excelFile, fileInput) {
     } else {
         errors.push("Vui lòng điền đủ các thông tin giáo trình");
     }
-    if (!syllabusLength > 0 && !numOfSessions > 0 || syllabusLength !== numOfSessions) {
-        if (!errors.includes("Vui lòng điền đủ các thông tin giáo trình")) {
+    if (syllabusLength > 0 && numOfSessions > 0 && syllabusLength !== numOfSessions) {
+        if (!errors.includes("Thông tin số buổi và giáo trình không phù hợp")) {
             errors.push("Thông tin số buổi và giáo trình không phù hợp");
         }
     }

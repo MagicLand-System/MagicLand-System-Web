@@ -10,12 +10,15 @@
   text-align: center;
   margin-top: 40px;
 }
+.status {
+  text-align: center;
+  border-radius: 20px;
+  padding: 2px 15px;
+}
 .importButton {
-  margin-top: 24px;
   background-color: #f2c955;
   color: black !important;
-  font-size: 1rem;
-  height: 40px;
+  margin-right: 8px;
 }
 .importButton:hover {
   background: #ffd766 !important;
@@ -47,37 +50,6 @@
   background: #ffd766 !important;
   color: black !important;
 }
-.saveButton {
-  background-color: #f2c955;
-  color: black !important;
-  margin-right: 8px;
-}
-.saveButton:hover {
-  background: #ffd766 !important;
-  color: black !important;
-  border: 1px solid #ffd766 !important;
-}
-.cancelButton {
-  background-color: #ff6868;
-  margin-right: 8px;
-  color: white !important;
-}
-.cancelButton:hover {
-  background: #fb5959 !important;
-  color: white !important;
-  border: 1px solid #ff6868 !important;
-}
-.modalHeader {
-  padding-bottom: 5px;
-  margin-bottom: 12px !important;
-  border-bottom: 1px solid #f2c955 !important;
-}
-.searchTitle {
-  color: #888888;
-  margin: 0;
-  font-size: 1rem;
-}
-
 .input {
   width: 100%;
   color: black;
@@ -95,19 +67,38 @@
 .input div:hover {
   border-color: #f2c955 !important;
 }
-.multiSelect {
-  width: 100%;
-  color: black;
+.saveButton {
+  background-color: #f2c955;
+  color: black !important;
+  margin-right: 8px;
 }
-.multiSelect:focus {
-  border-color: #f2c955;
+.saveButton:hover {
+  background: #ffd766 !important;
+  color: black !important;
+  border: 1px solid #ffd766 !important;
 }
-.multiSelect:hover {
-  border-color: #f2c955 !important;
+.cancelButton {
+  background-color: #FF6868;
+  margin-right: 8px;
+  color: white !important;
 }
-.multiSelect div:focus {
-  border-color: #f2c955;
+.cancelButton:hover {
+  background: #fb5959 !important;
+  color: white !important;
+  border: 1px solid #FF6868 !important;
 }
-.multiSelect div:hover {
-  border-color: #f2c955 !important;
+.addTitle {
+  text-align: right;
+  height: 40px;
+  margin: 0;
+  line-height: 40px;
+  margin-right: 16px;
+}
+.addTitle span {
+  color: red;
+}
+.modalHeader {
+  padding-bottom: 5px;
+  margin-bottom: 12px !important;
+  border-bottom: 1px solid #f2c955 !important;
 }

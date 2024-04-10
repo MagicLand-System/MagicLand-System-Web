@@ -33,6 +33,8 @@ import CourseRegister from './pages/courseRegister/CourseRegister.jsx'
 import CourseRegisterDetail from './pages/courseRegister/courseRegisterDetail/CourseRegisterDetail.jsx'
 import RegisterCourse from './pages/courseRegister/register/RegisterCourse.jsx'
 import NetworkStatusIndicator from './components/networkStatusIndicator/NetworkStatusIndicator.jsx'
+import ImportClasses from './pages/classManagement/importClasses/ImportClasses.jsx'
+import Dashboard from './pages/dashboard/Dashboard.jsx'
 
 const router = createBrowserRouter([
   //Route đã đăng nhập thì k vào được, k có header, footer
@@ -67,6 +69,10 @@ const router = createBrowserRouter([
           {
             path: '/class-management',
             element: <ClassManagement />
+          },
+          {
+            path: '/class-management/import-classes',
+            element: <ImportClasses />
           },
           {
             path: '/class-management/detail/:id',
@@ -148,6 +154,15 @@ const router = createBrowserRouter([
           {
             path: '/lecturer-management',
             element: <LecturerManagement />
+          },
+        ]
+      },
+      {
+        element: <AuthRoutes role='STAFF ADMIN' />,
+        children: [
+          {
+            path: '/dashboard',
+            element: <Dashboard />
           },
         ]
       },

@@ -167,7 +167,7 @@ export default function CourseRegisterDetail() {
                 <>
                     {schedules.map((session, index) => (
                         <p style={{ margin: 0 }} key={index}>
-                            {formatDayOfWeek(session.dayOfWeek)}:&ensp;{session.startTime} - {session.endTime}
+                            {session.dayOfWeek && formatDayOfWeek(session.dayOfWeek)}:&ensp;{session.startTime} - {session.endTime}
                         </p>
                     ))}
                 </>
@@ -176,9 +176,7 @@ export default function CourseRegisterDetail() {
         {
             title: 'Ngày bắt đầu',
             dataIndex: 'startDate',
-            render: (startDate) => {
-                return startDate && `${formatDate(startDate)}`
-            }
+            render: (startDate) => startDate && formatDate(startDate)
         },
         {
             title: 'Hình thức',
@@ -217,13 +215,13 @@ export default function CourseRegisterDetail() {
                     <Row>
                         <Col xs={24} lg={8} style={{ marginBottom: '20px', boxSizing: 'border-box', padding: '0px 8px' }}>
                             <div className={styles.classPart}>
-                                <h5 className={styles.classPartTitle}>Hình ảnh:</h5>
+                                <h5 className={styles.classPartTitle}>Hình ảnh</h5>
                                 <img style={{ width: '100%' }} src={courseData.image} alt="Hình ảnh" />
                             </div>
                         </Col>
                         <Col xs={24} lg={8} style={{ marginBottom: '20px', boxSizing: 'border-box', padding: '0px 8px' }}>
                             <div className={styles.classPart}>
-                                <h5 className={styles.classPartTitle}>Thông tin khóa học:</h5>
+                                <h5 className={styles.classPartTitle}>Thông tin khóa học</h5>
                                 <Row style={{ marginTop: 12 }}>
                                     <Col span={8}>
                                         <p className={styles.classTitle}>Tên khóa học:</p>
@@ -268,7 +266,7 @@ export default function CourseRegisterDetail() {
                         </Col>
                         <Col xs={24} lg={8} style={{ marginBottom: '20px', boxSizing: 'border-box', padding: '0px 8px' }}>
                             <div className={styles.classPart}>
-                                <h5 className={styles.classPartTitle}>Mô tả chi tiết:</h5>
+                                <h5 className={styles.classPartTitle}>Mô tả chi tiết</h5>
                                 {courseData.subDescriptionTitles?.map((subDes, index) =>
                                     <Row key={index} style={{ marginTop: 12 }}>
                                         <Col span={24}>

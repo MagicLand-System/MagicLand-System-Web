@@ -20,12 +20,14 @@ export default function CourseManagement() {
             pageSize: 10,
         },
     });
+    const [numberOfCourse, setNumberOfCourse] = useState(null)
 
     async function getListsOfCourses(searchString) {
         try {
             setLoading(true);
             const data = await searchCourses(searchString);
-            setCourses(data);
+            setNumberOfCourse(data?.numberOfCourse)
+            setCourses(data?.courses);
             setTableParams({
                 pagination: {
                     current: 1,
@@ -111,6 +113,7 @@ export default function CourseManagement() {
                 <Button onClick={() => navigate('add-course')} type='primary' className={styles.importButton} icon={<PlusOutlined />}>Thêm khóa học</Button>
                 <Search className={styles.searchBar} placeholder="Tìm kiếm khóa học" onSearch={(value, e) => { setSearch(value) }} enterButton />
             </div>
+            <h5 style={{ fontSize: '1rem', color: '#888888', fontWeight: 'normal', margin: '0 10px 10px' }}>Số lượng khóa học: {numberOfCourse}</h5>
             <Table
                 columns={columns}
                 rowKey={(record) => record.courseId}

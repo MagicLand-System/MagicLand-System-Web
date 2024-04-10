@@ -265,11 +265,20 @@ export default function Register() {
                 </Radio.Group>
               </div>
               <p className={styles.addTitle}><span>*</span> Địa chỉ:</p>
-              <Input
+              {/* <Input
                 ref={(c) => {
                   addressRef.current = c;
                   if (c) adrRef.current = c.input;
                 }}
+                className={styles.input}
+                required
+                disabled={loading}
+              /> */}
+              <Input
+                placeholder="Email"
+                name='email'
+                value={address}
+                onChange={(e) => { setAddress(e.target.value) }}
                 className={styles.input}
                 required
                 disabled={loading}

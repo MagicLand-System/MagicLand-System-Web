@@ -114,9 +114,13 @@ export default function RegisterCourse() {
     };
     const handleFirstStep = () => {
         let check = true;
+        const regex = /^\+?[0-9]{10,11}$/;
+
         if (!phoneNumber) {
             check = false;
             setPhoneNumberError("Vui lòng nhập số điện thoại")
+        } else if (!regex.test(phoneNumber)) {
+            setPhoneNumberError("Số điện thoại không hợp lệ")
         } else {
             setPhoneNumberError(null)
         }
