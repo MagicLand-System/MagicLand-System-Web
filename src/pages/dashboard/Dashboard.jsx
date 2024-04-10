@@ -51,11 +51,13 @@ export default function Dashboard() {
         setNumOfCurrentClasses(data?.numOfCurrentClasses)
     };
 
-    function endOfMonth(date) {
+    function endOfMonth(d) {
+        const date = new Date(d)
         return new Date(date.getFullYear(), date.getMonth() + 1, 0);
     }
 
-    function startOfMonth(date) {
+    function startOfMonth(d) {
+        const date = new Date(d)
         return new Date(date.getFullYear(), date.getMonth(), 1);
     }
 
@@ -174,198 +176,6 @@ export default function Dashboard() {
                 method: 'Trực tiếp',
                 revenue: 200000,
             },
-            {
-                date: '12/4',
-                method: 'Ví',
-                revenue: 0,
-            },
-            {
-                date: '12/4',
-                method: 'Trực tiếp',
-                revenue: 0,
-            },
-
-            {
-                date: '13/4',
-                method: 'Ví',
-                revenue: 0,
-            },
-            {
-                date: '13/4',
-                method: 'Trực tiếp',
-                revenue: 0,
-            },
-            {
-                date: '14/4',
-                method: 'Ví',
-                revenue: 0,
-            },
-            {
-                date: '14/4',
-                method: 'Trực tiếp',
-                revenue: 0,
-            },
-            {
-                date: '15/4',
-                method: 'Ví',
-                revenue: 0,
-            },
-            {
-                date: '15/4',
-                method: 'Trực tiếp',
-                revenue: 0,
-            },
-
-            {
-                date: '16/4',
-                method: 'Ví',
-                revenue: 0,
-            },
-            {
-                date: '16/4',
-                method: 'Trực tiếp',
-                revenue: 0,
-            },
-            {
-                date: '17/4',
-                method: 'Ví',
-                revenue: 0,
-            },
-            {
-                date: '17/4',
-                method: 'Trực tiếp',
-                revenue: 0,
-            },
-            {
-                date: '18/4',
-                method: 'Ví',
-                revenue: 0,
-            },
-            {
-                date: '18/4',
-                method: 'Trực tiếp',
-                revenue: 0,
-            },
-            {
-                date: '19/4',
-                method: 'Ví',
-                revenue: 0,
-            },
-            {
-                date: '19/4',
-                method: 'Trực tiếp',
-                revenue: 0,
-            },
-            {
-                date: '20/4',
-                method: 'Ví',
-                revenue: 0,
-            },
-            {
-                date: '20/4',
-                method: 'Trực tiếp',
-                revenue: 0,
-            },
-            {
-                date: '21/4',
-                method: 'Ví',
-                revenue: 0,
-            },
-            {
-                date: '21/4',
-                method: 'Trực tiếp',
-                revenue: 0,
-            },
-            {
-                date: '22/4',
-                method: 'Ví',
-                revenue: 0,
-            },
-            {
-                date: '22/4',
-                method: 'Trực tiếp',
-                revenue: 0,
-            },
-            {
-                date: '23/4',
-                method: 'Ví',
-                revenue: 0,
-            },
-            {
-                date: '23/4',
-                method: 'Trực tiếp',
-                revenue: 0,
-            },
-            {
-                date: '24/4',
-                method: 'Ví',
-                revenue: 0,
-            },
-            {
-                date: '24/4',
-                method: 'Trực tiếp',
-                revenue: 0,
-            },
-            {
-                date: '25/4',
-                method: 'Ví',
-                revenue: 0,
-            },
-            {
-                date: '25/4',
-                method: 'Trực tiếp',
-                revenue: 0,
-            },
-            {
-                date: '26/4',
-                method: 'Ví',
-                revenue: 0,
-            },
-            {
-                date: '26/4',
-                method: 'Trực tiếp',
-                revenue: 0,
-            },
-            {
-                date: '27/4',
-                method: 'Ví',
-                revenue: 0,
-            },
-            {
-                date: '27/4',
-                method: 'Trực tiếp',
-                revenue: 0,
-            },
-            {
-                date: '28/4',
-                method: 'Ví',
-                revenue: 0,
-            },
-            {
-                date: '28/4',
-                method: 'Trực tiếp',
-                revenue: 0,
-            },
-            {
-                date: '29/4',
-                method: 'Ví',
-                revenue: 0,
-            },
-            {
-                date: '29/4',
-                method: 'Trực tiếp',
-                revenue: 0,
-            },
-            {
-                date: '30/4',
-                method: 'Ví',
-                revenue: 0,
-            },
-            {
-                date: '30/4',
-                method: 'Trực tiếp',
-                revenue: 0,
-            },
         ]
         setRevenueData(data)
     };
@@ -385,25 +195,6 @@ export default function Dashboard() {
             { date: '9/4', numOfRegisters: 10 },
             { date: '10/4', numOfRegisters: 22 },
             { date: '11/4', numOfRegisters: 5 },
-            { date: '12/4', numOfRegisters: 0 },
-            { date: '13/4', numOfRegisters: 0 },
-            { date: '14/4', numOfRegisters: 0 },
-            { date: '15/4', numOfRegisters: 0 },
-            { date: '16/4', numOfRegisters: 0 },
-            { date: '17/4', numOfRegisters: 0 },
-            { date: '18/4', numOfRegisters: 0 },
-            { date: '19/4', numOfRegisters: 0 },
-            { date: '20/4', numOfRegisters: 0 },
-            { date: '21/4', numOfRegisters: 0 },
-            { date: '22/4', numOfRegisters: 0 },
-            { date: '23/4', numOfRegisters: 0 },
-            { date: '24/4', numOfRegisters: 0 },
-            { date: '25/4', numOfRegisters: 0 },
-            { date: '26/4', numOfRegisters: 0 },
-            { date: '27/4', numOfRegisters: 0 },
-            { date: '28/4', numOfRegisters: 0 },
-            { date: '29/4', numOfRegisters: 0 },
-            { date: '30/4', numOfRegisters: 0 }
         ]
         setRegisterData(data);
     };
@@ -534,14 +325,24 @@ export default function Dashboard() {
                     onChange={(date) => setDate(date)}
                     placeholder="Chọn thời gian" />
             </ConfigProvider>
-            <div style={{ marginBottom: 20 }}>
-                <h5 className={styles.subTitle}>Doanh thu</h5>
-                <Column data={revenueData} xField="date" yField="revenue" stack={true} colorField='method' />
-            </div>
-            <div style={{ marginBottom: 20 }}>
-                <h5 className={styles.subTitle}>Số lượt đăng kí</h5>
-                <Column data={registerData} xField="date" yField="numOfRegisters" />
-            </div>
+            <Row>
+                <Col md={12}>
+                    <div style={{ marginBottom: 20 }}>
+                        <h5 className={styles.subTitle}>Doanh thu</h5>
+                        <Column data={revenueData} xField="date" yField="revenue" stack={true} colorField='method' />
+                    </div>
+                </Col>
+                <Col md={12}>
+                    <div style={{ marginBottom: 20 }}>
+                        <h5 className={styles.subTitle}>Số lượt đăng kí</h5>
+                        <Column data={registerData} xField="date" yField="numOfRegisters" tooltip={(item) => {
+                            return {name: 'Số lượng học viên', value: item.numOfRegisters}
+                        }} />
+                    </div>
+                </Col>
+            </Row>
+
+
             <div style={{ marginBottom: 20 }}>
                 <h5 className={styles.subTitle}>Các khóa học yêu thích</h5>
                 <Table
