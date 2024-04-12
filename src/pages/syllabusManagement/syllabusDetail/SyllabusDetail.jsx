@@ -13,7 +13,7 @@ import dayjs from 'dayjs'
 
 import TextArea from 'antd/es/input/TextArea';
 import Swal from 'sweetalert2';
-import { handleImportSyllabus } from '../../../utils/utils';
+import { handleDownloadExcelFile, handleImportSyllabus } from '../../../utils/utils';
 
 export default function SyllabusDetail() {
     const params = useParams();
@@ -704,7 +704,11 @@ export default function SyllabusDetail() {
                     classNames={{ header: styles.modalHeader }}
                 >
                     <div style={{ display: 'flex', alignItems: 'center' }}>
-                        <Button className={styles.addButton} icon={<CloudDownloadOutlined />} onClick={() => handleDownloadExcelFile(TEMPLATE_ADD_SYLLABUS_FILE, 'Mau-tao-giao-trinh.xlsx')} >Tải mẫu lớp học</Button>
+                        <Button className={styles.addButton} icon={<CloudDownloadOutlined />} onClick={() => {
+                            handleDownloadExcelFile(TEMPLATE_ADD_SYLLABUS_FILE, 'Mau-tao-giao-trinh.xlsx')
+                            handleDownloadExcelFile(TEMPLATE_FLASHCARD, 'Mau-ghep-the.xlsx')
+                            handleDownloadExcelFile(TEMPLATE_MULTIPLE_CHOICE, 'Mau-trac-nghiem.xlsx')
+                        }} >Tải mẫu giáo trình</Button>
                         <Button type='primary' className={styles.importButton} icon={<CloudUploadOutlined />} onClick={() => fileInputRef.current.click()}>Chọn tệp</Button>
                         <input accept='application/vnd.ms-excel, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' type='file' style={{ display: 'none' }} ref={fileInputRef} onChange={handleFileChange} />
                         <p>{fileInput ? fileInput.name : 'Chưa có tệp nào được chọn'}</p>

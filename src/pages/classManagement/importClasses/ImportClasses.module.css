@@ -102,3 +102,7 @@
   margin-bottom: 12px !important;
   border-bottom: 1px solid #f2c955 !important;
 }
+.steps {
+  width: 40%;
+  margin: 20px auto 30px
+}

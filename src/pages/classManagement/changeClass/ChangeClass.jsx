@@ -50,7 +50,7 @@ export default function ChangeClass() {
                 })
             } else {
                 const studentIdList = [studentId]
-                await changeClass(fromClassId, newClassId, studentIdList)
+                await changeClass(classId, newClassId, studentIdList)
                     .then(() => Swal.fire({
                         position: "center",
                         icon: "success",
@@ -62,6 +62,7 @@ export default function ChangeClass() {
                     })
             }
         } catch (error) {
+            console.log(error)
             Swal.fire({
                 position: "center",
                 icon: "error",

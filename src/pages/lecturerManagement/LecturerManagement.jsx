@@ -6,7 +6,8 @@ import { getLecturerSchedule } from '../../api/user';
 import { getLecturer, getSlots } from '../../api/classesApi';
 import dayjs from 'dayjs';
 import { formatDate, formatSlot } from '../../utils/utils';
-import { compareAsc } from 'date-fns';
+import { compareAsc, startOfWeek, endOfWeek } from 'date-fns';
+import viLocale from 'date-fns/locale/vi';
 
 export default function LecturerManagement() {
     const navigate = useNavigate()
@@ -78,24 +79,9 @@ export default function LecturerManagement() {
 
     useEffect(() => {
         if (lecturer) {
-            getListsOfSchedule(lecturer, startOfWeek(new Date(date)), endOfWeek(new Date(date)));
+            getListsOfSchedule(lecturer, startOfWeek(new Date(date), { locale: viLocale }), endOfWeek(new Date(date), { locale: viLocale }));
         }
     }, [lecturer, date]);
-    function startOfWeek(date) {
-        var diff = date.getDate() - date.getDay() + (date.getDay() === 0 ? -6 : 1);
-        return new Date(date.setDate(diff));
-    }
-    function endOfWeek(date) {
-        var diff = date.getDate() - date.getDay() + (date.getDay() === 0 ? -6 : 1);
-        diff = diff + 6
-        return new Date(date.setDate(diff));
-    }
-    function endOfMonth(date) {
-        return new Date(date.getFullYear(), date.getMonth() + 1, 0);
-    }
-    function startOfMonth(date) {
-        return new Date(date.getFullYear(), date.getMonth(), 1);
-    }
     const handleTableChange = (pagination, filters, sorter, extra) => {
         pagination.total = extra.currentDataSource.length
         setTableParams({
@@ -116,10 +102,10 @@ export default function LecturerManagement() {
             width: 120,
         },
         {
-            title: `Thứ 2 - ${formatDate(startOfWeek(new Date(date)))}`,
+            title: `Thứ 2 - ${formatDate(startOfWeek(new Date(date), { locale: viLocale }))}`,
             render: (_, record) => {
                 const schedules = record.lecturers?.filter((lecturer) => {
-                    const dateA = startOfWeek(new Date(date))
+                    const dateA = startOfWeek(new Date(date), { locale: viLocale })
                     dateA.setHours(0, 0, 0, 0)
                     const dateB = new Date(lecturer.date)
                     dateB.setHours(0, 0, 0, 0)
@@ -141,10 +127,10 @@ export default function LecturerManagement() {
                 }
             }
         }, {
-            title: `Thứ 3 - ${formatDate(new Date(new Date(startOfWeek(new Date(date))).getTime() + 24 * 60 * 60 * 1000))}`,
+            title: `Thứ 3 - ${formatDate(new Date(new Date(startOfWeek(new Date(date), { locale: viLocale })).getTime() + 24 * 60 * 60 * 1000))}`,
             render: (_, record) => {
                 const schedules = record.lecturers?.filter((lecturer) => {
-                    const dateA = new Date(new Date(startOfWeek(new Date(date))).getTime() + 24 * 60 * 60 * 1000)
+                    const dateA = new Date(new Date(startOfWeek(new Date(date), { locale: viLocale })).getTime() + 24 * 60 * 60 * 1000)
                     dateA.setHours(0, 0, 0, 0)
                     const dateB = new Date(lecturer.date)
                     dateB.setHours(0, 0, 0, 0)
@@ -167,10 +153,10 @@ export default function LecturerManagement() {
             }
         },
         {
-            title: `Thứ 4 - ${formatDate(new Date(new Date(startOfWeek(new Date(date))).getTime() + 2 * 24 * 60 * 60 * 1000))}`,
+            title: `Thứ 4 - ${formatDate(new Date(new Date(startOfWeek(new Date(date), { locale: viLocale })).getTime() + 2 * 24 * 60 * 60 * 1000))}`,
             render: (_, record) => {
                 const schedules = record.lecturers?.filter((lecturer) => {
-                    const dateA = new Date(new Date(startOfWeek(new Date(date))).getTime() + 2 * 24 * 60 * 60 * 1000)
+                    const dateA = new Date(new Date(startOfWeek(new Date(date), { locale: viLocale })).getTime() + 2 * 24 * 60 * 60 * 1000)
                     dateA.setHours(0, 0, 0, 0)
                     const dateB = new Date(lecturer.date)
                     dateB.setHours(0, 0, 0, 0)
@@ -193,10 +179,10 @@ export default function LecturerManagement() {
             }
         },
         {
-            title: `Thứ 5 - ${formatDate(new Date(new Date(startOfWeek(new Date(date))).getTime() + 3 * 24 * 60 * 60 * 1000))}`,
+            title: `Thứ 5 - ${formatDate(new Date(new Date(startOfWeek(new Date(date), { locale: viLocale })).getTime() + 3 * 24 * 60 * 60 * 1000))}`,
             render: (_, record) => {
                 const schedules = record.lecturer?.filter((lecturer) => {
-                    const dateA = new Date(new Date(startOfWeek(new Date(date))).getTime() + 3 * 24 * 60 * 60 * 1000)
+                    const dateA = new Date(new Date(startOfWeek(new Date(date), { locale: viLocale })).getTime() + 3 * 24 * 60 * 60 * 1000)
                     dateA.setHours(0, 0, 0, 0)
                     const dateB = new Date(lecturer.date)
                     dateB.setHours(0, 0, 0, 0)
@@ -219,10 +205,10 @@ export default function LecturerManagement() {
             }
         },
         {
-            title: `Thứ 6 - ${formatDate(new Date(new Date(startOfWeek(new Date(date))).getTime() + 4 * 24 * 60 * 60 * 1000))}`,
+            title: `Thứ 6 - ${formatDate(new Date(new Date(startOfWeek(new Date(date), { locale: viLocale })).getTime() + 4 * 24 * 60 * 60 * 1000))}`,
             render: (_, record) => {
                 const schedules = record.lecturers?.filter((lecturer) => {
-                    const dateA = new Date(new Date(startOfWeek(new Date(date))).getTime() + 4 * 24 * 60 * 60 * 1000)
+                    const dateA = new Date(new Date(startOfWeek(new Date(date), { locale: viLocale })).getTime() + 4 * 24 * 60 * 60 * 1000)
                     dateA.setHours(0, 0, 0, 0)
                     const dateB = new Date(lecturer.date)
                     dateB.setHours(0, 0, 0, 0)
@@ -245,10 +231,10 @@ export default function LecturerManagement() {
             }
         },
         {
-            title: `Thứ 7 - ${formatDate(new Date(new Date(startOfWeek(new Date(date))).getTime() + 5 * 24 * 60 * 60 * 1000))}`,
+            title: `Thứ 7 - ${formatDate(new Date(new Date(startOfWeek(new Date(date), { locale: viLocale })).getTime() + 5 * 24 * 60 * 60 * 1000))}`,
             render: (_, record) => {
                 const schedules = record.lecturers?.filter((lecturer) => {
-                    const dateA = new Date(new Date(startOfWeek(new Date(date))).getTime() + 5 * 24 * 60 * 60 * 1000)
+                    const dateA = new Date(new Date(startOfWeek(new Date(date), { locale: viLocale })).getTime() + 5 * 24 * 60 * 60 * 1000)
                     dateA.setHours(0, 0, 0, 0)
                     const dateB = new Date(lecturer.date)
                     dateB.setHours(0, 0, 0, 0)
@@ -272,10 +258,10 @@ export default function LecturerManagement() {
         },
 
         {
-            title: `Chủ nhật - ${formatDate(endOfWeek(new Date(date)))}`,
+            title: `Chủ nhật - ${formatDate(endOfWeek(new Date(date), { locale: viLocale }))}`,
             render: (_, record) => {
                 const schedules = record.lecturers?.filter((lecturer) => {
-                    const dateA = endOfWeek(new Date(date))
+                    const dateA = endOfWeek(new Date(date), { locale: viLocale })
                     dateA.setHours(0, 0, 0, 0)
                     const dateB = new Date(lecturer.date)
                     dateB.setHours(0, 0, 0, 0)
@@ -314,7 +300,7 @@ export default function LecturerManagement() {
                     <DatePicker
                         value={date}
                         picker="week"
-                        format={`${formatDate(startOfWeek(new Date(date)))} ~ ${formatDate(endOfWeek(new Date(date)))}`}
+                        format={`${formatDate(startOfWeek(new Date(date), { locale: viLocale }))} ~ ${formatDate(endOfWeek(new Date(date), { locale: viLocale }))}`}
                         allowClear={false}
                         className={styles.input}
                         onChange={(date) => setDate(date)}

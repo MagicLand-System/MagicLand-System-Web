@@ -6,8 +6,8 @@ import { useNavigate } from 'react-router-dom';
 import { searchSyllabuses } from '../../api/syllabus';
 import { getSubjects } from '../../api/courseApi';
 import { EyeOutlined } from '@ant-design/icons';
-import { formatDate, handleImportSyllabus } from '../../utils/utils';
-import { TEMPLATE_ADD_SYLLABUS_FILE } from '../../constants/constants';
+import { formatDate, handleDownloadExcelFile, handleImportSyllabus } from '../../utils/utils';
+import { TEMPLATE_ADD_SYLLABUS_FILE, TEMPLATE_FLASHCARD, TEMPLATE_MULTIPLE_CHOICE } from '../../constants/constants';
 
 const { Search } = Input;
 
@@ -184,7 +184,11 @@ export default function SyllabusManagement() {
                     classNames={{ header: styles.modalHeader }}
                 >
                     <div style={{ display: 'flex', alignItems: 'center' }}>
-                        <Button className={styles.addButton} icon={<CloudDownloadOutlined />} onClick={() => handleDownloadExcelFile(TEMPLATE_ADD_SYLLABUS_FILE, 'Mau-tao-giao-trinh.xlsx')} >Tải mẫu lớp học</Button>
+                        <Button className={styles.addButton} icon={<CloudDownloadOutlined />} onClick={() => {
+                            handleDownloadExcelFile(TEMPLATE_ADD_SYLLABUS_FILE, 'Mau-tao-giao-trinh.xlsx')
+                            handleDownloadExcelFile(TEMPLATE_FLASHCARD, 'Mau-ghep-the.xlsx')
+                            handleDownloadExcelFile(TEMPLATE_MULTIPLE_CHOICE, 'Mau-trac-nghiem.xlsx')
+                        }} >Tải mẫu giáo trình</Button>
                         <Button type='primary' className={styles.importButton} icon={<CloudUploadOutlined />} onClick={() => fileInputRef.current.click()}>Chọn tệp</Button>
                         <input accept='application/vnd.ms-excel, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' type='file' style={{ display: 'none' }} ref={fileInputRef} onChange={handleFileChange} />
                         <p>{fileInput ? fileInput.name : 'Chưa có tệp nào được chọn'}</p>

@@ -1,12 +1,12 @@
 import React, { useEffect, useState } from 'react'
 import styles from './ImportClasses.module.css'
-import { Button, DatePicker, Radio, Input, Modal, Table, Select, Row, Col, Tabs, ConfigProvider, Alert, Empty, Spin } from 'antd';
+import { Button, DatePicker, Radio, Input, Modal, Table, Select, Row, Col, Divider, ConfigProvider, Steps, Empty, Spin, Alert } from 'antd';
 import { DeleteOutlined, EditOutlined } from '@ant-design/icons';
 import Swal from 'sweetalert2';
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
 import dayjs from 'dayjs';
-import { addClass, getClasses, getLecturer, getLecturerBySchedule, getRooms, getRoomsBySchedule, getSlots, saveImport } from '../../../api/classesApi';
+import { addClass, getClassCode, getClasses, getLecturer, getLecturerBySchedule, getRooms, getRoomsBySchedule, getSlots, saveImport } from '../../../api/classesApi';
 import { getCourses } from '../../../api/courseApi';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { formatDate, formatDayOfWeek } from '../../../utils/utils';
@@ -16,6 +16,7 @@ export default function ImportClasses() {
     const navigate = useNavigate()
     const location = useLocation()
     const { importClasses } = location.state
+    const [currentStep, setCurrentStep] = useState(0)
     const [apiLoading, setApiLoading] = useState(false);
     const [classes, setClasses] = useState(importClasses?.rowInsertResponse)
     const [loading, setLoading] = useState(false);
@@ -54,6 +55,10 @@ export default function ImportClasses() {
 
     const [scheduleRequests, setSchedulesRequests] = useState([{ dateOfWeek: null, slotId: null }]);
     const [schedulesError, setSchedulesError] = useState(null)
+
+    const [importRes, setImportRes] = useState(null)
+    const [importRow, setImportRow] = useState(null)
+    const [classCode, setClassCode] = useState(null)
 
     const [tableParams, setTableParams] = useState({
         pagination: {
@@ -127,63 +132,122 @@ export default function ImportClasses() {
                 if (isStartDateCorrect) {
                     try {
                         setApiLoading(true)
-                        const newClass = editClass;
-                        newClass.createClass.courseId = course
-                        const courseResponse = courses.find(iCourse => iCourse.courseId === course)
-                        newClass.createClass.myCourseResponse = {
-                            courseId: course,
-                            courseName: courseResponse.courseDetail.courseName,
-                            subjectCode: courseResponse.courseDetail.subjectCode
-                        }
+                        if (importRow) {
+                            await addClass({ ...values, classCode, startDate, courseId: course, lecturerId: lecturer, method, scheduleRequests, roomId: room })
+                                .then((data) => {
+                                    importRow.isSucess = true
+                                    data.startDate = startDate.toISOString()
+                                    const times = data.times?.map((time) => `${time.schedule}: ${time.slot}`)
+                                    data.times = times
+                                    importRow.successfulInformation = data
+                                    let index = -1;
 
-                        newClass.createClass.leastNumberStudent = values.leastNumberStudent
-                        newClass.createClass.limitNumberStudent = values.limitNumberStudent
-                        newClass.createClass.method = method
-                        scheduleRequests.map(schedule => {
-                            const findSlot = slots.find(slot => slot.id === schedule.slotId)
-                            schedule.startTime = findSlot.startTime
-                            schedule.endTime = findSlot.endTime
-                            return schedule
-                        })
-                        newClass.createClass.scheduleRequests = scheduleRequests
-                        newClass.createClass.startDate = startDate.toISOString()
+                                    for (let i = 0; i < importRes.length; i++) {
+                                        if (importRes[i].index === importRow.index) {
+                                            index = i;
+                                            break;
+                                        }
+                                    }
+                                    if (index !== -1) {
+                                        importRes.splice(index, 1, importRow);
+                                    }
+                                    Swal.fire({
+                                        position: "center",
+                                        icon: "success",
+                                        title: "Tạo lớp học thành công",
+                                        showConfirmButton: false,
+                                        timer: 2000
+                                    })
+                                })
+                                .then(() => {
+                                    setAddModalOpen(false)
+                                    setCourse(null)
+                                    setCourses(courses)
+                                    setCourseError(null)
 
-                        newClass.createClass.roomId = room
-                        const roomResponse = allRooms.find(iRoom => iRoom.id === room)
-                        newClass.createClass.roomResponse = roomResponse
+                                    setClassCode(null)
 
-                        newClass.createClass.lecturerId = lecturer
-                        const lecturerResponse = allLecturers.find(iLecturer => iLecturer.lectureId === lecturer)
-                        newClass.createClass.lecturerResponse = lecturerResponse
-                        newClass.isSuccess = true
-                        console.log(newClass)
+                                    setLecturers([])
+                                    setLecturersOptions([])
 
-                        const updatedClasses = classes.map(cls => {
-                            if (cls.index === newClass.index) {
-                                return newClass;
+                                    setLecturer(null)
+                                    setLecturerError(null)
+
+                                    setStartDate(null)
+
+                                    setRooms([])
+                                    setRoomsOptions([])
+
+                                    setRoom(null)
+                                    setRoomError(null)
+
+                                    setSchedulesRequests([{ dateOfWeek: null, slotId: null }])
+                                    setSchedulesError(null)
+                                    formik.resetForm()
+                                    setImportRow(null)
+                                })
+                        } else {
+                            const newClass = editClass;
+                            newClass.createClass.courseId = course
+                            const courseResponse = courses.find(iCourse => iCourse.courseId === course)
+                            newClass.createClass.myCourseResponse = {
+                                courseId: course,
+                                courseName: courseResponse.courseDetail.courseName,
+                                subjectCode: courseResponse.courseDetail.subjectCode
                             }
-                            return cls;
-                        });
-                        setClasses(updatedClasses)
 
-                        setAddModalOpen(false)
-                        setEditClass(null)
-                        setCourse(null)
-                        setCoursesOptions(courses)
-                        setCourseError(null)
+                            newClass.createClass.leastNumberStudent = values.leastNumberStudent
+                            newClass.createClass.limitNumberStudent = values.limitNumberStudent
+                            newClass.createClass.method = method
+                            scheduleRequests.map(schedule => {
+                                const findSlot = slots.find(slot => slot.id === schedule.slotId)
+                                schedule.startTime = findSlot.startTime
+                                schedule.endTime = findSlot.endTime
+                                return schedule
+                            })
+                            newClass.createClass.scheduleRequests = scheduleRequests
+                            newClass.createClass.startDate = startDate.toISOString()
 
-                        setLecturer(null)
-                        setLecturerError(null)
+                            newClass.createClass.roomId = room
+                            const roomResponse = allRooms.find(iRoom => iRoom.id === room)
+                            newClass.createClass.roomResponse = roomResponse
 
-                        setStartDate(null)
+                            newClass.createClass.lecturerId = lecturer
+                            const lecturerResponse = allLecturers.find(iLecturer => iLecturer.lectureId === lecturer)
+                            newClass.createClass.lecturerResponse = lecturerResponse
+                            newClass.isSuccess = true
+                            console.log(newClass)
 
-                        setRoom(null)
-                        setRoomError(null)
+                            const updatedClasses = classes.map(cls => {
+                                if (cls.index === newClass.index) {
+                                    return newClass;
+                                }
+                                return cls;
+                            });
+                            setClasses(updatedClasses)
 
-                        setSchedulesRequests([{ dateOfWeek: null, slotId: null }])
-                        setSchedulesError(null)
-                        formik.resetForm()
+                            setAddModalOpen(false)
+                            setEditClass(null)
+                            setCourse(null)
+                            setCoursesOptions(courses)
+                            setCourseError(null)
 
+                            setLecturers([])
+                            setLecturersOptions([])
+                            setLecturer(null)
+                            setLecturerError(null)
+
+                            setStartDate(null)
+
+                            setRooms([])
+                            setRoomsOptions([])
+                            setRoom(null)
+                            setRoomError(null)
+
+                            setSchedulesRequests([{ dateOfWeek: null, slotId: null }])
+                            setSchedulesError(null)
+                            formik.resetForm()
+                        }
                     } catch (error) {
                         console.log(error)
                     } finally {
@@ -203,6 +267,10 @@ export default function ImportClasses() {
             ).max(30, "Số lượng học viên tối đa phải nhỏ hơn 30"),
         }),
     });
+    async function getClassCodeByCourseId(course) {
+        const data = await getClassCode(course);
+        setClassCode(data.classCode)
+    }
     async function getListsOfCourses() {
         const data = await getCourses();
         setCourses(data);
@@ -234,10 +302,10 @@ export default function ImportClasses() {
             setLecturerLoading(false);
         }
     };
-    async function getListsOfRooms(startDate, schedules, courseId) {
+    async function getListsOfRooms(startDate, schedules, courseId, method) {
         try {
             setRoomLoading(true)
-            const data = await getRoomsBySchedule({ startDate, schedules, courseId });
+            const data = await getRoomsBySchedule({ startDate, schedules, courseId, method });
             setRooms(data);
             setRoomsOptions(data);
         } catch (error) {
@@ -281,16 +349,10 @@ export default function ImportClasses() {
                     rowInsertResponse: classes
                 }
                 await saveImport(importData)
-                    .then(() =>
-                        Swal.fire({
-                            position: "center",
-                            icon: "success",
-                            title: "Thêm lớp thành công",
-                            showConfirmButton: false,
-                            timer: 2000
-                        })).then(() => {
-                            navigate(-1)
-                        })
+                    .then((data) => {
+                        setImportRes(data)
+                        setCurrentStep(1)
+                    })
             } catch (error) {
                 Swal.fire({
                     position: "center",
@@ -355,6 +417,39 @@ export default function ImportClasses() {
         }
         return false;
     };
+    const handleErrorImport = (dataClass) => {
+        getListsOfCourses()
+        formik.resetForm()
+        if (dataClass.courseId !== "00000000-0000-0000-0000-000000000000") {
+            setCourse(dataClass.courseId)
+        } else {
+            setCourse(null)
+        }
+        setCoursesOptions(courses)
+        setCourseError(null)
+
+        setLecturer(dataClass.lecturerId)
+        setLecturers([])
+        setLecturersOptions([])
+        setLecturerError(null)
+
+        setStartDate(dayjs(dataClass.startDate))
+
+        setRoom(dataClass.roomId)
+        setRoomError(null)
+
+        setMethod(dataClass.method)
+
+        formik.setValues({
+            leastNumberStudent: dataClass.leastNumberStudent,
+            limitNumberStudent: dataClass.limitNumberStudent,
+        })
+        getClassCodeByCourseId(dataClass.courseId)
+
+        setSchedulesRequests(dataClass.scheduleRequests)
+        setSchedulesError(null)
+        setAddModalOpen(true)
+    }
     useEffect(() => {
         getListsOfCourses();
         getListsOfSlots();
@@ -366,7 +461,7 @@ export default function ImportClasses() {
             return schedule.dateOfWeek === null || schedule.slotId === null;
         });
         const hasDuplicateValues = checkDuplicateCombinations();
-        if (course && startDate && scheduleRequests) {
+        if (course && startDate && scheduleRequests && method) {
             if (hasNullValues) {
                 setSchedulesError("Vui lòng điền đủ lịch học để chọn giáo viên và phòng học")
                 setLecturers([]);
@@ -378,10 +473,10 @@ export default function ImportClasses() {
             } else {
                 setSchedulesError(null)
                 getListsOfLecturer(startDate, scheduleRequests, course);
-                getListsOfRooms(startDate, scheduleRequests, course);
+                getListsOfRooms(startDate, scheduleRequests, course, method);
             }
         }
-    }, [scheduleRequests, startDate, course]);
+    }, [scheduleRequests, startDate, course, method, importRow, editClass]);
     const handleEdit = (dataClass) => {
         getListsOfCourses()
         formik.resetForm()
@@ -497,23 +592,111 @@ export default function ImportClasses() {
     return (
         <div className={styles.container}>
             <h2 className={styles.title}>Tạo nhiều lớp</h2>
-            <Table
-                columns={classesColumn}
-                rowKey={(record) => record.index}
-                dataSource={classes}
-                pagination={tableParams.pagination}
-                loading={loading}
-                onChange={handleTableChange}
-                scroll={{ y: 'calc(100vh - 220px)' }}
+            <Steps
+                className={styles.steps}
+                current={currentStep}
+                items={[
+                    {
+                        title: 'Xác nhận',
+                    },
+                    {
+                        title: 'Hoàn thành',
+                    },
+                ]}
             />
-            <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 20 }}>
-                <Button loading={apiLoading} onClick={handleSaveClasses} className={styles.saveButton}>
-                    Lưu
-                </Button>
-                <Button disabled={apiLoading} className={styles.cancelButton} onClick={() => { navigate(-1) }}>
-                    Hủy
-                </Button>
-            </div>
+            <Divider />
+            {currentStep === 0 &&
+                <>
+                    <Table
+                        columns={classesColumn}
+                        rowKey={(record) => record.index}
+                        dataSource={classes}
+                        pagination={tableParams.pagination}
+                        loading={loading}
+                        onChange={handleTableChange}
+                        scroll={{ y: 'calc(100vh - 220px)' }}
+                    />
+                    <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 20 }}>
+                        <Button loading={apiLoading} onClick={handleSaveClasses} className={styles.saveButton}>
+                            Lưu
+                        </Button>
+                        <Button disabled={apiLoading} className={styles.cancelButton} onClick={() => { navigate(-1) }}>
+                            Hủy
+                        </Button>
+                    </div>
+                </>
+            }
+            {currentStep === 1 && importRes && (
+                <>
+                    <p style={{ color: 'green', marginBottom: 0 }}>Số lớp tạo thành công: <span>{importRes.successRow}</span></p>
+                    <p style={{ color: 'red', marginTop: 0 }}>Số lớp tạo thất bại: <span>{importRes.failureRow}</span></p>
+                    {importRes.rowInsertResponse.map((row, index) => (
+                        <>
+                            {row.isSucess
+                                ? <Alert key={index} style={{ marginBottom: 5 }} message={`${row.index} - Tạo lớp thành công`}
+                                    description={
+                                        <Row>
+                                            <Col span={7}>
+                                                <p style={{ margin: 0, fontWeight: 'bold' }}>Mã lớp học:</p>
+                                            </Col>
+                                            <Col span={17}>
+                                                <p style={{ margin: 0 }}>{row.successfulInformation.classCode}</p>
+                                            </Col>
+                                            <Col span={7}>
+                                                <p style={{ margin: 0, fontWeight: 'bold' }}>Giáo viên:</p>
+                                            </Col>
+                                            <Col span={17}>
+                                                <p style={{ margin: 0 }}>{row.successfulInformation.lecturerName}</p>
+                                            </Col>
+                                            <Col span={7}>
+                                                <p style={{ margin: 0, fontWeight: 'bold' }}>Phòng học:</p>
+                                            </Col>
+                                            <Col span={17}>
+                                                <p style={{ margin: 0 }}>{row.successfulInformation.roomName}</p>
+                                            </Col>
+                                            <Col span={7}>
+                                                <p style={{ margin: 0, fontWeight: 'bold' }}>Lịch học:</p>
+                                            </Col>
+                                            <Col span={17}>
+                                                {row.successfulInformation.times?.map(time =>
+                                                    <p style={{ margin: 0 }}>{time}</p>
+                                                )}
+                                            </Col>
+                                            <Col span={7}>
+                                                <p style={{ margin: 0, fontWeight: 'bold' }}>Ngày bắt đầu:</p>
+                                            </Col>
+                                            <Col span={17}>
+                                                <p style={{ margin: 0 }}>{row?.successfulInformation?.startDate && formatDate(new Date(row.successfulInformation.startDate))}</p>
+                                            </Col>
+                                        </Row>
+                                    } type="success" showIcon />
+                                : <Alert
+                                    key={index}
+                                    style={{ marginBottom: 5 }}
+                                    message={`${row.index} - Tạo lớp thất bại`}
+                                    description={
+                                        <>
+                                            <p style={{ margin: 0 }}>{row?.messsage}</p>
+                                        </>
+                                    }
+                                    type="error"
+                                    showIcon
+                                    action={
+                                        <Button type='link' onClick={() => {
+                                            setImportRow(row)
+                                            handleErrorImport(row.createClass)
+                                        }} icon={<EditOutlined />} size='large' />
+                                    } />
+                            }
+                            <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 20 }}>
+                                <Button onClick={() => navigate(-1)} className={styles.saveButton}>
+                                    Quay về trang chủ
+                                </Button>
+                            </div>
+                        </>
+                    ))}
+                </>
+            )}
 
             <ConfigProvider
                 theme={{
@@ -581,6 +764,7 @@ export default function ImportClasses() {
                                     }}
                                     disabled={apiLoading}
                                 />
+                                {importRow && <p style={{ color: 'black', margin: 0 }}> Mã lớp học:&ensp;<span style={{ fontWeight: "bold" }}>{classCode ? classCode : "Chưa có"}</span></p>}
                                 <div style={{ height: '24px', paddingLeft: '10px' }}>
                                     {courseError && (<p style={{ color: 'red', fontSize: '14px', margin: '0' }}>{courseError}</p>)}
                                 </div>

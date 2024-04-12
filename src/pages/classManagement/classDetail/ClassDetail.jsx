@@ -3,7 +3,7 @@ import styles from './ClassDetail.module.css'
 import { Button, DatePicker, Input, Table, Row, Col, Avatar, ConfigProvider, Tabs, Modal, Select, Empty } from 'antd';
 import { SwapOutlined, EditOutlined } from '@ant-design/icons';
 import { useNavigate, useParams } from 'react-router-dom';
-import { cancelClass, getClass, getLecturer, getRooms, getSessionOfClass, getSlots, getStudentsOfClass, updateClass, updateSession } from '../../../api/classesApi';
+import { cancelClass, getClass, getLecturerChangeClass, getLecturerSession, getRoomChangeClass, getRoomSession, getSessionOfClass, getSlots, getStudentsOfClass, updateClass, updateSession } from '../../../api/classesApi';
 import { formatDate, formatDayOfWeek, formatPhone, formatSlot } from '../../../utils/utils';
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
@@ -49,6 +49,12 @@ export default function ClassDetail() {
 
     const [sessionId, setSessionId] = useState(null);
 
+    const [roomsSession, setRoomsSession] = useState([])
+    const [roomsOptionsSession, setRoomsOptionsSession] = useState(roomsSession)
+
+    const [lecturersSession, setlecturersSession] = useState([])
+    const [lecturersOptionsSession, setLecturersOptionsSession] = useState(lecturersSession);
+
     const [lecturerSession, setLecturerSession] = useState(null)
     const [lecturerSessionError, setLecturerSessionError] = useState(null)
 
@@ -69,14 +75,20 @@ export default function ClassDetail() {
             limitNumberStudent: null,
         },
         onSubmit: async values => {
+            const checkRoom = rooms.find(roomItem => roomItem.id === room);
+            const checkLecturer = lecturers.find(lecturerItem => lecturerItem.lectureId === lecturer);
             if (!lecturer || !room) {
-                if (lecturer === null) {
+                if (!lecturer) {
                     setLecturerError("Vui lòng chọn giáo viên")
+                } else if (!checkLecturer) {
+                    setLecturerError("Vui lòng chọn giáo viên hợp lệ")
                 } else {
                     setLecturerError(null)
                 }
-                if (room === null) {
+                if (!room) {
                     setRoomError("Vui lòng nhập phòng học")
+                } else if (!checkRoom) {
+                    setRoomError("Vui lòng chọn phòng học hợp lệ")
                 } else {
                     setRoomError(null)
                 }
@@ -161,13 +173,13 @@ export default function ClassDetail() {
         }
     };
 
-    async function getListsOfLecturer() {
-        const data = await getLecturer();
+    async function getListsOfLecturer(id) {
+        const data = await getLecturerChangeClass(id);
         setlecturers(data);
         setLecturersOptions(data);
     };
-    async function getListsOfRooms() {
-        const data = await getRooms();
+    async function getListsOfRooms(id) {
+        const data = await getRoomChangeClass(id);
         setRooms(data);
         setRoomsOptions(data);
     };
@@ -180,9 +192,18 @@ export default function ClassDetail() {
         })
         setSlots(data);
     };
+
+    async function getListsOfLecturerSession(id, slotId, date) {
+        const data = await getLecturerSession(id, slotId, date);
+        setlecturersSession(data);
+        setLecturersOptionsSession(data);
+    };
+    async function getListsOfRoomsSession(id, slotId, date) {
+        const data = await getRoomSession(id, slotId, date);
+        setRoomsSession(data);
+        setRoomsOptionsSession(data);
+    };
     useEffect(() => {
-        getListsOfLecturer()
-        getListsOfRooms();
         getListsOfSlots()
     }, []);
     useEffect(() => {
@@ -194,31 +215,45 @@ export default function ClassDetail() {
     }, [tabActive]);
     useEffect(() => {
         getClassDetail(id)
+        getListsOfLecturer(id)
+        getListsOfRooms(id);
         if (tabActive === 'students') {
             getStudentsList(id);
         } else if (tabActive === 'sessions') {
             getSessions(id);
         }
     }, [id]);
+    useEffect(() => {
+        if (sessionId && dateSession && slotSession) {
+            getListsOfLecturerSession(id, slotSession, dateSession)
+            getListsOfRoomsSession(id, slotSession, dateSession);
+        }
+    }, [id, dateSession, slotSession, sessionId]);
 
     const handleUpdateSession = async () => {
+        const checkRoom = roomsSession.find(roomItem => roomItem.id === roomSession);
+        const checkLecturer = lecturersSession.find(lecturerItem => lecturerItem.lectureId === lecturerSession);
         if (!lecturerSession || !roomSession || !slotSession || !dateSession) {
-            if (lecturerSession === null) {
+            if (!lecturerSession) {
                 setLecturerSessionError("Vui lòng chọn giáo viên")
+            } else if (!checkLecturer) {
+                setLecturerSessionError("Vui lòng chọn giáo viên hợp lệ")
             } else {
                 setLecturerSessionError(null)
             }
-            if (roomSession === null) {
+            if (!roomSession) {
                 setRoomSessionError("Vui lòng nhập phòng học")
+            } else if (!checkRoom) {
+                setRoomSessionError("Vui lòng chọn phòng học hợp lệ")
             } else {
                 setRoomSessionError(null)
             }
-            if (slotSession === null) {
+            if (!slotSession) {
                 setSlotSessionError("Vui lòng chọn giờ học")
             } else {
                 setSlotSessionError(null)
             }
-            if (dateSession === null) {
+            if (!dateSession) {
                 setDateSessionError("Vui lòng chọn ngày học")
             } else {
                 setDateSessionError(null)
@@ -909,19 +944,19 @@ export default function ClassDetail() {
                                 onSelect={(data) => { setLecturerSession(data) }}
                                 defaultValue={lecturer}
                                 options={
-                                    lecturersOptions
+                                    lecturersOptionsSession
                                         .map((lecturer) => ({
                                             value: lecturer.lectureId,
                                             label: lecturer.fullName,
                                         }))}
                                 onSearch={(value) => {
-                                    const filteredOptions = lecturers.filter(
+                                    const filteredOptions = lecturersSession.filter(
                                         (lecture) =>
                                             `${lecture.fullName}`
                                                 .toLowerCase()
                                                 .includes(value.toLowerCase())
                                     );
-                                    setLecturersOptions(filteredOptions);
+                                    setLecturersOptionsSession(filteredOptions);
                                 }}
                                 disabled={apiLoading}
                             />
@@ -943,16 +978,16 @@ export default function ClassDetail() {
                                 className={styles.input}
                                 placeholder="Phòng học"
                                 onSelect={(data) => { setRoomSession(data) }}
-                                options={roomsOptions.map((room) => ({
+                                options={roomsOptionsSession.map((room) => ({
                                     value: room.id,
                                     label: room.name
                                 }))}
                                 onSearch={(value) => {
                                     if (value) {
-                                        const filteredOptions = rooms.filter(
+                                        const filteredOptions = roomsSession.filter(
                                             (room) => room.name.toLowerCase().includes(value?.toLowerCase())
                                         );
-                                        setRoomsOptions(filteredOptions);
+                                        setRoomsOptionsSession(filteredOptions);
                                     }
                                 }}
                                 disabled={apiLoading}

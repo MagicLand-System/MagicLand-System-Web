@@ -112,3 +112,19 @@ export const saveImport = async (credential) => {
   return response.data;
 };
 
+export const getRoomChangeClass = async (classId) => {
+  const response = await api.get(`/api/v1/classes/getRoomForUpdate`, { params: { classId } });
+  return response.data;
+};
+export const getLecturerChangeClass = async (classId) => {
+  const response = await api.get(`/api/v1/classes/getLecturerForUpdate`, { params: { classId } });
+  return response.data;
+};
+export const getRoomSession = async (classId, slotId, date) => {
+  const response = await api.get(`/api/v1/classes/getRoomForUpdateSession`, { params: { classId, slotId, date } });
+  return response.data;
+};
+export const getLecturerSession = async (classId, slotId, date) => {
+  const response = await api.get(`/api/v1/classes/getLecturerForUpdateSession`, { params: { classId, slotId, date } });
+  return response.data;
+};

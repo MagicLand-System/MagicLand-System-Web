@@ -115,7 +115,7 @@ export default function MakeUpClass() {
     const classesColumn = [
         {
             render: (_, record) => (
-                <Checkbox checked={record.id === makeUpScheduleId} value={record.id} onChange={(e) => { setMakeUpScheduleId(e.target.value) }} />
+                <Checkbox checked={record.scheduleId === makeUpScheduleId} value={record.scheduleId} onChange={(e) => { setMakeUpScheduleId(e.target.value) }} />
             ),
             width: 120,
         },
@@ -149,7 +149,7 @@ export default function MakeUpClass() {
             title: 'Giờ học',
             dataIndex: 'slot',
             render: (slot) => (
-                `${slot.startTime} - ${slot.endTime}`
+                `${slot.startTimeString} - ${slot.endTimeString}`
             ),
         },
         {
@@ -184,6 +184,7 @@ export default function MakeUpClass() {
                         placeholder="Tìm kiếm ngày" />
                 </ConfigProvider>
                 <Select
+                    allowClear
                     className={styles.input}
                     value={slot}
                     placeholder="Giờ học"

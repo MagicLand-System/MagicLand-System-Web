@@ -5,7 +5,8 @@ import { useNavigate } from 'react-router-dom';
 import { getRoomDailySchedule, getRoomSchedule } from '../../api/room';
 import { getRooms, getSlots } from '../../api/classesApi';
 import dayjs from 'dayjs';
-import { compareAsc } from 'date-fns'
+import { compareAsc, startOfWeek, endOfWeek } from 'date-fns';
+import viLocale from 'date-fns/locale/vi';
 import { formatDate, formatSlot } from '../../utils/utils';
 
 const { Search } = Input;
@@ -89,27 +90,12 @@ export default function RoomManagement() {
     useEffect(() => {
         if (tab === "weekly") {
             if (room) {
-                getListsOfSchedule(room, startOfWeek(new Date(date)), endOfWeek(new Date(date)));
+                getListsOfSchedule(room, startOfWeek(new Date(date), { locale: viLocale }), endOfWeek(new Date(date), { locale: viLocale }));
             }
         } else {
             getListsOfDailySchedule(dailyDate, search)
         }
     }, [tab, room, date, dailyDate, search]);
-    function startOfWeek(date) {
-        var diff = date.getDate() - date.getDay() + (date.getDay() === 0 ? -6 : 1);
-        return new Date(date.setDate(diff));
-    }
-    function endOfWeek(date) {
-        var diff = date.getDate() - date.getDay() + (date.getDay() === 0 ? -6 : 1);
-        diff = diff + 6
-        return new Date(date.setDate(diff));
-    }
-    function endOfMonth(date) {
-        return new Date(date.getFullYear(), date.getMonth() + 1, 0);
-    }
-    function startOfMonth(date) {
-        return new Date(date.getFullYear(), date.getMonth(), 1);
-    }
     const handleTableChange = (pagination, filters, sorter, extra) => {
         pagination.total = extra.currentDataSource.length
         setTableParams({
@@ -233,10 +219,10 @@ export default function RoomManagement() {
             width: 120,
         },
         {
-            title: `Thứ 2 - ${formatDate(startOfWeek(new Date(date)))}`,
+            title: `Thứ 2 - ${formatDate(startOfWeek(new Date(date), { locale: viLocale }))}`,
             render: (_, record) => {
                 const schedules = record.rooms?.filter((room) => {
-                    const dateA = startOfWeek(new Date(date))
+                    const dateA = startOfWeek(new Date(date), { locale: viLocale })
                     dateA.setHours(0, 0, 0, 0)
                     const dateB = new Date(room.date)
                     dateB.setHours(0, 0, 0, 0)
@@ -258,10 +244,10 @@ export default function RoomManagement() {
                 }
             }
         }, {
-            title: `Thứ 3 - ${formatDate(new Date(new Date(startOfWeek(new Date(date))).getTime() + 24 * 60 * 60 * 1000))}`,
+            title: `Thứ 3 - ${formatDate(new Date(new Date(startOfWeek(new Date(date), { locale: viLocale })).getTime() + 24 * 60 * 60 * 1000))}`,
             render: (_, record) => {
                 const schedules = record.rooms?.filter((room) => {
-                    const dateA = new Date(new Date(startOfWeek(new Date(date))).getTime() + 24 * 60 * 60 * 1000)
+                    const dateA = new Date(new Date(startOfWeek(new Date(date), { locale: viLocale })).getTime() + 24 * 60 * 60 * 1000)
                     dateA.setHours(0, 0, 0, 0)
                     const dateB = new Date(room.date)
                     dateB.setHours(0, 0, 0, 0)
@@ -284,10 +270,10 @@ export default function RoomManagement() {
             }
         },
         {
-            title: `Thứ 4 - ${formatDate(new Date(new Date(startOfWeek(new Date(date))).getTime() + 2 * 24 * 60 * 60 * 1000))}`,
+            title: `Thứ 4 - ${formatDate(new Date(new Date(startOfWeek(new Date(date), { locale: viLocale })).getTime() + 2 * 24 * 60 * 60 * 1000))}`,
             render: (_, record) => {
                 const schedules = record.rooms?.filter((room) => {
-                    const dateA = new Date(new Date(startOfWeek(new Date(date))).getTime() + 2 * 24 * 60 * 60 * 1000)
+                    const dateA = new Date(new Date(startOfWeek(new Date(date), { locale: viLocale })).getTime() + 2 * 24 * 60 * 60 * 1000)
                     dateA.setHours(0, 0, 0, 0)
                     const dateB = new Date(room.date)
                     dateB.setHours(0, 0, 0, 0)
@@ -310,10 +296,10 @@ export default function RoomManagement() {
             }
         },
         {
-            title: `Thứ 5 - ${formatDate(new Date(new Date(startOfWeek(new Date(date))).getTime() + 3 * 24 * 60 * 60 * 1000))}`,
+            title: `Thứ 5 - ${formatDate(new Date(new Date(startOfWeek(new Date(date), { locale: viLocale })).getTime() + 3 * 24 * 60 * 60 * 1000))}`,
             render: (_, record) => {
                 const schedules = record.rooms?.filter((room) => {
-                    const dateA = new Date(new Date(startOfWeek(new Date(date))).getTime() + 3 * 24 * 60 * 60 * 1000)
+                    const dateA = new Date(new Date(startOfWeek(new Date(date), { locale: viLocale })).getTime() + 3 * 24 * 60 * 60 * 1000)
                     dateA.setHours(0, 0, 0, 0)
                     const dateB = new Date(room.date)
                     dateB.setHours(0, 0, 0, 0)
@@ -336,10 +322,10 @@ export default function RoomManagement() {
             }
         },
         {
-            title: `Thứ 6 - ${formatDate(new Date(new Date(startOfWeek(new Date(date))).getTime() + 4 * 24 * 60 * 60 * 1000))}`,
+            title: `Thứ 6 - ${formatDate(new Date(new Date(startOfWeek(new Date(date), { locale: viLocale })).getTime() + 4 * 24 * 60 * 60 * 1000))}`,
             render: (_, record) => {
                 const schedules = record.rooms?.filter((room) => {
-                    const dateA = new Date(new Date(startOfWeek(new Date(date))).getTime() + 4 * 24 * 60 * 60 * 1000)
+                    const dateA = new Date(new Date(startOfWeek(new Date(date), { locale: viLocale })).getTime() + 4 * 24 * 60 * 60 * 1000)
                     dateA.setHours(0, 0, 0, 0)
                     const dateB = new Date(room.date)
                     dateB.setHours(0, 0, 0, 0)
@@ -362,10 +348,10 @@ export default function RoomManagement() {
             }
         },
         {
-            title: `Thứ 7 - ${formatDate(new Date(new Date(startOfWeek(new Date(date))).getTime() + 5 * 24 * 60 * 60 * 1000))}`,
+            title: `Thứ 7 - ${formatDate(new Date(new Date(startOfWeek(new Date(date), { locale: viLocale })).getTime() + 5 * 24 * 60 * 60 * 1000))}`,
             render: (_, record) => {
                 const schedules = record.rooms?.filter((room) => {
-                    const dateA = new Date(new Date(startOfWeek(new Date(date))).getTime() + 5 * 24 * 60 * 60 * 1000)
+                    const dateA = new Date(new Date(startOfWeek(new Date(date), { locale: viLocale })).getTime() + 5 * 24 * 60 * 60 * 1000)
                     dateA.setHours(0, 0, 0, 0)
                     const dateB = new Date(room.date)
                     dateB.setHours(0, 0, 0, 0)
@@ -389,10 +375,10 @@ export default function RoomManagement() {
         },
 
         {
-            title: `Chủ nhật - ${formatDate(endOfWeek(new Date(date)))}`,
+            title: `Chủ nhật - ${formatDate(endOfWeek(new Date(date), { locale: viLocale }))}`,
             render: (_, record) => {
                 const schedules = record.rooms?.filter((room) => {
-                    const dateA = endOfWeek(new Date(date))
+                    const dateA = endOfWeek(new Date(date), { locale: viLocale })
                     dateA.setHours(0, 0, 0, 0)
                     const dateB = new Date(room.date)
                     dateB.setHours(0, 0, 0, 0)
@@ -488,7 +474,7 @@ export default function RoomManagement() {
                                             <DatePicker
                                                 value={date}
                                                 picker={"week"}
-                                                format={`${formatDate(startOfWeek(new Date(date)))} ~ ${formatDate(endOfWeek(new Date(date)))}`}
+                                                format={`${formatDate(startOfWeek(new Date(date), { locale: viLocale }))} ~ ${formatDate(endOfWeek(new Date(date), { locale: viLocale }))}`}
                                                 allowClear={false}
                                                 className={styles.input}
                                                 onChange={(date) => setDate(date)}
