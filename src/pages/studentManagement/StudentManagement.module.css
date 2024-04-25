@@ -8,8 +8,7 @@
   font-size: 2rem;
   color: #3a0ca3;
   text-align: center;
-  margin-top: 20px;
-  margin-bottom: 20px;
+  margin-top: 40px;
 }
 .status {
   text-align: center;
@@ -68,12 +67,10 @@
 .input div:hover {
   border-color: #f2c955 !important;
 }
-.inputNumber {
-  text-align: right;
-}
 .saveButton {
   background-color: #f2c955;
   color: black !important;
+  margin-right: 8px;
 }
 .saveButton:hover {
   background: #ffd766 !important;
@@ -81,18 +78,21 @@
   border: 1px solid #ffd766 !important;
 }
 .cancelButton {
-  background-color: #ff6868;
+  background-color: #FF6868;
   margin-right: 8px;
   color: white !important;
 }
 .cancelButton:hover {
   background: #fb5959 !important;
   color: white !important;
-  border: 1px solid #ff6868 !important;
+  border: 1px solid #FF6868 !important;
 }
 .addTitle {
-  margin: 0 0 4px;
-  font-size: 14px;
+  text-align: right;
+  height: 40px;
+  margin: 0;
+  line-height: 40px;
+  margin-right: 16px;
 }
 .addTitle span {
   color: red;
@@ -102,63 +102,9 @@
   margin-bottom: 12px !important;
   border-bottom: 1px solid #f2c955 !important;
 }
-.column {
-  padding: 0 10px;
+.picker {
+  min-width: 300px;
 }
-.button {
-  margin-bottom: 20px;
-  width: 100%;
-  height: 40px;
-  background-color: #f2c955;
-  color: black;
-  border-radius: 20px;
-  font-size: 1.2rem;
-}
-.button:hover {
-  background: #ffd766 !important;
-  color: black !important;
-  border: 1px solid #f2c955 !important;
-}
-.button:focus,
-.button:focus-visible {
-  outline: none !important;
-}
-.button:disabled {
-  background-color: #f9e4aa !important;
-  color: #808080 !important;
-}
-.imageCol {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-}
-.image {
-  width: 30%;
-  margin-bottom: 20px;
-}
-.steps {
-  width: 50%;
-  margin: 20px auto 30px;
-}
-.disableSelect {
-  color: black !important;
-}
-.syllabusInfo {
-  text-align: right;
-  margin: 0;
-  font-size: 1rem;
-}
-.syllabusTitle {
-  color: #888888;
-  margin: 0;
-  font-size: 1rem;
-}
-.currencyInput {
-  border: 1px solid #d9d9d9;
-  box-sizing: border-box;
-  border-radius: 6px;
-  padding: 4px 11px 4px;
-}
-.currencyInput::placeholder {
-  color: #bfbfbf;
+.picker:hover {
+  border-color: #ffd766 !important;
 }

@@ -439,7 +439,7 @@ export default function RoomManagement() {
                                                 value={dailyDate}
                                                 format={'DD/MM/YYYY'}
                                                 allowClear={false}
-                                                className={styles.input}
+                                                className={styles.picker}
                                                 onChange={(date) => setDailyDate(date)}
                                                 placeholder="Chọn thời gian" />
                                         </ConfigProvider>
@@ -476,7 +476,7 @@ export default function RoomManagement() {
                                                 picker={"week"}
                                                 format={`${formatDate(startOfWeek(new Date(date), { locale: viLocale }))} ~ ${formatDate(endOfWeek(new Date(date), { locale: viLocale }))}`}
                                                 allowClear={false}
-                                                className={styles.input}
+                                                className={styles.picker}
                                                 onChange={(date) => setDate(date)}
                                                 placeholder="Chọn thời gian" />
                                         </ConfigProvider>

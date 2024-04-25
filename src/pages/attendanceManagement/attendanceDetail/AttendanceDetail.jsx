@@ -117,7 +117,7 @@ export default function AttendanceDetail() {
         {
             title: 'Chuyển lớp học bù',
             render: (_, record) => !record.isPresent && (
-                <Button type='link' onClick={() => navigate(`make-up-class/${record.student.id}`, { state: { student: record } })} icon={<SwapOutlined />} size='large' />
+                <Button type='link' onClick={() => navigate(`/student-management/view-schedules/${record.student.id}/make-up-class/${id}`)} icon={<SwapOutlined />} size='large' />
             ),
         },
     ];

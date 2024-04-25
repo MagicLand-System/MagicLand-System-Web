@@ -248,7 +248,7 @@ export default function Register() {
                     return (current > dayjs().subtract(3, 'year'))
                   }}
                   onChange={(date) => setDateOfBirth(date)}
-                  defaultValue={dateOfBirth}
+                  value={dateOfBirth}
                   format={'DD/MM/YYYY'}
                   placeholder="Chọn ngày sinh"
                   disabled={loading} />

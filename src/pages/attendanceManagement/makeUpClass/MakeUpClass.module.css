@@ -10,25 +10,30 @@
   text-align: center;
   margin-top: 40px;
 }
-.input {
-  flex: 1;
-  width: 100%;
-  color: black;
+.status {
+  text-align: center;
+  border-radius: 20px;
+  padding: 2px 15px;
 }
-.input:focus {
-  border-color: #f2c955;
+.importButton {
+  margin-top: 24px;
+  background-color: #f2c955;
+  color: black !important;
+  font-size: 1rem;
+  height: 40px;
 }
-.input:hover {
-  border-color: #f2c955 !important;
+.importButton:hover {
+  background: #ffd766 !important;
+  color: black !important;
 }
-.input div:focus {
-  border-color: #f2c955;
+.addButton {
+  background-color: #fef9ea;
+  border: 1px solid #f2c955 !important;
+  margin-right: 8px;
 }
-.input div:hover {
-  border-color: #f2c955 !important;
-}
-.searchBar {
-  flex: 7;
+.addButton:hover {
+  background: #ffeebc !important;
+  color: black !important;
 }
 .searchBar input:hover {
   border-color: #ffd766 !important;
@@ -44,11 +49,30 @@
   background: #ffd766 !important;
   color: black !important;
 }
-.picker {
-  min-width: 300px;
+.addTitle span {
+  color: red;
 }
-.picker:hover {
-  border-color: #ffd766 !important;
+.classTitle {
+  color: #888888;
+  margin: 0;
+  font-size: 1rem;
+}
+.classDetail {
+  margin: 0;
+  text-align: right;
+  font-size: 1rem;
+}
+.classPart {
+  padding: 12px 12px 6px;
+  border: 1px solid #f2c955;
+  background-color: #fffcf4;
+  height: 100%;
+  width: 90%;
+  border-radius: 10px;
+}
+.classPartTitle {
+  font-size: 1.2rem;
+  margin: 8px 0;
 }
 .saveButton {
   background-color: #f2c955;
@@ -61,30 +85,40 @@
   border: 1px solid #ffd766 !important;
 }
 .cancelButton {
-  background-color: #ff6868;
+  background-color: #FF6868;
   margin-right: 8px;
   color: white !important;
 }
 .cancelButton:hover {
   background: #fb5959 !important;
   color: white !important;
-  border: 1px solid #ff6868 !important;
+  border: 1px solid #FF6868 !important;
 }
-.classCode {
-  font-size: 1.2rem;
+.modalHeader {
+  padding-bottom: 5px;
+  margin-bottom: 12px !important;
+  border-bottom: 1px solid #f2c955 !important;
 }
-.classCode span {
-  font-weight: bold;
+.input {
+  width: 100%;
+  color: black;
 }
-.status {
-  text-align: center;
-  border-radius: 20px;
-  padding: 2px 15px;
+.input:focus {
+  border-color: #f2c955;
 }
-.classDetailTitle {
-  font-size: 1.2rem;
+.input:hover {
+  border-color: #f2c955 !important;
 }
-.classDetail {
-  font-size: 1.2rem;
-  font-weight: bold;
+.input div:focus {
+  border-color: #f2c955;
+}
+.input div:hover {
+  border-color: #f2c955 !important;
+}
+.addTitle {
+  text-align: right;
+  height: 40px;
+  margin: 0;
+  line-height: 40px;
+  margin-right: 16px;
 }

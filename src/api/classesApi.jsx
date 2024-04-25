@@ -68,23 +68,20 @@ export const updateSession = async (id, credential) => {
   const response = await api.put(`/api/v1/classes/${id}/updateSession`, credential);
   return response.data;
 };
-export const getSuitableClass = async (credential) => {
+export const getSuitableClass = async (classId, studentId) => {
   const response = await api.get(`/api/v1/classes/staff/change/suitable`, {
-    params: credential
+    params: { classId, studentId }
   });
   return response.data;
 };
-export const changeClass = async (fromClassId, toClassId, studentIdList) => {
-  const params = {
-    fromClassId,
-    toClassId,
-  };
-  if (studentIdList.length > 0) {
-    studentIdList.forEach((id, index) => {
-      params[`studentIdList[${index}]`] = id;
-    });
-  }
-  const response = await api.get(`/api/v1/classes/staff/change`, { params });
+export const changeClass = async (fromClassId, toClassId, studentId) => {
+  const response = await api.get(`/api/v1/classes/staff/change`, {
+    params: {
+      fromClassId,
+      toClassId,
+      studentId
+    }
+  });
   return response.data;
 };
 export const cancelClass = async (id) => {

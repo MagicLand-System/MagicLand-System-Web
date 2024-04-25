@@ -1,0 +1,17 @@
+.input {
+  width: 100%;
+  color: black;
+  height: 40px;
+}
+.input:focus {
+  border-color: #f2c955;
+}
+.input:hover {
+  border-color: #f2c955 !important;
+}
+.input div:focus {
+  border-color: #f2c955;
+}
+.input div:hover {
+  border-color: #f2c955 !important;
+}

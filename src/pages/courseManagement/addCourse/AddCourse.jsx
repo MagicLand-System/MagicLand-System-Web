@@ -433,23 +433,15 @@ export default function AddCourse() {
                                 </div>
                             </Col>
                             <Col span={24} className={styles.imageCol}>
-                                <img className={styles.image} alt="image" src={imageUrl ? imageUrl : '../../src/assets/images/empty_image.jpg'} />
+                                {imageUrl &&
+                                    <img className={styles.image} alt="image" src={imageUrl} />
+                                }
                                 <input type='file' disabled={apiLoading} accept='image/*' ref={imageInputRef} onChange={handleImageChange} style={{ display: 'none' }} />
                                 <Button disabled={apiLoading} style={{ width: '180px' }} onClick={() => imageInputRef.current.click()} icon={<CloudUploadOutlined />} className={styles.button}>
                                     Tải hình lên
                                 </Button>
                                 <div style={{ height: '24px', paddingLeft: '10px' }}>
                                     {imageError && (<p style={{ color: 'red', fontSize: '14px', margin: '0' }}>{imageError}</p>)}
-                                </div>
-                                <div style={{ display: 'flex', marginBottom: 20 }}>
-                                    {id ?
-                                        <Button loading={apiLoading} htmlType='submit' className={styles.saveButton}>
-                                            Lưu
-                                        </Button>
-                                        : <Button loading={apiLoading} htmlType='submit' className={styles.saveButton}>
-                                            Tạo khóa học
-                                        </Button>
-                                    }
                                 </div>
                             </Col>
                         </Row>
@@ -501,6 +493,16 @@ export default function AddCourse() {
                                 </Row>
                             </div>
                         }
+                        <div style={{ width: '100%', textAlign: 'center', marginTop: 20 }}>
+                            {id ?
+                                <Button loading={apiLoading} htmlType='submit' className={styles.saveButton}>
+                                    Lưu
+                                </Button>
+                                : <Button loading={apiLoading} htmlType='submit' className={styles.saveButton}>
+                                    Tạo khóa học
+                                </Button>
+                            }
+                        </div>
                     </Col>
                 </Row>
             </form >

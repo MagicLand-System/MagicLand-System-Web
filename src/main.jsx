@@ -35,6 +35,10 @@ import RegisterCourse from './pages/courseRegister/register/RegisterCourse.jsx'
 import NetworkStatusIndicator from './components/networkStatusIndicator/NetworkStatusIndicator.jsx'
 import ImportClasses from './pages/classManagement/importClasses/ImportClasses.jsx'
 import Dashboard from './pages/dashboard/Dashboard.jsx'
+import StudentManagement from './pages/studentManagement/StudentManagement.jsx'
+import ViewStudentClasses from './pages/studentManagement/viewStudentClasses/ViewStudentClasses.jsx'
+import ViewStudentSchedules from './pages/studentManagement/viewStudentSchedules/ViewStudentSchedules.jsx'
+import StaffManagement from './pages/staffManagement/StaffManagement.jsx'
 
 const router = createBrowserRouter([
   //Route đã đăng nhập thì k vào được, k có header, footer
@@ -79,10 +83,6 @@ const router = createBrowserRouter([
             element: <ClassDetail />
           },
           {
-            path: '/class-management/detail/:classId/change-class/:studentId',
-            element: <ChangeClass />
-          },
-          {
             path: '/transaction-management',
             element: <TransactionManagement />
           },
@@ -95,10 +95,6 @@ const router = createBrowserRouter([
             element: <AttendanceDetail />
           },
           {
-            path: '/attendance-management/check-attendance/:scheduleId/make-up-class/:studentId',
-            element: <MakeUpClass />
-          },
-          {
             path: '/course-register',
             element: <CourseRegister />
           },
@@ -109,6 +105,26 @@ const router = createBrowserRouter([
           {
             path: '/course-register/register',
             element: <RegisterCourse />
+          },
+          {
+            path: '/student-management',
+            element: <StudentManagement />
+          },
+          {
+            path: '/student-management/view-classes/:studentId',
+            element: <ViewStudentClasses />
+          },
+          {
+            path: '/student-management/view-classes/:studentId/change-class/:classId',
+            element: <ChangeClass />
+          },
+          {
+            path: '/student-management/view-schedules/:studentId',
+            element: <ViewStudentSchedules />
+          },
+          {
+            path: '/student-management/view-schedules/:studentId/make-up-class/:scheduleId',
+            element: <MakeUpClass />
           },
         ]
       },
@@ -163,6 +179,10 @@ const router = createBrowserRouter([
           {
             path: '/dashboard',
             element: <Dashboard />
+          },
+          {
+            path: '/staff-management',
+            element: <StaffManagement />
           },
         ]
       },

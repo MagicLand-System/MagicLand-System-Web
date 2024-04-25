@@ -274,7 +274,7 @@ export default function CourseRegisterDetail() {
                                         </Col>
                                         {subDes.contents?.map((subCont, subIndex) =>
                                             <Col key={subIndex} span={24}>
-                                                <p className={styles.classDetail} style={{ textAlign: 'left' }}><span className={styles.classTitle}>- {subCont.content}: </span>{subCont.description}</p>
+                                                <p className={styles.classDetail} style={{ textAlign: 'left' }}><span className={styles.classTitle}>- {subCont.content}</span>{subCont.description? `: ${subCont.description}` : subCont.description}</p>
                                             </Col>)}
                                     </Row>
                                 )}

@@ -1,19 +1,21 @@
 import React, { useEffect, useState } from 'react'
 import styles from './MakeUpClass.module.css'
-import { Button, Input, Table, Checkbox, Select, DatePicker, ConfigProvider } from 'antd';
+import { Button, Input, Table, Checkbox, Select, DatePicker, ConfigProvider, Row, Col } from 'antd';
 import Swal from 'sweetalert2';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { formatDate, formatDayOfWeek, formatPhone, formatSlot } from '../../../utils/utils';
 import { arrangeMakeUpClass, getMakeUpClass, getSlots } from '../../../api/classesApi';
 import { compareAsc } from 'date-fns';
 import dayjs from 'dayjs';
+import { getSessionOfStudent, getStudent } from '../../../api/student';
 
 const { Search } = Input;
 
 export default function MakeUpClass() {
     const navigate = useNavigate()
-    const location = useLocation()
-    const { student } = location.state
+
+    const [student, setStudent] = useState(null)
+    const [schedule, setSchedule] = useState(null)
     const [apiLoading, setApiLoading] = useState(false);
     const [classes, setClasses] = useState([])
     const [loading, setLoading] = useState(false);
@@ -109,6 +111,63 @@ export default function MakeUpClass() {
     useEffect(() => {
         getListsOfSlots()
     }, [])
+    async function getScheduleDetail(scheduleId) {
+        // const data = await getSessionOfStudent(scheduleId);
+        const data = {
+            classCode: 'LTS101-1',
+            courseName: 'Lập trình Scratch',
+            index: 1,
+            id: "29565731-0b04-44a1-87c1-9fbcfbcc4c99",
+            date: "2024-05-02T03:37:23.632",
+            status: "future",
+            slot: {
+                slotOrder: null,
+                startTime: "12:00",
+                endTime: "14:00",
+                slotId: "6ab50a00-08ba-483c-bf5d-0d55b05a2ccc",
+                startTimeString: null,
+                endTimeString: null
+            },
+            room: {
+                roomId: "99f6f043-3fee-435f-a8ae-1f55f13b3256",
+                name: "101",
+                floor: 1,
+                status: "AVAILABLE",
+                linkUrl: null,
+                capacity: 35
+            },
+            dayOfWeeks: "thursday",
+            lecturer: {
+                id: "66aa922d-4392-4958-bbef-fc9689c9774d",
+                fullName: "Ngô Văn Thành",
+                phone: "0985081329",
+                avatarImage: null,
+                email: "tramnt@fe.edu.vn",
+                gender: "Nam",
+                dateOfBirth: "1990-11-11T00:00:00",
+                address: "Hồ Chí Minh"
+            },
+            orderTopic: 1,
+            topicName: "Bắt đầu lập trình",
+            contents: [
+                {
+                    content: "Bài lập trình đầu tiên",
+                    details: ["Giới thiệu", "Thực hành"]
+                }
+            ]
+        }
+        setSchedule(data);
+    };
+    async function getStudentData(studentId) {
+        const data = await getStudent(studentId);
+        setStudent(data[0]);
+    };
+    useEffect(() => {
+        getStudentData(studentId);
+    }, [studentId]);
+    useEffect(() => {
+        getScheduleDetail(scheduleId);
+    }, [scheduleId]);
     useEffect(() => {
         getListOfMakeUpClasses(scheduleId, studentId, search, findDate, slot)
     }, [scheduleId, studentId, search, findDate, slot])
@@ -149,7 +208,7 @@ export default function MakeUpClass() {
             title: 'Giờ học',
             dataIndex: 'slot',
             render: (slot) => (
-                `${slot.startTimeString} - ${slot.endTimeString}`
+                `${slot.startTime} - ${slot.endTime}`
             ),
         },
         {
@@ -162,7 +221,133 @@ export default function MakeUpClass() {
     return (
         <div className={styles.container}>
             <h2 className={styles.title}>Xếp lịch học bù</h2>
-            <p className={styles.classDetailTitle}>Học viên: <span className={styles.classDetail}>{student.student.fullName}</span></p>
+            {schedule && student && (
+                <>
+                    <Row>
+                        <Col md={6} xs={12} style={{ marginBottom: '40px' }}>
+                            <div className={styles.classPart}>
+                                <h5 className={styles.classPartTitle}>Học viên</h5>
+                                <Row>
+                                    <Col span={8}>
+                                        <p className={styles.classTitle}>Họ và tên:</p>
+                                    </Col>
+                                    <Col span={16}>
+                                        <p className={styles.classDetail}>{student?.studentResponse?.fullName}</p>
+                                    </Col>
+                                </Row>
+                                <Row>
+                                    <Col span={8}>
+                                        <p className={styles.classTitle}>Ngày sinh:</p>
+                                    </Col>
+                                    <Col span={16}>
+                                        <p className={styles.classDetail}>{student?.studentResponse?.dateOfBirth && `${formatDate(student.studentResponse.dateOfBirth)}`}</p>
+                                    </Col>
+                                </Row>
+                                <Row>
+                                    <Col span={8}>
+                                        <p className={styles.classTitle}>Giới tính:</p>
+                                    </Col>
+                                    <Col span={16}>
+                                        <p className={styles.classDetail}>{student?.studentResponse?.gender}</p>
+                                    </Col>
+                                </Row>
+                            </div>
+                        </Col>
+                        <Col md={6} xs={12} style={{ marginBottom: '40px' }}>
+                            <div className={styles.classPart}>
+                                <h5 className={styles.classPartTitle}>Phụ huynh</h5>
+                                <Row>
+                                    <Col span={8}>
+                                        <p className={styles.classTitle}>Họ và tên:</p>
+                                    </Col>
+                                    <Col span={16}>
+                                        <p className={styles.classDetail}>{student?.parent?.fullName}</p>
+                                    </Col>
+                                </Row>
+                                <Row>
+                                    <Col span={8}>
+                                        <p className={styles.classTitle}>Số điện thoại:</p>
+                                    </Col>
+                                    <Col span={16}>
+                                        <p className={styles.classDetail}>{student?.parent?.phone && `${formatPhone(student.parent.phone)}`}</p>
+                                    </Col>
+                                </Row>
+                            </div>
+                        </Col>
+                        <Col md={6} xs={12} style={{ marginBottom: '40px' }}>
+                            <div className={styles.classPart}>
+                                <h5 className={styles.classPartTitle}>Buổi học ban đầu</h5>
+                                <Row>
+                                    <Col span={10}>
+                                        <p className={styles.classTitle}>Khóa học:</p>
+                                    </Col>
+                                    <Col span={14}>
+                                        <p className={styles.classDetail}>{schedule.courseName}</p>
+                                    </Col>
+                                </Row>
+                                <Row>
+                                    <Col span={10}>
+                                        <p className={styles.classTitle}>Buổi học thứ:</p>
+                                    </Col>
+                                    <Col span={14}>
+                                        <p className={styles.classDetail}>{schedule.index}</p>
+                                    </Col>
+                                </Row>
+                                <Row>
+                                    <Col span={8}>
+                                        <p className={styles.classTitle}>Ngày học:</p>
+                                    </Col>
+                                    <Col span={16}>
+                                        <p className={styles.classDetail}>{`${formatDayOfWeek(schedule.dayOfWeeks)} - ${formatDate(schedule.date)}`}</p>
+                                    </Col>
+                                </Row>
+                                <Row>
+                                    <Col span={8}>
+                                        <p className={styles.classTitle}>Giờ học:</p>
+                                    </Col>
+                                    <Col span={16}>
+                                        <p className={styles.classDetail}>{`${schedule.slot.startTime} - ${schedule.slot.endTime}`}</p>
+                                    </Col>
+                                </Row>
+                                <Row>
+                                    <Col span={8}>
+                                        <p className={styles.classTitle}>Phòng học:</p>
+                                    </Col>
+                                    <Col span={16}>
+                                        <p className={styles.classDetail}>{schedule.room.name}</p>
+                                    </Col>
+                                </Row>
+                            </div>
+                        </Col>
+                        <Col md={6} xs={12} style={{ marginBottom: '40px' }}>
+                            <div className={styles.classPart}>
+                                <h5 className={styles.classPartTitle}>Nội dung buổi học</h5>
+                                <Row>
+                                    <Col span={10}>
+                                        <p className={styles.classTitle}>Chủ đề:</p>
+                                    </Col>
+                                    <Col span={14}>
+                                        <p className={styles.classDetail}>{`Chủ đề ${schedule.orderTopic}: ${schedule.topicName}`}</p>
+                                    </Col>
+                                </Row>
+                                <Row>
+                                    <Col span={10}>
+                                        <p className={styles.classTitle}>Nội dung buổi học:</p>
+                                    </Col>
+                                    <Col span={14}>
+                                        {schedule.contents.map((content, index) => (
+                                            <div key={index}>
+                                                <p className={styles.classDetail}> {content.content}:</p>
+                                                {content.details.map((detail) => <p className={styles.classDetail}>&emsp;-&nbsp;{detail}</p>)}
+                                            </div>
+                                        ))}
+                                    </Col>
+                                </Row>
+                            </div>
+                        </Col>
+                    </Row>
+                </>
+            )}
             <div style={{ display: 'flex', marginBottom: '16px', gap: '8px' }}>
                 <Search className={styles.searchBar} placeholder="Tìm kiếm lớp học, giáo viên" onSearch={(value, e) => { setSearch(value) }} enterButton />
                 <ConfigProvider
@@ -204,7 +389,7 @@ export default function MakeUpClass() {
                 onChange={handleTableChange}
                 scroll={{ y: 'calc(100vh - 220px)' }}
             />
-            <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+            <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 8 }}>
                 <Button loading={apiLoading} disabled={!makeUpScheduleId} onClick={handleSaveMakeUpClass} className={styles.saveButton}>
                     Lưu
                 </Button>

@@ -1,21 +1,21 @@
 import React, { useEffect, useState } from 'react'
 import styles from './ChangeClass.module.css'
-import { Button, Table, Checkbox } from 'antd';
+import { Button, Table, Checkbox, Row, Col } from 'antd';
 import Swal from 'sweetalert2';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
-import { formatDate, formatDayOfWeek } from '../../../utils/utils';
-import { changeClass, getSuitableClass } from '../../../api/classesApi';
+import { formatDate, formatDayOfWeek, formatPhone } from '../../../utils/utils';
+import { changeClass, getClass, getSuitableClass } from '../../../api/classesApi';
+import { getStudent } from '../../../api/student';
 
 export default function ChangeClass() {
     const navigate = useNavigate()
-    const location = useLocation()
-    const { student } = location.state
     const [apiLoading, setApiLoading] = useState(false);
     const [classes, setClasses] = useState([])
     const [loading, setLoading] = useState(false);
 
-    const [search, setSearch] = useState(null)
     const [newClassId, setNewClassId] = useState(null)
+    const [student, setStudent] = useState(null)
+    const [classData, setClassData] = useState(null)
 
     const [tableParams, setTableParams] = useState({
         pagination: {
@@ -49,8 +49,7 @@ export default function ChangeClass() {
                     timer: 2000
                 })
             } else {
-                const studentIdList = [studentId]
-                await changeClass(classId, newClassId, studentIdList)
+                await changeClass(classId, newClassId, studentId)
                     .then(() => Swal.fire({
                         position: "center",
                         icon: "success",
@@ -121,7 +120,7 @@ export default function ChangeClass() {
     async function getListsOfClasses(classId, studentId) {
         try {
             setLoading(true);
-            const data = await getSuitableClass({ classId, studentIdList: [studentId] });
+            const data = await getSuitableClass(classId, studentId);
             setClasses(data);
             setTableParams({
                 pagination: {
@@ -136,6 +135,20 @@ export default function ChangeClass() {
             setLoading(false);
         }
     };
+    async function getClassDetail(classId) {
+        const data = await getClass(classId);
+        setClassData(data);
+    };
+    async function getStudentData(studentId) {
+        const data = await getStudent(studentId);
+        setStudent(data[0]);
+    };
+    useEffect(() => {
+        getStudentData(studentId);
+    }, [studentId]);
+    useEffect(() => {
+        getClassDetail(classId);
+    }, [classId]);
     useEffect(() => {
         getListsOfClasses(classId, studentId);
     }, [classId, studentId]);
@@ -143,10 +156,136 @@ export default function ChangeClass() {
     return (
         <div className={styles.container}>
             <h2 className={styles.title}>Chuyển lớp</h2>
-            <p className={styles.classDetailTitle}>Học viên: <span className={styles.classDetail}>{student.fullName}</span></p>
-            {/* <div style={{ display: 'flex', marginBottom: '16px', gap: '8px' }}>
-                <Search className={styles.searchBar} placeholder="Tìm kiếm lớp học, giáo viên" onSearch={(value, e) => { setSearch(value) }} enterButton />
-            </div> */}
+            {classData && student && (
+                <>
+                    <Row>
+                        <Col md={6} xs={12} style={{ marginBottom: '40px' }}>
+                            <div className={styles.classPart}>
+                                <h5 className={styles.classPartTitle}>Học viên</h5>
+                                <Row>
+                                    <Col span={8}>
+                                        <p className={styles.classTitle}>Họ và tên:</p>
+                                    </Col>
+                                    <Col span={16}>
+                                        <p className={styles.classDetail}>{student?.studentResponse?.fullName}</p>
+                                    </Col>
+                                </Row>
+                                <Row>
+                                    <Col span={8}>
+                                        <p className={styles.classTitle}>Ngày sinh:</p>
+                                    </Col>
+                                    <Col span={16}>
+                                        <p className={styles.classDetail}>{student?.studentResponse?.dateOfBirth && `${formatDate(student.studentResponse.dateOfBirth)}`}</p>
+                                    </Col>
+                                </Row>
+                                <Row>
+                                    <Col span={8}>
+                                        <p className={styles.classTitle}>Giới tính:</p>
+                                    </Col>
+                                    <Col span={16}>
+                                        <p className={styles.classDetail}>{student?.studentResponse?.gender}</p>
+                                    </Col>
+                                </Row>
+                            </div>
+                        </Col>
+                        <Col md={6} xs={12} style={{ marginBottom: '40px' }}>
+                            <div className={styles.classPart}>
+                                <h5 className={styles.classPartTitle}>Phụ huynh</h5>
+                                <Row>
+                                    <Col span={8}>
+                                        <p className={styles.classTitle}>Họ và tên:</p>
+                                    </Col>
+                                    <Col span={16}>
+                                        <p className={styles.classDetail}>{student?.parent?.fullName}</p>
+                                    </Col>
+                                </Row>
+                                <Row>
+                                    <Col span={8}>
+                                        <p className={styles.classTitle}>Số điện thoại:</p>
+                                    </Col>
+                                    <Col span={16}>
+                                        <p className={styles.classDetail}>{student?.parent?.phone && `${formatPhone(student.parent.phone)}`}</p>
+                                    </Col>
+                                </Row>
+                            </div>
+                        </Col>
+                        <Col md={6} xs={12} style={{ marginBottom: '40px' }}>
+                            <div className={styles.classPart}>
+                                <h5 className={styles.classPartTitle}>Khóa học</h5>
+                                <Row>
+                                    <Col span={8}>
+                                        <p className={styles.classTitle}>Tên khóa học:</p>
+                                    </Col>
+                                    <Col span={16}>
+                                        <p className={styles.classDetail}>{classData.courseResponse.name}</p>
+                                    </Col>
+                                </Row>
+                                <Row>
+                                    <Col span={16}>
+                                        <p className={styles.classTitle}>Mã giáo trình:</p>
+                                    </Col>
+                                    <Col span={8}>
+                                        <p className={styles.classDetail}>{classData.courseResponse.syllabusCode}</p>
+                                    </Col>
+                                </Row>
+                                <Row>
+                                    <Col span={16}>
+                                        <p className={styles.classTitle}>Độ tuổi phù hợp:</p>
+                                    </Col>
+                                    <Col span={8}>
+                                        <p className={styles.classDetail}>{classData.courseResponse.minYearOldsStudent} - {classData.courseResponse.maxYearOldsStudent} tuổi</p>
+                                    </Col>
+                                </Row>
+                            </div>
+                        </Col>
+                        <Col md={6} xs={12} style={{ marginBottom: '40px' }}>
+                            <div className={styles.classPart}>
+                                <h5 className={styles.classPartTitle}>Lớp học ban đầu</h5>
+                                <Row>
+                                    <Col span={8}>
+                                        <p className={styles.classTitle}>Mã lớp:</p>
+                                    </Col>
+                                    <Col span={16}>
+                                        <p className={styles.classDetail}>{classData.classCode}</p>
+                                    </Col>
+                                </Row>
+                                <Row>
+                                    <Col span={8}>
+                                        <p className={styles.classTitle}>Trạng thái:</p>
+                                    </Col>
+                                    <Col span={16}>
+                                        <p className={styles.classDetail}>{classData.status.toLowerCase().includes('completed') ? 'Đã hoàn thành'
+                                            : classData.status.toLowerCase().includes('upcoming') ? 'Sắp tới'
+                                                : classData.status.toLowerCase().includes('progressing') ? 'Đang diễn ra'
+                                                    : classData.status.toLowerCase().includes('canceled') && 'Đã hủy'}
+                                        </p>
+                                    </Col>
+                                </Row>
+                                <Row>
+                                    <Col span={8}>
+                                        <p className={styles.classTitle}>Ngày bắt đầu:</p>
+                                    </Col>
+                                    <Col span={16}>
+                                        <p className={styles.classDetail}>{classData && `${formatDate(classData.startDate)}`}</p>
+                                    </Col>
+                                </Row>
+                                <Row>
+                                    <Col span={10}>
+                                        <p className={styles.classTitle}>Lịch học hàng tuần:</p>
+                                    </Col>
+                                    <Col span={14}>
+                                        {classData?.schedules?.map((session, index) => (
+                                            <p className={styles.classDetail} key={index}>
+                                                {formatDayOfWeek(session.dayOfWeek)}: {session.startTime} - {session.endTime}
+                                            </p>
+                                        ))}
+                                    </Col>
+                                </Row>
+                            </div>
+                        </Col>
+                    </Row>
+                </>
+            )}
             <Table
                 columns={classesColumn}
                 rowKey={(record) => record.classId}

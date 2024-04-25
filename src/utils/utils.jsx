@@ -99,7 +99,7 @@ export async function handleImportSyllabus(excelFile, fileInput) {
         if (generalData.effectiveDate) {
             const dateRegex = /^\d{2}\/\d{2}\/\d{4}$/;
             if (!dateRegex.test(generalData.effectiveDate)) {
-                errors.push("Ngày hiệu lực không đúng định dạng (dd/mm/yyyy)");
+                errors.push("Vui lòng để ngày hiệu lực dạng văn bản (dd/mm/yyyy)");
             } else {
                 const today = new Date();
                 today.setHours(0);
@@ -125,7 +125,7 @@ export async function handleImportSyllabus(excelFile, fileInput) {
         });
         syllabusDetail = { generalData }
     } else {
-        errors.push("Vui lòng điền đúng các thông tin chung")
+        errors.push("Vui lòng chỉ điền các thông tin chung trên 1 dòng")
     }
     //sheet syllabus
     const worksheetSyllabus = workbook.Sheets['Giáo trình'];

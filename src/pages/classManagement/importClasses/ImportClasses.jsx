@@ -215,7 +215,7 @@ export default function ImportClasses() {
                             newClass.createClass.lecturerId = lecturer
                             const lecturerResponse = allLecturers.find(iLecturer => iLecturer.lectureId === lecturer)
                             newClass.createClass.lecturerResponse = lecturerResponse
-                            newClass.isSuccess = true
+                            newClass.isSucess = true
                             console.log(newClass)
 
                             const updatedClasses = classes.map(cls => {
@@ -315,55 +315,65 @@ export default function ImportClasses() {
         }
     };
     const handleSaveClasses = async () => {
-        const errors = []
-        let successRow = 0
-        let failureRow = 0
-        classes.map(iClass => {
-            if (iClass.isSuccess === false) {
-                errors.push(iClass.index)
-                failureRow = failureRow++
-            } else {
-                successRow = successRow++
-            }
-        })
-        if (errors.length > 0) {
-            Swal.fire({
-                position: "center",
-                icon: "error",
-                title: "Thêm lớp học thất bại",
-                text: `Vui lòng điền đủ thông tin lớp học có số thứ tự ${errors.map((error, index) => {
-                    if (index !== errors.length - 1) {
-                        return error + ", "
-                    } else {
-                        return error
-                    }
-                })}`,
-                showConfirmButton: false,
-            })
-        } else {
-            try {
-                setApiLoading(true)
-                const importData = {
-                    successRow: importClasses.successRow,
-                    failureRow: importClasses.failureRow,
-                    rowInsertResponse: classes
+        if (classes.length > 0) {
+            const errors = []
+            let successRow = 0
+            let failureRow = 0
+            classes.map(iClass => {
+                if (iClass.isSucess === false) {
+                    errors.push(iClass.index)
+                    failureRow = failureRow++
+                } else {
+                    successRow = successRow++
                 }
-                await saveImport(importData)
-                    .then((data) => {
-                        setImportRes(data)
-                        setCurrentStep(1)
-                    })
-            } catch (error) {
+            })
+            if (errors.length > 0) {
                 Swal.fire({
                     position: "center",
                     icon: "error",
-                    title: error.response?.data?.Error,
+                    title: "Thêm lớp học thất bại",
+                    text: `Vui lòng điền đủ thông tin lớp học có số thứ tự ${errors.map((error, index) => {
+                        if (index !== errors.length - 1) {
+                            return error + ", "
+                        } else {
+                            return error
+                        }
+                    })}`,
                     showConfirmButton: false,
-                    timer: 2000
                 })
-            } finally {
-                setApiLoading(false)
+            } else {
+                try {
+                    setApiLoading(true)
+                    const importData = {
+                        successRow: importClasses.successRow,
+                        failureRow: importClasses.failureRow,
+                        rowInsertResponse: classes
+                    }
+                    await saveImport(importData)
+                        .then((data) => {
+                            setImportRes(data)
+                            setCurrentStep(1)
+                        })
+                } catch (error) {
+                    Swal.fire({
+                        position: "center",
+                        icon: "error",
+                        title: error.response?.data?.Error,
+                        showConfirmButton: false,
+                        timer: 2000
+                    })
+                } finally {
+                    setApiLoading(false)
+                }
             }
+        } else {
+            Swal.fire({
+                position: "center",
+                icon: "error",
+                title: "Số lượng lớp học phải lớn hơn 0",
+                showConfirmButton: false,
+                timer: 2000
+            })
         }
     }
     const handleDateChange = (index, value) => {
@@ -526,7 +536,7 @@ export default function ImportClasses() {
         {
             title: 'Số thứ tự',
             dataIndex: 'index',
-            render: (_, record) => <p style={{ margin: 0 }}>{record.isSuccess === false && <span style={{ margin: 0, color: 'red' }}>* </span>} {record.index}</p>,
+            render: (_, record) => <p style={{ margin: 0 }}>{!record.isSucess && <span style={{ margin: 0, color: 'red' }}>* </span>} {record.index}</p>,
             sorter: (a, b) => a.index - b.index,
             width: 120,
         },
@@ -688,13 +698,13 @@ export default function ImportClasses() {
                                         }} icon={<EditOutlined />} size='large' />
                                     } />
                             }
-                            <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 20 }}>
-                                <Button onClick={() => navigate(-1)} className={styles.saveButton}>
-                                    Quay về trang chủ
-                                </Button>
-                            </div>
                         </>
                     ))}
+                    <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 20 }}>
+                        <Button onClick={() => navigate(-1)} className={styles.saveButton}>
+                            Quay về trang chủ
+                        </Button>
+                    </div>
                 </>
             )}
 

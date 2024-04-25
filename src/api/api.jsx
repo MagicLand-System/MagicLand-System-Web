@@ -13,11 +13,7 @@ const instance = axios.create({
 });
 
 instance.interceptors.request.use(
-  async (config) => {
-    // if (config.url !== "/System/GetTime") {
-    //   const time = await getTime();
-    //   MockDate.set(new Date(time))
-    // }
+  (config) => {
     const accessToken = localStorage.getItem("accessToken");
     if (accessToken) {
       config.headers["Authorization"] = `Bearer ${accessToken}`;

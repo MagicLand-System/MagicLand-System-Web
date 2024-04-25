@@ -56,6 +56,14 @@ export default function Header() {
         },
         {
           label: (
+            <Link className={styles.label} to={'/student-management'}>
+              Học viên
+            </Link>
+          ),
+          key: '/student-management',
+        },
+        {
+          label: (
             <Link className={styles.label} to={'/attendance-management'}>
               Điểm danh
             </Link>
@@ -72,11 +80,11 @@ export default function Header() {
         },
         {
           label: (
-            <Link className={styles.label} to={'#'}>
+            <Link className={styles.label} to={'/staff-management'}>
               Nhân sự
             </Link>
           ),
-          key: '/account-management',
+          key: '/staff-management',
         },
         {
           label: (
@@ -153,11 +161,11 @@ export default function Header() {
         },
         {
           label: (
-            <Link className={styles.label} to={'#'}>
+            <Link className={styles.label} to={'/staff-management'}>
               Nhân sự
             </Link>
           ),
-          key: '/account-management',
+          key: '/staff-management',
         },
         {
           label: (

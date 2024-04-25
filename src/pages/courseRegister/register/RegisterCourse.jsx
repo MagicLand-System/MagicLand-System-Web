@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react'
 import styles from './RegisterCourse.module.css'
-import { Button, Checkbox, Col, AutoComplete, ConfigProvider, DatePicker, Divider, Empty, Input, Radio, Row, Select, Space, Steps, Spin } from 'antd';
+import { Button, Checkbox, Col, AutoComplete, ConfigProvider, DatePicker, Divider, Empty, Input, Radio, Row, Select, Space, Steps, Spin, Avatar } from 'antd';
 import { PlusOutlined, DeleteOutlined } from '@ant-design/icons';
 import Swal from 'sweetalert2';
 import { useLocation, useNavigate } from 'react-router-dom';
@@ -10,7 +10,8 @@ import { getClass } from '../../../api/classesApi';
 import { cashCheckout, getCourse } from '../../../api/courseApi';
 import { formatDate, formatDateTime, formatDayOfWeek, formatPhone } from '../../../utils/utils';
 import debounce from 'lodash/debounce';
-
+import { getTime } from '../../../api/time';
+import MockDate from "mockdate";
 export default function RegisterCourse() {
     const navigate = useNavigate()
     const location = useLocation()
@@ -46,6 +47,7 @@ export default function RegisterCourse() {
             const data = await getUserByName(name);
             setUsers(data);
         } catch (error) {
+            console.log(error)
             setUsers([])
         }
     };
@@ -55,6 +57,14 @@ export default function RegisterCourse() {
             setChildrens(data);
         } catch (error) {
             console.log(error);
+        }
+    };
+    async function checkPhoneExist(phone) {
+        const data = await getUserByPhone(phone);
+        if (data.phone && !isExist) {
+            setPhoneNumberError("Số điện thoại đã tồn tại")
+        } else {
+            setPhoneNumberError(null)
         }
     };
     async function getCourseData(id) {
@@ -77,8 +87,11 @@ export default function RegisterCourse() {
         const regex = /^\+?[0-9]{10,11}$/;
         if (phoneNumber && phoneNumber.length >= 10) {
             if (regex.test(phoneNumber)) {
-                setPhoneNumberError(null)
-                getStudentData(phoneNumber, classId);
+                checkPhoneExist(phoneNumber)
+                if (!phoneNumberError) {
+                    setPhoneNumberError(null)
+                    getStudentData(phoneNumber, classId);
+                }
             } else {
                 setPhoneNumberError("Số điện thoại không hợp lệ")
             }
@@ -115,12 +128,15 @@ export default function RegisterCourse() {
     const handleFirstStep = () => {
         let check = true;
         const regex = /^\+?[0-9]{10,11}$/;
-
+        checkPhoneExist(phoneNumber)
         if (!phoneNumber) {
             check = false;
             setPhoneNumberError("Vui lòng nhập số điện thoại")
         } else if (!regex.test(phoneNumber)) {
+            check = false;
             setPhoneNumberError("Số điện thoại không hợp lệ")
+        } else if (phoneNumberError) {
+            check = false;
         } else {
             setPhoneNumberError(null)
         }
@@ -135,6 +151,7 @@ export default function RegisterCourse() {
             check = false;
             setEmailError("Vui lòng nhập email")
         } else if (!re.test(email)) {
+            check = false;
             setEmailError("Vui lòng nhập đúng email")
         } else {
             setEmailError(null)
@@ -148,11 +165,13 @@ export default function RegisterCourse() {
         const newList = newChildrensList.map(child => {
             const errors = validateChildren(child);
             child.errors = errors;
-            check = !Object.values(errors).some(error => !!error);
+            if (Object.values(errors).some(error => !!error)) {
+                check = false;
+            }
             return child;
         });
         setNewChildrensList(newList)
-        if (check && !phoneNumberError) {
+        if (check) {
             setCurrentStep(currentStep + 1)
         }
     }
@@ -251,7 +270,7 @@ export default function RegisterCourse() {
                                 key: user.id,
                                 user: user,
                                 label: (
-                                    <div>
+                                    <div key={user.id}>
                                         <span>{user.fullName}</span>
                                         <span style={{ float: 'right' }}>{user.phone && formatPhone(user.phone)}</span>
                                     </div>
@@ -264,47 +283,52 @@ export default function RegisterCourse() {
                                 setPhoneNumber(option.user.phone)
                                 setEmail(option.user.email)
                             }}
-                            onChange={(value) => {
-                                setFullName(value)
+                            onChange={async (value) => {
+                                setUsers([])
                                 setIsExist(false)
+                                setFullName(value)
+                                setPhoneNumber(null)
+                                setEmail(null)
+                                setChildrens([])
+                                setChildrensList([])
                                 debouncedGetParentData(value);
+                                const time = await getTime();
+                                MockDate.set(new Date(time))
                             }}
                             placeholder="Họ và tên"
                         />
                         <div style={{ height: '24px' }}>
                             {fullNameError && (<p style={{ color: 'red', fontSize: '14px', margin: '0' }}>{fullNameError}</p>)}
                         </div>
-                        {!isExist &&
-                            <>
-                                <p className={styles.addTitle}><span>*</span> Số điện thoại:</p>
-                                <Input
-                                    allowClear
-                                    placeholder="Số điện thoại phụ huynh"
-                                    name='phoneNumber'
-                                    value={phoneNumber}
-                                    onChange={(e) => setPhoneNumber(e.target.value)}
-                                    className={styles.input}
-                                    required
-                                />
-                                <div style={{ height: '24px', paddingLeft: '10px' }}>
-                                    {phoneNumberError && (<p style={{ color: 'red', fontSize: '14px', margin: '0' }}>{phoneNumberError}</p>)}
-                                </div>
-                                <p className={styles.addTitle}><span>*</span> Email:</p>
-                                <Input
-                                    allowClear
-                                    placeholder="Email"
-                                    type='email'
-                                    name='email'
-                                    value={email}
-                                    onChange={(e) => setEmail(e.target.value)}
-                                    className={styles.input}
-                                    required
-                                />
-                                <div style={{ height: '24px' }}>
-                                    {emailError && (<p style={{ color: 'red', fontSize: '14px', margin: '0' }}>{emailError}</p>)}
-                                </div>
-                            </>
-                        }
+                        <p className={styles.addTitle}><span>*</span> Số điện thoại:</p>
+                        <Input
+                            allowClear
+                            placeholder="Số điện thoại phụ huynh"
+                            name='phoneNumber'
+                            value={phoneNumber}
+                            onChange={(e) => setPhoneNumber(e.target.value)}
+                            className={styles.input}
+                            disabled={isExist}
+                            required
+                        />
+                        <div style={{ height: '24px', paddingLeft: '10px' }}>
+                            {phoneNumberError && (<p style={{ color: 'red', fontSize: '14px', margin: '0' }}>{phoneNumberError}</p>)}
+                        </div>
+                        <p className={styles.addTitle}><span>*</span> Email:</p>
+                        <Input
+                            allowClear
+                            placeholder="Email"
+                            type='email'
+                            name='email'
+                            value={email}
+                            onChange={(e) => setEmail(e.target.value)}
+                            className={styles.input}
+                            disabled={isExist}
+                            required
+                        />
+                        <div style={{ height: '24px' }}>
+                            {emailError && (<p style={{ color: 'red', fontSize: '14px', margin: '0' }}>{emailError}</p>)}
+                        </div>
                         <div style={{ display: 'flex', marginTop: 20, justifyContent: 'space-between' }}>
                             <h5 style={{ fontSize: '1.2rem', margin: 0, marginLeft: 10 }}>Thông tin bé</h5>
                             <Button onClick={() => { setNewChildrensList([...newChildrensList, { fullName: null, dateOfBirth: dayjs().subtract(3, 'year'), gender: "Khác" }]) }} className={styles.addButton} icon={<PlusOutlined />}>
@@ -317,61 +341,75 @@ export default function RegisterCourse() {
                         </div>
                         <Row>
                             {childrens.length > 0 && childrens.map((child, index) =>
-                                <Col key={index} span={12} style={{ padding: 10 }}>
+                                <Col key={index} xs={24} md={12} style={{ padding: 10 }}>
                                     {child.canRegistered ?
                                         <div style={{ border: '1px solid #d9d9d9', borderRadius: 6, padding: '20px 20px', height: '100%', boxSizing: 'border-box' }}>
                                             <Checkbox checked={childrensList.includes(child)} onChange={() => toggleChildren(child)} />
-                                            <Row style={{ marginTop: 10 }}>
-                                                <Col span={8}>
-                                                    <p className={styles.syllabusTitle}>Họ và tên:</p>
+                                            <Row>
+                                                <Col span={6} style={{ padding: '10px' }}>
+                                                    <Avatar shape='square' alt={child.fullName} className={styles.avatar} src={child.avatarImage} />
                                                 </Col>
-                                                <Col span={16}>
-                                                    <p className={styles.syllabusInfo}>{child.fullName}</p>
-                                                </Col>
-                                            </Row>
-                                            <Row style={{ marginTop: 20 }}>
-                                                <Col span={8}>
-                                                    <p className={styles.syllabusTitle}>Tuổi:</p>
-                                                </Col>
-                                                <Col span={16}>
-                                                    <p className={styles.syllabusInfo}>{child.dateOfBirth && (new Date().getFullYear() - new Date(child.dateOfBirth).getFullYear())}</p>
-                                                </Col>
-                                            </Row>
-                                            <Row style={{ marginTop: 20 }}>
-                                                <Col span={8}>
-                                                    <p className={styles.syllabusTitle}>Giới tính:</p>
+                                                <Col span={14}>
+                                                    <Row style={{ marginTop: 10 }}>
+                                                        <Col span={8}>
+                                                            <p className={styles.syllabusTitle}>Họ và tên:</p>
+                                                        </Col>
+                                                        <Col span={16}>
+                                                            <p className={styles.syllabusInfo}>{child.fullName}</p>
+                                                        </Col>
+                                                    </Row>
+                                                    <Row style={{ marginTop: 20 }}>
+                                                        <Col span={8}>
+                                                            <p className={styles.syllabusTitle}>Tuổi:</p>
+                                                        </Col>
+                                                        <Col span={16}>
+                                                            <p className={styles.syllabusInfo}>{child.dateOfBirth && (new Date().getFullYear() - new Date(child.dateOfBirth).getFullYear())}</p>
+                                                        </Col>
+                                                    </Row>
+                                                    <Row style={{ marginTop: 20 }}>
+                                                        <Col span={8}>
+                                                            <p className={styles.syllabusTitle}>Giới tính:</p>
 
-                                                </Col>
-                                                <Col span={16}>
-                                                    <p className={styles.syllabusInfo}>{child.gender}</p>
+                                                        </Col>
+                                                        <Col span={16}>
+                                                            <p className={styles.syllabusInfo}>{child.gender}</p>
+                                                        </Col>
+                                                    </Row>
                                                 </Col>
                                             </Row>
                                         </div>
                                         : <div style={{ backgroundColor: '#f5f5f5', border: '1px solid #d9d9d9', borderRadius: 6, padding: '20px 20px', height: '100%', boxSizing: 'border-box' }}>
                                             <Checkbox disabled checked={childrensList.includes(child)} onChange={() => toggleChildren(child)} />
-                                            <Row style={{ marginTop: 10 }}>
-                                                <Col span={8}>
-                                                    <p className={styles.syllabusTitle}>Họ và tên:</p>
+                                            <Row>
+                                                <Col span={6} style={{ padding: '10px' }}>
+                                                    <Avatar shape='square' alt={child.fullName} className={styles.avatar} src={child.avatarImage} />
                                                 </Col>
-                                                <Col span={16}>
-                                                    <p className={styles.syllabusInfo}>{child.fullName}</p>
-                                                </Col>
-                                            </Row>
-                                            <Row style={{ marginTop: 20 }}>
-                                                <Col span={8}>
-                                                    <p className={styles.syllabusTitle}>Tuổi:</p>
-                                                </Col>
-                                                <Col span={16}>
-                                                    <p className={styles.syllabusInfo}>{child.dateOfBirth && (new Date().getFullYear() - new Date(child.dateOfBirth).getFullYear())}</p>
-                                                </Col>
-                                            </Row>
-                                            <Row style={{ marginTop: 20 }}>
-                                                <Col span={8}>
-                                                    <p className={styles.syllabusTitle}>Giới tính:</p>
+                                                <Col span={14}>
+                                                    <Row style={{ marginTop: 10 }}>
+                                                        <Col span={8}>
+                                                            <p className={styles.syllabusTitle}>Họ và tên:</p>
+                                                        </Col>
+                                                        <Col span={16}>
+                                                            <p className={styles.syllabusInfo}>{child.fullName}</p>
+                                                        </Col>
+                                                    </Row>
+                                                    <Row style={{ marginTop: 20 }}>
+                                                        <Col span={8}>
+                                                            <p className={styles.syllabusTitle}>Tuổi:</p>
+                                                        </Col>
+                                                        <Col span={16}>
+                                                            <p className={styles.syllabusInfo}>{child.dateOfBirth && (new Date().getFullYear() - new Date(child.dateOfBirth).getFullYear())}</p>
+                                                        </Col>
+                                                    </Row>
+                                                    <Row style={{ marginTop: 20 }}>
+                                                        <Col span={8}>
+                                                            <p className={styles.syllabusTitle}>Giới tính:</p>
 
-                                                </Col>
-                                                <Col span={16}>
-                                                    <p className={styles.syllabusInfo}>{child.gender}</p>
+                                                        </Col>
+                                                        <Col span={16}>
+                                                            <p className={styles.syllabusInfo}>{child.gender}</p>
+                                                        </Col>
+                                                    </Row>
                                                 </Col>
                                             </Row>
                                         </div>

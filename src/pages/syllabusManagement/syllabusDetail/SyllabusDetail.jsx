@@ -393,7 +393,9 @@ export default function SyllabusDetail() {
             dataIndex: 'questionRequests',
             render: (text, record, index) =>
             (<>
-                <Button type='link' onClick={() => getQuesionList(record.questionPackageId, record.type)} icon={<EyeOutlined />} size='large' />
+                {record.type !== "offline" &&
+                    <Button type='link' onClick={() => getQuesionList(record.questionPackageId, record.type)} icon={<EyeOutlined />} size='large' />
+                }
                 {/* <Button type='link' onClick={() => console.log('update')} icon={<EditOutlined />} size='large' /> */}
             </>)
         },

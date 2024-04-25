@@ -298,7 +298,7 @@ export default function ClassManagement() {
       return schedule.dateOfWeek === null || schedule.slotId === null;
     });
     const hasDuplicateValues = checkDuplicateCombinations();
-    if (course && startDate && scheduleRequests ) {
+    if (course && startDate && scheduleRequests) {
       if (hasNullValues) {
         setSchedulesError("Vui lòng điền đủ lịch học để chọn giáo viên và phòng học")
         setLecturers([]);
@@ -412,6 +412,14 @@ export default function ClassManagement() {
               }
             } else {
               indexValues.push(data.index);
+            }
+            if (data.startDate) {
+              const dateRegex = /^\d{2}\/\d{2}\/\d{4}$/;
+              if (!dateRegex.test(data.startDate)) {
+                if (!errors.includes("Vui lòng để ngày bắt đầu dạng văn bản (dd/mm/yyyy)")) {
+                  errors.push("Vui lòng để ngày bắt đầu dạng văn bản (dd/mm/yyyy)");
+                }
+              }
             }
             const newItem = {
               index: data.index,

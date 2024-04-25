@@ -302,7 +302,7 @@ export default function LecturerManagement() {
                         picker="week"
                         format={`${formatDate(startOfWeek(new Date(date), { locale: viLocale }))} ~ ${formatDate(endOfWeek(new Date(date), { locale: viLocale }))}`}
                         allowClear={false}
-                        className={styles.input}
+                        className={styles.picker}
                         onChange={(date) => setDate(date)}
                         placeholder="Chọn thời gian" />
                 </ConfigProvider>

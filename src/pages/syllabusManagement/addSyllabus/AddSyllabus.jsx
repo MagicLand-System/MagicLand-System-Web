@@ -354,6 +354,16 @@ export default function AddSyllabus() {
                             if (!question.description || !question.card1 || !question.card2 || !question.score) {
                                 check = false
                                 console.log("Sai mẫu ghép thẻ")
+                            } else {
+                                if (question.description) {
+                                    question.description = question.description.toString()
+                                }
+                                if (question.card1) {
+                                    question.card1 = question.card1.toString()
+                                }
+                                if (question.card2) {
+                                    question.card2 = question.card2.toString()
+                                }
                             }
                             return question
                         })
@@ -372,13 +382,29 @@ export default function AddSyllabus() {
                                 answer4: row['Đáp án 4'] || null,
                                 score4: row['Số điểm 4'] !== undefined ? row['Số điểm 4'] : null,
                             }
-                            if (!question.description || !question.answer1 || !question.score1
+                            if (!question.description || !question.answer1 || question.score1 === null
                                 || (!question.answer1 && (question.score1 !== null)) || (question.answer1 && (question.score1 === null))
                                 || (!question.answer2 && (question.score2 !== null)) || (question.answer2 && (question.score1 === null))
                                 || (!question.answer3 && (question.score3 !== null)) || (question.answer3 && (question.score1 === null))
                                 || (!question.answer4 && (question.score4 !== null)) || (question.answer4 && (question.score1 === null))) {
                                 check = false
                                 console.log("Sai mẫu trắc nghiệm")
+                            } else {
+                                if (question.description) {
+                                    question.description = question.description.toString()
+                                }
+                                if (question.answer1) {
+                                    question.answer1 = question.answer1.toString()
+                                }
+                                if (question.answer2) {
+                                    question.answer2 = question.answer2.toString()
+                                }
+                                if (question.answer3) {
+                                    question.answer3 = question.answer3.toString()
+                                }
+                                if (question.answer4) {
+                                    question.answer4 = question.answer4.toString()
+                                }
                             }
                             return question
                         })
@@ -599,7 +625,7 @@ export default function AddSyllabus() {
             title: 'Đáp án 1',
             dataIndex: 'answer1',
             render: (text) =>
-                text?.toLowerCase().includes('https://') ?
+                text?.toLowerCase()?.includes('https://') ?
                     <img style={{ width: 100 }} src={text} alt="Hình ảnh" /> : text
         },
         {
@@ -610,7 +636,7 @@ export default function AddSyllabus() {
             title: 'Đáp án 2',
             dataIndex: 'answer2',
             render: (text) =>
-                text?.toLowerCase().includes('https://') ?
+                text?.toLowerCase()?.includes('https://') ?
                     <img style={{ width: 100 }} src={text} alt="Hình ảnh" /> : text
         },
         {
@@ -621,7 +647,7 @@ export default function AddSyllabus() {
             title: 'Đáp án 3',
             dataIndex: 'answer3',
             render: (text) =>
-                text?.toLowerCase().includes('https://') ?
+                text?.toLowerCase()?.includes('https://') ?
                     <img style={{ width: 100 }} src={text} alt="Hình ảnh" /> : text
         },
         {
@@ -632,7 +658,7 @@ export default function AddSyllabus() {
             title: 'Đáp án 4',
             dataIndex: 'answer4',
             render: (text) =>
-                text?.toLowerCase().includes('https://') ?
+                text?.toLowerCase()?.includes('https://') ?
                     <img style={{ width: 100 }} src={text} alt="Hình ảnh" /> : text
         },
         {
