@@ -1,19 +1,16 @@
 import React, { useState, useEffect } from 'react'
-import styles from './ViewStudentSchedules.module.css'
+import styles from './ViewStudentMakeUp.module.css'
 import { Button, Input, Table, Tabs, ConfigProvider, DatePicker, } from 'antd';
 import { SwapOutlined } from '@ant-design/icons';
 import { useNavigate, useParams } from 'react-router-dom';
 import { getClasses } from '../../../api/classesApi';
 import { formatDate, formatDayOfWeek } from '../../../utils/utils';
 import dayjs from 'dayjs';
-import { getScheduleOfStudent } from '../../../api/student';
 
 const { Search } = Input;
 
-export default function ViewStudentSchedules() {
+export default function ViewStudentMakeUp() {
     const navigate = useNavigate()
-    const params = useParams();
-    const studentId = params.studentId;
     const [search, setSearch] = useState(null)
     const [date, setDate] = useState(dayjs())
     const [schedules, setSchedules] = useState([]);
@@ -24,10 +21,11 @@ export default function ViewStudentSchedules() {
             pageSize: 10,
         },
     });
-    async function getListOfSchedules(studentId, searchString, date) {
+    async function getListOfSchedules(searchString, date) {
         try {
             setLoading(true);
-            const data = await getScheduleOfStudent(studentId, date.toISOString());
+            // const data = await getSchedules(searchString, date);
+            const data = []
             setSchedules(data);
             setTableParams({
                 pagination: {
@@ -43,8 +41,8 @@ export default function ViewStudentSchedules() {
         }
     };
     useEffect(() => {
-        getListOfSchedules(studentId, search, date)
-    }, [studentId, search, date])
+        getListOfSchedules(search, date)
+    }, [search, date])
 
     const handleTableChange = (pagination, filters, sorter, extra) => {
         pagination.total = extra.currentDataSource.length
@@ -60,45 +58,38 @@ export default function ViewStudentSchedules() {
 
     const columns = [
         {
-            title: 'Mã lớp học',
-            dataIndex: 'classCode',
-            sorter: (a, b) => a.classCode.toLowerCase().localeCompare(b.classCode.toLowerCase()),
+            title: 'Tên học viên',
+            sorter: (a, b) => a.studentResponse?.fullName?.toLowerCase().localeCompare(b.studentResponse?.fullName?.toLowerCase()),
+            render: (_, record) => (
+                <div style={{ display: 'flex', flexDirection: 'row', alignItems: 'center' }}>
+                    <Avatar size={64} src={record.studentResponse?.avatarImage} style={{ marginRight: '10px' }} />
+                    <p>{record.studentResponse?.fullName}</p>
+                </div>
+            ),
+        },
+        {
+            title: 'Ngày sinh',
+            render: (_, record) => (record.studentResponse?.dateOfBirth && formatDate(record.studentResponse?.dateOfBirth)),
         },
         {
             title: 'Tên khóa học',
             dataIndex: 'courseName',
             sorter: (a, b) => a.courseName.toLowerCase().localeCompare(b.courseName.toLowerCase()),
         },
-        // {
-        //     title: 'Buổi học',
-        //     dataIndex: 'index',
-        //     width: 120
-        // },
-        // {
-        //     title: 'Ngày học',
-        //     render: (_, record) => {
-        //         return record.dayOfWeek && record.date && `${formatDayOfWeek(record.dayOfWeek)} - ${formatDate(record.date)}`
-        //     }
-        // },
         {
-            title: 'Giờ học',
-            render: (_, record) => `${record.startTime} - ${record.endTime}`
-        },
-        {
-            title: 'Phòng học',
-            dataIndex: 'roomName',
+            title: 'Buổi học',
+            dataIndex: 'index',
+            width: 120
         },
         // {
         //     title: 'Trạng thái',
         //     dataIndex: 'status',
         //     render: (status) => {
         //         if (status) {
-        //             if (status.toLowerCase().includes('future')) {
-        //                 return <div style={{ backgroundColor: '#e7e9ea', color: '#495057', whiteSpace: 'nowrap' }} className={styles.status}>Sắp tới</div>
-        //             } else if (status.toLowerCase().includes('present')) {
-        //                 return <div style={{ backgroundColor: '#d4edda', color: '#155724', whiteSpace: 'nowrap' }} className={styles.status}>Đã hoàn thành</div>
+        //             if (status.toLowerCase().includes('present')) {
+        //                 return <div style={{ backgroundColor: '#d4edda', color: '#155724', whiteSpace: 'nowrap' }} className={styles.status}>Chưa xếp lớp</div>
         //             } else if (status.toLowerCase().includes('absent')) {
-        //                 return <div style={{ backgroundColor: '#FFE5E5', color: '#FF0000', whiteSpace: 'nowrap' }} className={styles.status}>Đã hoàn thành</div>
+        //                 return <div style={{ backgroundColor: '#FFE5E5', color: '#FF0000', whiteSpace: 'nowrap' }} className={styles.status}>Đã xếp lớp</div>
         //             }
         //         }
         //     }
@@ -106,16 +97,16 @@ export default function ViewStudentSchedules() {
         {
             title: 'Học bù',
             render: (_, record) => (
-                <Button type='link' onClick={() => navigate(`make-up-class/${record.id}`)} icon={<SwapOutlined />} size='large' />
+                <Button type='link' onClick={() => navigate(`/student-management/view-classes/${record.studentId}/make-up-class/${record.scheduleId}`)} icon={<SwapOutlined />} size='large' />
             ),
             width: 120,
         },
     ];
     return (
         <div className={styles.container}>
-            <h2 className={styles.title}>Danh sách buổi học</h2>
+            <h2 className={styles.title}>Danh sách học viên chưa xếp lớp</h2>
             <div style={{ display: 'flex', marginBottom: '16px' }}>
-                {/* <Search style={{ marginRight: 8 }} className={styles.searchBar} placeholder="Tìm kiếm mã lớp, tên khóa học" onSearch={(value, e) => { setSearch(value) }} enterButton /> */}
+                <Search style={{ marginRight: 8 }} className={styles.searchBar} placeholder="Tìm kiếm học viên, tên khóa học" onSearch={(value, e) => { setSearch(value) }} enterButton />
                 <ConfigProvider
                     theme={{
                         components: {
@@ -124,13 +115,13 @@ export default function ViewStudentSchedules() {
                             },
                         },
                     }}>
-                    <DatePicker
+                    {/* <DatePicker
                         style={{ width: 250 }}
                         value={date}
                         format={'DD/MM/YYYY'}
                         className={styles.picker}
                         onChange={(date) => setDate(date)}
-                        placeholder="Ngày học" />
+                        placeholder="Ngày sinh" /> */}
                 </ConfigProvider>
             </div>
             <Table
@@ -140,7 +131,7 @@ export default function ViewStudentSchedules() {
                 pagination={tableParams.pagination}
                 loading={loading}
                 onChange={handleTableChange}
-                scroll={{ y: 'calc(100vh - 220px)' }}
+                sticky={{ offsetHeader: 72 }}
             />
         </div >
     )

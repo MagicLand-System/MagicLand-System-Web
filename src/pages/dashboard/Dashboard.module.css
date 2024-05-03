@@ -8,14 +8,14 @@
   font-size: 2rem;
   color: #3a0ca3;
   text-align: center;
-  margin-top: 40px;
+  margin-top: 20px;
 }
 .subTitle {
   font-family: "Baloo 2", sans-serif;
   font-size: 1.6rem;
   color: #3a0ca3;
   text-align: center;
-  margin-top: 40px;
+  margin-top: 20px;
 }
 .input {
   width: 100%;
@@ -33,4 +33,9 @@
 }
 .input div:hover {
   border-color: #f2c955 !important;
+}
+.column {
+  width: 1000px !important;
+  height: 500px !important;
+  margin: 0px auto;
 }

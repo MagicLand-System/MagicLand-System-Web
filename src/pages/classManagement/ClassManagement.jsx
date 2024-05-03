@@ -290,7 +290,6 @@ export default function ClassManagement() {
   }
 
   useEffect(() => {
-    getListsOfCourses();
     getListsOfSlots();
   }, []);
   useEffect(() => {
@@ -555,13 +554,13 @@ export default function ClassManagement() {
                 <>
                   <h5 style={{ fontSize: '1rem', color: '#888888', fontWeight: 'normal', margin: '0 10px 10px' }}>Số lượng lớp <span style={{ textTransform: "lowercase" }}>{status.label}</span>: {!loading && numberOfClasses}</h5>
                   <Table
+                    sticky={{ offsetHeader: 72 }}
                     columns={columns}
                     rowKey={(record) => record.classId}
                     dataSource={classes}
                     pagination={tableParams.pagination}
                     loading={loading}
                     onChange={handleTableChange}
-                    scroll={{ y: 'calc(100vh - 220px)' }}
                   />
                 </>
               )

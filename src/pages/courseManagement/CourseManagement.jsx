@@ -121,7 +121,7 @@ export default function CourseManagement() {
                 pagination={tableParams.pagination}
                 loading={loading}
                 onChange={handleTableChange}
-                scroll={{ y: 'calc(100vh - 220px)' }}
+                sticky={{ offsetHeader: 72 }}
             />
         </div >
     )

@@ -186,12 +186,6 @@ export default function ClassDetail() {
             }
         });
     }
-    const ableToChangeClass = () => {
-        if (!classData?.status?.toLowerCase().includes('completed')) {
-            return 1;
-        }
-        return 0;
-    }
     const studentsColumns = [
         {
             title: 'Tên học viên',
@@ -245,21 +239,70 @@ export default function ClassDetail() {
         },
         {
             title: 'Chuyển lớp',
-            colSpan: ableToChangeClass(),
             render: (_, record) => {
-                if (!classData?.status?.toLowerCase().includes('completed')) {
-                    if (record.canChangeClass) {
-                        return (
-                            <Button type='link' onClick={() => navigate(`/student-management/view-classes/${record.studentId}/change-class/${id}`)} icon={< SwapOutlined />} size='large' />
-                        )
-                    } else {
-                        return (
-                            <p style={{ margin: 0 }}> Đã chuyển lớp</p>
-                        )
-                    }
+                if (record.canChangeClass) {
+                    return (
+                        <Button type='link' onClick={() => navigate(`/student-management/view-classes/${record.studentId}/change-class/${id}`)} icon={< SwapOutlined />} size='large' />
+                    )
+                } else {
+                    return (
+                        <p style={{ margin: 0 }}> Đã chuyển lớp</p>
+                    )
                 }
             },
-            width: 120,
+            width: 120
+        },
+    ];
+    const studentsColumnsNotChange = [
+        {
+            title: 'Tên học viên',
+            dataIndex: 'fullName',
+            sorter: (a, b) => a.fullName.toLowerCase().localeCompare(b.fullName.toLowerCase()),
+            render: (_, record) => (
+                <div style={{ display: 'flex', flexDirection: 'row', alignItems: 'center' }}>
+                    <Avatar size={64} src={record.imgAvatar} style={{ marginRight: '10px' }} />
+                    <p>{record.fullName}</p>
+                </div>
+            ),
+        },
+        {
+            title: 'Tuổi',
+            dataIndex: 'dateOfBirth',
+            render: (_, record) => (record.dateOfBirth && (new Date().getFullYear() - new Date(record.dateOfBirth).getFullYear())),
+            sorter: (a, b) => a.age - b.age,
+        },
+        {
+            title: 'Giới tính',
+            dataIndex: 'gender',
+            render: (gender) => {
+                if (gender === 'Nữ') {
+                    return <div style={{ backgroundColor: '#ffb6c1', color: '#800000', whiteSpace: 'nowrap' }} className={styles.status}>Nữ</div>
+                } else if (gender === 'Nam') {
+                    return <div style={{ backgroundColor: '#87ceeb', color: '#000080', whiteSpace: 'nowrap' }} className={styles.status}>Nam</div>
+                }
+            },
+            filters: [
+                {
+                    text: 'Nữ',
+                    value: 'Nữ',
+                },
+                {
+                    text: 'Nam',
+                    value: 'Nam',
+                },
+            ],
+            filterMode: 'tree',
+            filterSearch: true,
+            onFilter: (value, record) => record.gender === value,
+        },
+        {
+            title: 'Tên phụ huynh',
+            dataIndex: 'parentName'
+        },
+        {
+            title: 'Số điện thoại phụ huynh',
+            dataIndex: 'parentPhoneNumber',
+            render: (parentPhoneNumber) => parentPhoneNumber && formatPhone(parentPhoneNumber)
         },
     ];
     const transcriptColumns = [
@@ -521,13 +564,13 @@ export default function ClassDetail() {
                                         <Search className={styles.searchBar} placeholder="Tìm kiếm học viên..." onSearch={(value, e) => { console.log(value) }} enterButton />
                                     </div> */}
                                     <Table
-                                        columns={studentsColumns}
+                                        columns={(classData?.status && !classData?.status?.toLowerCase().includes('completed')) ? studentsColumns : studentsColumnsNotChange}
                                         rowKey={(record) => record.studentId}
                                         dataSource={students}
                                         pagination={tableParams.pagination}
                                         loading={loading}
                                         onChange={handleTableChange}
-                                        scroll={{ y: 'calc(100vh - 220px)' }}
+                                        sticky={{ offsetHeader: 72 }}
                                     />
                                 </>
                             )
@@ -547,7 +590,7 @@ export default function ClassDetail() {
                                         pagination={tableParams.pagination}
                                         loading={loading}
                                         onChange={handleTableChange}
-                                        scroll={{ y: 'calc(100vh - 220px)' }}
+                                        sticky={{ offsetHeader: 72 }}
                                     />
                                 </>
                             )
@@ -563,7 +606,7 @@ export default function ClassDetail() {
                                     pagination={tableParams.pagination}
                                     loading={loading}
                                     onChange={handleTableChange}
-                                    scroll={{ y: 'calc(100vh - 220px)' }}
+                                    sticky={{ offsetHeader: 72 }}
                                 />
                             )
                         },

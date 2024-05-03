@@ -6,6 +6,7 @@ import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { formatDate, formatDayOfWeek, formatPhone } from '../../../utils/utils';
 import { changeClass, getClass, getSuitableClass } from '../../../api/classesApi';
 import { getStudent } from '../../../api/student';
+import { getCourse } from '../../../api/courseApi';
 
 export default function ChangeClass() {
     const navigate = useNavigate()
@@ -16,6 +17,7 @@ export default function ChangeClass() {
     const [newClassId, setNewClassId] = useState(null)
     const [student, setStudent] = useState(null)
     const [classData, setClassData] = useState(null)
+    const [course, setCourse] = useState(null)
 
     const [tableParams, setTableParams] = useState({
         pagination: {
@@ -25,6 +27,7 @@ export default function ChangeClass() {
     });
     const params = useParams();
     const classId = params.classId;
+    const courseId = params.courseId;
     const studentId = params.studentId;
     const handleTableChange = (pagination, filters, sorter) => {
         setTableParams({
@@ -90,6 +93,10 @@ export default function ChangeClass() {
             render: (_, record) => record.lecture.fullName
         },
         {
+            title: 'Số buổi đã học',
+            render: (_, record) => record.currentSession
+        },
+        {
             title: 'Hình thức',
             dataIndex: 'method',
             render: (method) => {
@@ -135,6 +142,10 @@ export default function ChangeClass() {
             setLoading(false);
         }
     };
+    async function getCourseDetail(courseId) {
+        const data = await getCourse(courseId);
+        setCourse(data);
+    };
     async function getClassDetail(classId) {
         const data = await getClass(classId);
         setClassData(data);
@@ -147,8 +158,12 @@ export default function ChangeClass() {
         getStudentData(studentId);
     }, [studentId]);
     useEffect(() => {
-        getClassDetail(classId);
-    }, [classId]);
+        if (classId) {
+            getClassDetail(classId);
+        } else if (courseId) {
+            getCourseDetail(courseId);
+        }
+    }, [classId, courseId]);
     useEffect(() => {
         getListsOfClasses(classId, studentId);
     }, [classId, studentId]);
@@ -293,7 +308,7 @@ export default function ChangeClass() {
                 pagination={tableParams.pagination}
                 loading={loading}
                 onChange={handleTableChange}
-                scroll={{ y: 'calc(100vh - 220px)' }}
+                sticky={{ offsetHeader: 72 }}
             />
             <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 20 }}>
                 <Button loading={apiLoading} disabled={!newClassId} onClick={handleSaveChangeClass} className={styles.saveButton}>

@@ -130,7 +130,7 @@ export default function Header() {
         {
           label: (
             <Link className={styles.label} to={'/syllabus-management'}>
-              Giáo trình
+              Chương trình học
             </Link>
           ),
           key: '/syllabus-management',

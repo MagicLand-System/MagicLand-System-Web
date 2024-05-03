@@ -351,7 +351,7 @@ export default function LecturerManagement() {
                         pagination={null}
                         loading={loading}
                         onChange={handleTableChange}
-                        scroll={{ y: 'calc(100vh - 220px)' }}
+                        sticky={{ offsetHeader: 72 }}
                     />
                     : <h5 style={{ textAlign: 'center', fontSize: '1.2rem' }}>Vui lòng chọn giáo viên</h5>
             }

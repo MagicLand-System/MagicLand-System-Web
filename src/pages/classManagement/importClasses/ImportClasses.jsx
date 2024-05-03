@@ -624,7 +624,7 @@ export default function ImportClasses() {
                         pagination={tableParams.pagination}
                         loading={loading}
                         onChange={handleTableChange}
-                        scroll={{ y: 'calc(100vh - 220px)' }}
+                        sticky={{ offsetHeader: 72 }}
                     />
                     <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 20 }}>
                         <Button loading={apiLoading} onClick={handleSaveClasses} className={styles.saveButton}>

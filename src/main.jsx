@@ -37,8 +37,9 @@ import ImportClasses from './pages/classManagement/importClasses/ImportClasses.j
 import Dashboard from './pages/dashboard/Dashboard.jsx'
 import StudentManagement from './pages/studentManagement/StudentManagement.jsx'
 import ViewStudentClasses from './pages/studentManagement/viewStudentClasses/ViewStudentClasses.jsx'
-import ViewStudentSchedules from './pages/studentManagement/viewStudentSchedules/ViewStudentSchedules.jsx'
 import StaffManagement from './pages/staffManagement/StaffManagement.jsx'
+import ViewStudentMakeUp from './pages/studentManagement/viewStudentMakeUp/ViewStudentMakeUp.jsx'
+import ViewStudentReserve from './pages/studentManagement/viewStudentReserve/ViewStudentReserve.jsx'
 
 const router = createBrowserRouter([
   //Route đã đăng nhập thì k vào được, k có header, footer
@@ -119,12 +120,20 @@ const router = createBrowserRouter([
             element: <ChangeClass />
           },
           {
-            path: '/student-management/view-schedules/:studentId',
-            element: <ViewStudentSchedules />
+            path: '/student-management/view-classes/:studentId/make-up-class/:scheduleId',
+            element: <MakeUpClass />
           },
           {
-            path: '/student-management/view-schedules/:studentId/make-up-class/:scheduleId',
-            element: <MakeUpClass />
+            path: '/student-management/view-make-up',
+            element: <ViewStudentMakeUp />
+          },
+          {
+            path: '/student-management/view-reserve',
+            element: <ViewStudentReserve />
+          },
+          {
+            path: '/student-management/view-reserve/:studentId/register/:courseId',
+            element: <ChangeClass />
           },
         ]
       },

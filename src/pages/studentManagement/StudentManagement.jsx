@@ -108,18 +108,14 @@ export default function StudentManagement() {
                 <Button type='link' onClick={() => navigate(`view-classes/${record.studentResponse.studentId}`)} icon={< EyeOutlined />} size='large' />,
             width: 120,
         },
-        {
-            title: 'Buổi học',
-            render: (_, record) =>
-                <Button type='link' onClick={() => navigate(`view-schedules/${record.studentResponse.studentId}`)} icon={< EyeOutlined />} size='large' />,
-            width: 120,
-        },
     ];
 
     return (
         <div className={styles.container}>
             <h2 className={styles.title}>Quản lý học viên</h2>
             <div style={{ display: 'flex', marginBottom: '16px' }}>
+                <Button onClick={() => navigate('/student-management/view-reserve')} type='primary' className={styles.importButton} >Học viên bảo lưu</Button>
+                <Button onClick={() => navigate('/student-management/view-make-up')} type='primary' style={{color: 'black'}} className={styles.addButton} >Học viên cần học bù</Button>
                 <Search className={styles.searchBar} placeholder="Tên học viên" onSearch={(value, e) => { setName(value) }} enterButton />
                 <ConfigProvider
                     theme={{
@@ -149,7 +145,7 @@ export default function StudentManagement() {
                 pagination={tableParams.pagination}
                 loading={loading}
                 onChange={handleTableChange}
-                scroll={{ y: 'calc(100vh - 220px)' }}
+                sticky={{ offsetHeader: 72 }}
             />
         </div >
     )

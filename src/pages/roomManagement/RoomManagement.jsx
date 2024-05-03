@@ -452,7 +452,7 @@ export default function RoomManagement() {
                                         pagination={tableParams.pagination}
                                         loading={loading}
                                         onChange={handleTableChange}
-                                        scroll={{ y: 'calc(100vh - 220px)' }}
+                                        sticky={{ offsetHeader: 72 }}
                                     />}
                                 </>
                             )
@@ -521,7 +521,7 @@ export default function RoomManagement() {
                                                 pagination={null}
                                                 loading={loading}
                                                 onChange={handleTableChange}
-                                                scroll={{ y: 'calc(100vh - 220px)' }}
+                                                sticky={{ offsetHeader: 72 }}
                                             />
                                             : <h5 style={{ textAlign: 'center', fontSize: '1.2rem' }}>Vui lòng chọn phòng học</h5>
                                     }

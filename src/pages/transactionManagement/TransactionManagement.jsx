@@ -139,7 +139,7 @@ export default function TransactionManagement() {
         pagination={tableParams.pagination}
         loading={loading}
         onChange={handleTableChange}
-        scroll={{ y: 'calc(100vh - 220px)' }}
+        sticky={{ offsetHeader: 72 }}
       />
       <ConfigProvider
         theme={{

@@ -78,20 +78,20 @@ export default function SyllabusManagement() {
     };
     const columns = [
         {
-            title: 'Mã giáo trình',
+            title: 'Mã chương trình học',
             render: (_, record) => {
                 return `${record.subjectCode}`
             },
             sorter: (a, b) => a.subjectCode.toLowerCase().localeCompare(b.subjectCode.toLowerCase()),
         },
+        // {
+        //     title: 'Tên khóa học',
+        //     render: (_, record) => {
+        //         return record.course?.courseName ? record.course.courseName : 'Chưa có'
+        //     },
+        // },
         {
-            title: 'Tên khóa học',
-            render: (_, record) => {
-                return record.course?.courseName ? record.course.courseName : 'Chưa có'
-            },
-        },
-        {
-            title: 'Tên giáo trình',
+            title: 'Tên chương trình học',
             render: (_, record) => {
                 return record.syllabusName
             },
@@ -151,12 +151,12 @@ export default function SyllabusManagement() {
 
     return (
         <div className={styles.container}>
-            <h2 className={styles.title}>Quản lý giáo trình</h2>
+            <h2 className={styles.title}>Quản lý chương trình học</h2>
             <div style={{ display: 'flex', marginBottom: '16px' }}>
-                <Button onClick={() => setImportModalOpen(true)} className={styles.importButton} icon={<PlusOutlined />}>Thêm giáo trình</Button>
-                <Search className={styles.searchBar} placeholder="Tìm kiếm mã giáo trình, tên giáo trình" onSearch={(value, e) => { setSearch(value) }} enterButton />
+                <Button onClick={() => setImportModalOpen(true)} className={styles.importButton} icon={<PlusOutlined />}>Thêm chương trình học</Button>
+                <Search className={styles.searchBar} placeholder="Tìm kiếm mã chương trình học, tên chương trình học" onSearch={(value, e) => { setSearch(value) }} enterButton />
             </div>
-            <h5 style={{ fontSize: '1rem', color: '#888888', fontWeight: 'normal', margin: '0 10px 10px' }}>Số lượng giáo trình: {numberOfSyllabus}</h5>
+            <h5 style={{ fontSize: '1rem', color: '#888888', fontWeight: 'normal', margin: '0 10px 10px' }}>Số lượng chương trình học: {numberOfSyllabus}</h5>
             <Table
                 columns={columns}
                 rowKey={(record) => record.syllabusId}
@@ -164,7 +164,7 @@ export default function SyllabusManagement() {
                 pagination={tableParams.pagination}
                 loading={loading}
                 onChange={handleTableChange}
-                scroll={{ y: 'calc(100vh - 220px)' }}
+                sticky={{ offsetHeader: 72 }}
             />
             <ConfigProvider
                 theme={{
@@ -188,7 +188,7 @@ export default function SyllabusManagement() {
                             handleDownloadExcelFile(TEMPLATE_ADD_SYLLABUS_FILE, 'Mau-tao-giao-trinh.xlsx')
                             handleDownloadExcelFile(TEMPLATE_FLASHCARD, 'Mau-ghep-the.xlsx')
                             handleDownloadExcelFile(TEMPLATE_MULTIPLE_CHOICE, 'Mau-trac-nghiem.xlsx')
-                        }} >Tải mẫu giáo trình</Button>
+                        }} >Tải mẫu chương trình học</Button>
                         <Button type='primary' className={styles.importButton} icon={<CloudUploadOutlined />} onClick={() => fileInputRef.current.click()}>Chọn tệp</Button>
                         <input accept='application/vnd.ms-excel, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' type='file' style={{ display: 'none' }} ref={fileInputRef} onChange={handleFileChange} />
                         <p>{fileInput ? fileInput.name : 'Chưa có tệp nào được chọn'}</p>

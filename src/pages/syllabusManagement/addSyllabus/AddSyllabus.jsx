@@ -192,7 +192,7 @@ export default function AddSyllabus() {
                                 Swal.fire({
                                     position: "center",
                                     icon: "error",
-                                    title: "Thêm giáo trình thất bại",
+                                    title: "Thêm chương trình học thất bại",
                                     text: "Xin vui lòng thử lại sau",
                                     showConfirmButton: false
                                 })
@@ -204,7 +204,7 @@ export default function AddSyllabus() {
                         Swal.fire({
                             position: "center",
                             icon: "error",
-                            title: "Thêm giáo trình thất bại",
+                            title: "Thêm chương trình học thất bại",
                             text: "Xin vui lòng thử lại sau",
                             showConfirmButton: false
                         })
@@ -224,7 +224,7 @@ export default function AddSyllabus() {
                                             Swal.fire({
                                                 position: "center",
                                                 icon: "success",
-                                                title: "Chỉnh sửa giáo trình thành công",
+                                                title: "Chỉnh sửa chương trình học thành công",
                                                 showConfirmButton: false,
                                                 timer: 2000
                                             })
@@ -236,7 +236,7 @@ export default function AddSyllabus() {
                                     Swal.fire({
                                         position: "center",
                                         icon: "error",
-                                        title: "Chỉnh sửa giáo trình thất bại",
+                                        title: "Chỉnh sửa chương trình học thất bại",
                                         text: error.response.data.Error,
                                         showConfirmButton: false
                                     })
@@ -249,7 +249,7 @@ export default function AddSyllabus() {
                                             Swal.fire({
                                                 position: "center",
                                                 icon: "success",
-                                                title: "Thêm giáo trình thành công",
+                                                title: "Thêm chương trình học thành công",
                                                 showConfirmButton: false
                                             })
                                         }).then(() => {
@@ -260,7 +260,7 @@ export default function AddSyllabus() {
                                     Swal.fire({
                                         position: "center",
                                         icon: "error",
-                                        title: "Thêm giáo trình thất bại",
+                                        title: "Thêm chương trình học thất bại",
                                         text: error.response.data.Error,
                                         showConfirmButton: false
                                     })
@@ -272,7 +272,7 @@ export default function AddSyllabus() {
                             Swal.fire({
                                 position: "center",
                                 icon: "error",
-                                title: "Thêm giáo trình thất bại",
+                                title: "Thêm chương trình học thất bại",
                                 text: "Xin vui lòng thử lại sau",
                                 showConfirmButton: false
                             })
@@ -283,7 +283,7 @@ export default function AddSyllabus() {
                         Swal.fire({
                             position: "center",
                             icon: "error",
-                            title: "Thêm giáo trình thất bại",
+                            title: "Thêm chương trình học thất bại",
                             text: "Xin vui lòng thử lại sau",
                             showConfirmButton: false
                         })
@@ -295,7 +295,7 @@ export default function AddSyllabus() {
                     Swal.fire({
                         position: "center",
                         icon: "error",
-                        title: "Thêm giáo trình thất bại",
+                        title: "Thêm chương trình học thất bại",
                         text: "Xin vui lòng thử lại sau",
                         showConfirmButton: false
                     })
@@ -766,13 +766,13 @@ export default function AddSyllabus() {
     return (
         <div className={styles.container}>
             {oldSyllabusId ?
-                <h2 className={styles.title}>Cập nhật giáo trình</h2>
-                : <h2 className={styles.title}>Thêm giáo trình</h2>
+                <h2 className={styles.title}>Cập nhật chương trình học</h2>
+                : <h2 className={styles.title}>Thêm chương trình học</h2>
             }
             {syllabusDetail && (
                 <Row style={{ marginBottom: 20 }}>
                     <Col span={4}>
-                        <p className={styles.syllabusTitle}>Tên giáo trình:</p>
+                        <p className={styles.syllabusTitle}>Tên chương trình học:</p>
                     </Col>
                     <Col span={20} style={{ paddingLeft: 10 }}>
                         <p className={styles.syllabusDetail}>{syllabusDetail.generalData?.syllabusName}</p>
@@ -786,7 +786,7 @@ export default function AddSyllabus() {
                     </Col>
                     <Divider style={{ margin: 0 }} />
                     <Col span={4}>
-                        <p className={styles.syllabusTitle}>Mã giáo trình:</p>
+                        <p className={styles.syllabusTitle}>Mã chương trình học:</p>
                     </Col>
                     <Col span={20} style={{ paddingLeft: 10 }}>
                         <p className={styles.syllabusDetail}>{syllabusDetail.generalData?.subjectCode}</p>
@@ -880,7 +880,7 @@ export default function AddSyllabus() {
                     // tabBarExtraContent={}
                     items={[
                         {
-                            label: 'Giáo trình',
+                            label: 'Chương trình học',
                             key: 'syllabus',
                             children: (
                                 <Table
@@ -889,7 +889,7 @@ export default function AddSyllabus() {
                                     dataSource={syllabusDetail.groupedSyllabus}
                                     pagination={tableParams.pagination}
                                     onChange={handleTableChange}
-                                    scroll={{ y: 'calc(100vh - 220px)' }}
+                                    sticky={{ offsetHeader: 72 }}
                                 />
                             )
                         },
@@ -903,7 +903,7 @@ export default function AddSyllabus() {
                                     dataSource={syllabusDetail?.examSyllabusRequests}
                                     pagination={tableParams.pagination}
                                     onChange={handleTableChange}
-                                    scroll={{ y: 'calc(100vh - 220px)' }}
+                                    sticky={{ offsetHeader: 72 }}
                                 />
                             )
                         },
@@ -919,7 +919,7 @@ export default function AddSyllabus() {
                                         dataSource={exercises}
                                         pagination={tableParams.pagination}
                                         onChange={handleTableChange}
-                                        scroll={{ y: 'calc(100vh - 220px)' }}
+                                        sticky={{ offsetHeader: 72 }}
                                     />
                                 </>
                             )
@@ -945,7 +945,7 @@ export default function AddSyllabus() {
                                         dataSource={files}
                                         pagination={tableParams.pagination}
                                         onChange={handleTableChange}
-                                        scroll={{ y: 'calc(100vh - 220px)' }}
+                                        sticky={{ offsetHeader: 72 }}
                                     />
                                 </>
                             )

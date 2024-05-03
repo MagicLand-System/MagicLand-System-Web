@@ -12,9 +12,9 @@ export const getStudent = async (id) => {
     });
     return response.data;
 };
-export const getClassOfStudent = async (studentId, status, searchString) => {
+export const getClassOfStudent = async (studentId, status, searchString, dateTime) => {
     const response = await api.get("/api/v1/users/getClassOfStudent", {
-        params: { studentId, status, searchString }
+        params: { studentId, status, searchString, dateTime }
     });
     return response.data;
 };

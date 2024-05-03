@@ -129,7 +129,7 @@ export default function AddCourse() {
             });
             if ((!syllabusId && !id) || (!image && !id) || hasNullDescriptions || !price) {
                 if (!syllabusId && !id) {
-                    setSyllabusError("Vui lòng chọn giáo trình")
+                    setSyllabusError("Vui lòng chọn chương trình học")
                 } else {
                     setSyllabusError(null)
                 }
@@ -261,14 +261,14 @@ export default function AddCourse() {
                         <Row>
                             {!id &&
                                 <Col span={24} className={styles.column}>
-                                    <p className={styles.addTitle}><span>*</span> Giáo trình:</p>
+                                    <p className={styles.addTitle}><span>*</span> Chương trình học:</p>
                                     <Select
                                         showSearch
                                         value={syllabusId}
                                         suffixIcon={null}
                                         filterOption={false}
                                         className={styles.input}
-                                        placeholder="Chọn giáo trình"
+                                        placeholder="Chọn chương trình học"
                                         notFoundContent={
                                             loading
                                                 ? <div style={{ width: '100%', textAlign: 'center' }}>
@@ -278,7 +278,7 @@ export default function AddCourse() {
                                                     image={Empty.PRESENTED_IMAGE_SIMPLE}
                                                     description={
                                                         <span>
-                                                            Không tìm thấy giáo trình
+                                                            Không tìm thấy chương trình học
                                                         </span>
                                                     } />
                                         }
@@ -449,10 +449,10 @@ export default function AddCourse() {
                     <Col xs={24} lg={8}>
                         {syllabusDetail &&
                             <div style={{ border: '1px solid #d9d9d9', borderRadius: 6, padding: '30px 20px' }}>
-                                <h5 style={{ fontSize: '1.2rem', margin: 0 }}>Giáo trình</h5>
+                                <h5 style={{ fontSize: '1.2rem', margin: 0 }}>Chương trình học</h5>
                                 <Row style={{ marginTop: 10 }}>
                                     <Col span={6} >
-                                        <p className={styles.syllabusTitle}> Mã giáo trình:</p>
+                                        <p className={styles.syllabusTitle}> Mã chương trình học:</p>
                                     </Col>
                                     <Col span={18}>
                                         <p className={styles.syllabusInfo}>{syllabusDetail.subjectCode}</p>
@@ -460,7 +460,7 @@ export default function AddCourse() {
                                 </Row>
                                 <Row style={{ marginTop: 20 }}>
                                     <Col span={6} >
-                                        <p className={styles.syllabusTitle}> Tên giáo trình:</p>
+                                        <p className={styles.syllabusTitle}> Tên chương trình học:</p>
 
                                     </Col>
                                     <Col span={18} >

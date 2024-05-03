@@ -112,50 +112,7 @@ export default function MakeUpClass() {
         getListsOfSlots()
     }, [])
     async function getScheduleDetail(scheduleId) {
-        // const data = await getSessionOfStudent(scheduleId);
-        const data = {
-            classCode: 'LTS101-1',
-            courseName: 'Lập trình Scratch',
-            index: 1,
-            id: "29565731-0b04-44a1-87c1-9fbcfbcc4c99",
-            date: "2024-05-02T03:37:23.632",
-            status: "future",
-            slot: {
-                slotOrder: null,
-                startTime: "12:00",
-                endTime: "14:00",
-                slotId: "6ab50a00-08ba-483c-bf5d-0d55b05a2ccc",
-                startTimeString: null,
-                endTimeString: null
-            },
-            room: {
-                roomId: "99f6f043-3fee-435f-a8ae-1f55f13b3256",
-                name: "101",
-                floor: 1,
-                status: "AVAILABLE",
-                linkUrl: null,
-                capacity: 35
-            },
-            dayOfWeeks: "thursday",
-            lecturer: {
-                id: "66aa922d-4392-4958-bbef-fc9689c9774d",
-                fullName: "Ngô Văn Thành",
-                phone: "0985081329",
-                avatarImage: null,
-                email: "tramnt@fe.edu.vn",
-                gender: "Nam",
-                dateOfBirth: "1990-11-11T00:00:00",
-                address: "Hồ Chí Minh"
-            },
-            orderTopic: 1,
-            topicName: "Bắt đầu lập trình",
-            contents: [
-                {
-                    content: "Bài lập trình đầu tiên",
-                    details: ["Giới thiệu", "Thực hành"]
-                }
-            ]
-        }
+        const data = await getSessionOfStudent(scheduleId);
         setSchedule(data);
     };
     async function getStudentData(studentId) {
@@ -208,7 +165,7 @@ export default function MakeUpClass() {
             title: 'Giờ học',
             dataIndex: 'slot',
             render: (slot) => (
-                `${slot.startTime} - ${slot.endTime}`
+                `${slot.startTimeString} - ${slot.endTimeString}`
             ),
         },
         {
@@ -298,7 +255,7 @@ export default function MakeUpClass() {
                                         <p className={styles.classTitle}>Ngày học:</p>
                                     </Col>
                                     <Col span={16}>
-                                        <p className={styles.classDetail}>{`${formatDayOfWeek(schedule.dayOfWeeks)} - ${formatDate(schedule.date)}`}</p>
+                                        <p className={styles.classDetail}>{schedule.date && formatDate(schedule.date)}</p>
                                     </Col>
                                 </Row>
                                 <Row>
@@ -306,15 +263,7 @@ export default function MakeUpClass() {
                                         <p className={styles.classTitle}>Giờ học:</p>
                                     </Col>
                                     <Col span={16}>
-                                        <p className={styles.classDetail}>{`${schedule.slot.startTime} - ${schedule.slot.endTime}`}</p>
-                                    </Col>
-                                </Row>
-                                <Row>
-                                    <Col span={8}>
-                                        <p className={styles.classTitle}>Phòng học:</p>
-                                    </Col>
-                                    <Col span={16}>
-                                        <p className={styles.classDetail}>{schedule.room.name}</p>
+                                        <p className={styles.classDetail}>{`${schedule.startTime} - ${schedule.endTime}`}</p>
                                     </Col>
                                 </Row>
                             </div>
@@ -327,18 +276,18 @@ export default function MakeUpClass() {
                                         <p className={styles.classTitle}>Chủ đề:</p>
                                     </Col>
                                     <Col span={14}>
-                                        <p className={styles.classDetail}>{`Chủ đề ${schedule.orderTopic}: ${schedule.topicName}`}</p>
+                                        <p className={styles.classDetail}>{schedule.topicName}</p>
                                     </Col>
                                 </Row>
                                 <Row>
-                                    <Col span={10}>
+                                    <Col span={24}>
                                         <p className={styles.classTitle}>Nội dung buổi học:</p>
                                     </Col>
-                                    <Col span={14}>
+                                    <Col span={24}>
                                         {schedule.contents.map((content, index) => (
                                             <div key={index}>
-                                                <p className={styles.classDetail}> {content.content}:</p>
-                                                {content.details.map((detail) => <p className={styles.classDetail}>&emsp;-&nbsp;{detail}</p>)}
+                                                <p className={styles.classDetail} style={{textAlign: 'left', marginLeft: 10}}> {content.content}:</p>
+                                                {content.details.map((detail) => <p className={styles.classDetail} style={{textAlign: 'left', marginLeft: 10}}>&emsp;-&nbsp;{detail}</p>)}
                                             </div>
                                         ))}
                                     </Col>

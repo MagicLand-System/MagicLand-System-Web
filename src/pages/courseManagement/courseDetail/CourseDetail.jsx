@@ -211,20 +211,20 @@ export default function CourseDetail() {
             </Col>
             <Col xs={24} lg={8} style={{ marginBottom: '20px', boxSizing: 'border-box', padding: '0px 8px' }}>
               <div className={styles.classPart}>
-                <h5 className={styles.classPartTitle}>Giáo trình</h5>
+                <h5 className={styles.classPartTitle}>Chương trình học</h5>
                 <Row style={{ marginTop: 12 }}>
-                  <Col span={8}>
-                    <p className={styles.classTitle}>Mã giáo trình:</p>
+                  <Col span={10}>
+                    <p className={styles.classTitle}>Mã chương trình học:</p>
                   </Col>
-                  <Col span={16}>
+                  <Col span={14}>
                     <p className={styles.classDetail}>{syllabusData.subjectCode}</p>
                   </Col>
                 </Row>
                 <Row style={{ marginTop: 12 }}>
-                  <Col span={8}>
-                    <p className={styles.classTitle}>Tên giáo trình:</p>
+                  <Col span={10}>
+                    <p className={styles.classTitle}>Tên chương trình học:</p>
                   </Col>
-                  <Col span={16}>
+                  <Col span={14}>
                     <p className={styles.classDetail}>{syllabusData.syllabusName}</p>
                   </Col>
                 </Row>
@@ -395,7 +395,7 @@ export default function CourseDetail() {
         pagination={tableParams.pagination}
         loading={loading}
         onChange={handleTableChange}
-        scroll={{ y: 'calc(100vh - 220px)' }}
+        sticky={{ offsetHeader: 72 }}
       />
     </div >
   )

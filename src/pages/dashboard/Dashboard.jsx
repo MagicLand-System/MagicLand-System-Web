@@ -5,7 +5,7 @@ import { EyeOutlined } from '@ant-design/icons';
 import { Column } from '@ant-design/charts';
 import { useEffect } from 'react';
 import dayjs from 'dayjs';
-import { getNumberOfUser, getRevenue, getRegistered, getFavoriteCourse } from '../../api/dashboard';
+import { getNumberOfUser, getRevenue, getRegistered, getFavoriteCourse, getRegisteredCourse } from '../../api/dashboard';
 import QuarterSelect from '../../components/quarterSelect/QuaterSelect';
 import { getCourses } from '../../api/courseApi';
 
@@ -42,22 +42,7 @@ export default function Dashboard() {
     async function getCourseData(quarter, course) {
         try {
             setLoading(true)
-            // const data = await getCourseChart(quarter, course);
-            const data = [
-                { time: '1/4 - 7/4', numberOfRegisters: 10 },
-                { time: '8/4 - 14/4', numberOfRegisters: 5 },
-                { time: '15/4 - 21/4', numberOfRegisters: 18 },
-                { time: '22/4 - 28/4', numberOfRegisters: 22 },
-                { time: '29/4 - 5/5', numberOfRegisters: 21 },
-                { time: '6/5 - 12/5', numberOfRegisters: 7 },
-                { time: '13/5 - 19/5', numberOfRegisters: 1 },
-                { time: '20/5 - 26/5', numberOfRegisters: 2 },
-                { time: '27/5 - 2/6', numberOfRegisters: 4 },
-                { time: '3/6 - 9/6', numberOfRegisters: 12 },
-                { time: '10/6 - 16/6', numberOfRegisters: 13 },
-                { time: '17/6 - 23/6', numberOfRegisters: 19 },
-                { time: '24/6 - 30/6', numberOfRegisters: 14 }
-            ];
+            const data = await getRegisteredCourse(quarter, course);
             setCourseRegisterData(data)
         } catch (error) {
             console.log(error)
@@ -73,22 +58,7 @@ export default function Dashboard() {
     async function getRegisterData(quarter) {
         try {
             setLoading(true)
-            // const data = await getRegistered(quarter);
-            const data = [
-                { time: '1/4 - 7/4', numberOfRegisters: 50 },
-                { time: '8/4 - 14/4', numberOfRegisters: 25 },
-                { time: '15/4 - 21/4', numberOfRegisters: 28 },
-                { time: '22/4 - 28/4', numberOfRegisters: 32 },
-                { time: '29/4 - 5/5', numberOfRegisters: 29 },
-                { time: '6/5 - 12/5', numberOfRegisters: 27 },
-                { time: '13/5 - 19/5', numberOfRegisters: 31 },
-                { time: '20/5 - 26/5', numberOfRegisters: 26 },
-                { time: '27/5 - 2/6', numberOfRegisters: 30 },
-                { time: '3/6 - 9/6', numberOfRegisters: 28 },
-                { time: '10/6 - 16/6', numberOfRegisters: 33 },
-                { time: '17/6 - 23/6', numberOfRegisters: 29 },
-                { time: '24/6 - 30/6', numberOfRegisters: 34 }
-            ];
+            const data = await getRegistered(quarter);
             setRegisterData(data);
         } catch (error) {
             console.log(error)
@@ -146,9 +116,19 @@ export default function Dashboard() {
             <QuarterSelect value={quarter} onChange={(value) => setQuarter(value)} disabled={loading} />
             <div style={{ marginBottom: 20 }}>
                 <h5 className={styles.subTitle}>Tổng số lượt đăng kí</h5>
-                <Column data={registerData} xField="time" yField="numberOfRegisters" tooltip={(item) => {
-                    return { name: 'Số lượt đăng kí', value: item.numberOfRegisters }
-                }} />
+                <Column
+                    className={styles.column}
+                    data={registerData} xField="date"
+                    yField="numberOfRegisters"
+                    axis={{
+                        y: {
+                            labelFormatter: (val) => Number.isInteger(val) ? val : ''
+                        },
+                    }}
+                    tooltip={(item) => {
+                        return { name: 'Số lượt đăng kí', value: item.numberOfRegisters }
+                    }}
+                />
             </div>
             <div style={{ marginBottom: 20 }}>
                 <h5 className={styles.subTitle}>Số lượt đăng kí theo khóa</h5>
@@ -195,7 +175,11 @@ export default function Dashboard() {
                     disabled={loading}
                 />
                 {course ?
-                    <Column data={courseRegisterData} xField="time" yField="numberOfRegisters" tooltip={(item) => {
+                    <Column className={styles.column} axis={{
+                        y: {
+                            labelFormatter: (val) => Number.isInteger(val) ? val : ''
+                        },
+                    }} data={courseRegisterData} xField="date" yField="numberOfRegisters" tooltip={(item) => {
                         return { name: 'Số lượt đăng kí', value: item.numberOfRegisters }
                     }} />
                     : <h5 style={{ textAlign: 'center', fontSize: '1.2rem' }}>Vui lòng chọn khóa học</h5>}
