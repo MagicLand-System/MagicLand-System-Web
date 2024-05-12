@@ -61,6 +61,7 @@ export default function ClassManagement() {
 
   const [course, setCourse] = useState(null)
   const [courseError, setCourseError] = useState(null)
+  const [courseLoading, setCourseLoading] = useState(false)
 
   const [lecturer, setLecturer] = useState(null)
   const [lecturerError, setLecturerError] = useState(null)
@@ -250,9 +251,17 @@ export default function ClassManagement() {
     }
   };
   async function getListsOfCourses() {
-    const data = await getCourses();
-    setCourses(data);
-    setCoursesOptions(data);
+    try {
+      setCourseLoading(true)
+      const data = await getCourses();
+      setCourses(data);
+      setCoursesOptions(data);
+    } catch (error) {
+      console.log(error)
+    } finally {
+      setCourseLoading(false)
+    }
+
   };
   async function getListsOfSlots() {
     const data = await getSlots();
@@ -552,7 +561,7 @@ export default function ClassManagement() {
               key: status.key,
               children: (
                 <>
-                  <h5 style={{ fontSize: '1rem', color: '#888888', fontWeight: 'normal', margin: '0 10px 10px' }}>Số lượng lớp <span style={{ textTransform: "lowercase" }}>{status.label}</span>: {!loading && numberOfClasses}</h5>
+                  <h5 style={{ fontSize: '1rem', color: '#888888', fontWeight: 'normal', margin: '0 10px 10px' }}>Tổng số lớp <span style={{ textTransform: "lowercase" }}>{status.label}</span>: {!loading && numberOfClasses}</h5>
                   <Table
                     sticky={{ offsetHeader: 72 }}
                     columns={columns}
@@ -601,13 +610,17 @@ export default function ClassManagement() {
                   placeholder="Chọn khóa học"
                   onSelect={(data) => { setCourse(data) }}
                   notFoundContent={
-                    <Empty
-                      image={Empty.PRESENTED_IMAGE_SIMPLE}
-                      description={
-                        <span>
-                          Không tìm thấy khóa học
-                        </span>
-                      } />
+                    courseLoading
+                      ? <div style={{ width: '100%', textAlign: 'center' }}>
+                        <Spin size='small' />
+                      </div>
+                      : <Empty
+                        image={Empty.PRESENTED_IMAGE_SIMPLE}
+                        description={
+                          <span>
+                            Không tìm thấy khóa học
+                          </span>
+                        } />
                   }
                   options={
                     coursesOptions

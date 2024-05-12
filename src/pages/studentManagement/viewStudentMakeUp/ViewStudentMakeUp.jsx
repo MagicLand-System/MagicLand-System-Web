@@ -1,19 +1,19 @@
 import React, { useState, useEffect } from 'react'
 import styles from './ViewStudentMakeUp.module.css'
-import { Button, Input, Table, Tabs, ConfigProvider, DatePicker, } from 'antd';
+import { Button, Input, Table, Tabs, ConfigProvider, DatePicker, Avatar, } from 'antd';
 import { SwapOutlined } from '@ant-design/icons';
 import { useNavigate, useParams } from 'react-router-dom';
-import { getClasses } from '../../../api/classesApi';
 import { formatDate, formatDayOfWeek } from '../../../utils/utils';
 import dayjs from 'dayjs';
+import { getListMakeUpStudent } from '../../../api/student';
 
 const { Search } = Input;
 
 export default function ViewStudentMakeUp() {
     const navigate = useNavigate()
     const [search, setSearch] = useState(null)
-    const [date, setDate] = useState(dayjs())
-    const [schedules, setSchedules] = useState([]);
+    const [date, setDate] = useState(null)
+    const [students, setStudents] = useState([]);
     const [loading, setLoading] = useState(false);
     const [tableParams, setTableParams] = useState({
         pagination: {
@@ -21,12 +21,11 @@ export default function ViewStudentMakeUp() {
             pageSize: 10,
         },
     });
-    async function getListOfSchedules(searchString, date) {
+    async function getListOfStudents(searchString, date) {
         try {
             setLoading(true);
-            // const data = await getSchedules(searchString, date);
-            const data = []
-            setSchedules(data);
+            const data = await getListMakeUpStudent(searchString, date);
+            setStudents(data);
             setTableParams({
                 pagination: {
                     current: 1,
@@ -41,7 +40,7 @@ export default function ViewStudentMakeUp() {
         }
     };
     useEffect(() => {
-        getListOfSchedules(search, date)
+        getListOfStudents(search, date)
     }, [search, date])
 
     const handleTableChange = (pagination, filters, sorter, extra) => {
@@ -52,7 +51,7 @@ export default function ViewStudentMakeUp() {
             ...sorter,
         });
         if (pagination.pageSize !== tableParams.pagination?.pageSize) {
-            setSchedules([]);
+            setStudents([]);
         }
     };
 
@@ -72,39 +71,43 @@ export default function ViewStudentMakeUp() {
             render: (_, record) => (record.studentResponse?.dateOfBirth && formatDate(record.studentResponse?.dateOfBirth)),
         },
         {
+            title: 'Tên phụ huynh',
+            render: (_, record) => record.parentResponse.fullName,
+        },
+        {
             title: 'Tên khóa học',
             dataIndex: 'courseName',
             sorter: (a, b) => a.courseName.toLowerCase().localeCompare(b.courseName.toLowerCase()),
         },
         {
             title: 'Buổi học',
-            dataIndex: 'index',
+            dataIndex: 'noOfSession',
             width: 120
         },
-        // {
-        //     title: 'Trạng thái',
-        //     dataIndex: 'status',
-        //     render: (status) => {
-        //         if (status) {
-        //             if (status.toLowerCase().includes('present')) {
-        //                 return <div style={{ backgroundColor: '#d4edda', color: '#155724', whiteSpace: 'nowrap' }} className={styles.status}>Chưa xếp lớp</div>
-        //             } else if (status.toLowerCase().includes('absent')) {
-        //                 return <div style={{ backgroundColor: '#FFE5E5', color: '#FF0000', whiteSpace: 'nowrap' }} className={styles.status}>Đã xếp lớp</div>
-        //             }
-        //         }
-        //     }
-        // },
         {
-            title: 'Học bù',
+            title: 'Trạng thái',
+            dataIndex: 'status',
+            render: (status) => {
+                if (status) {
+                    if (status.toLowerCase().includes('makeup')) {
+                        return <div style={{ backgroundColor: '#d4edda', color: '#155724', whiteSpace: 'nowrap' }} className={styles.status}>Chưa xếp lịch</div>
+                    } else if (status.toLowerCase().includes('expired')) {
+                        return <div style={{ backgroundColor: '#FFE5E5', color: '#FF0000', whiteSpace: 'nowrap' }} className={styles.status}>Hết hạn</div>
+                    }
+                }
+            }
+        },
+        {
+            title: 'Xếp lịch',
             render: (_, record) => (
-                <Button type='link' onClick={() => navigate(`/student-management/view-classes/${record.studentId}/make-up-class/${record.scheduleId}`)} icon={<SwapOutlined />} size='large' />
+                <Button type='link' onClick={() => navigate(`/student-management/view-classes/${record.studentResponse.studentId}/make-up-class/${record.scheduleId}`, { state: { action: 'afterMakeUp' } })} icon={<SwapOutlined />} size='large' />
             ),
             width: 120,
         },
     ];
     return (
         <div className={styles.container}>
-            <h2 className={styles.title}>Danh sách học viên chưa xếp lớp</h2>
+            <h2 className={styles.title}>Danh sách học viên chưa học bù</h2>
             <div style={{ display: 'flex', marginBottom: '16px' }}>
                 <Search style={{ marginRight: 8 }} className={styles.searchBar} placeholder="Tìm kiếm học viên, tên khóa học" onSearch={(value, e) => { setSearch(value) }} enterButton />
                 <ConfigProvider
@@ -127,7 +130,7 @@ export default function ViewStudentMakeUp() {
             <Table
                 columns={columns}
                 rowKey={(record) => record.id}
-                dataSource={schedules}
+                dataSource={students}
                 pagination={tableParams.pagination}
                 loading={loading}
                 onChange={handleTableChange}

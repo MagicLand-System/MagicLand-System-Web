@@ -4,7 +4,8 @@ import { Button, Input, Table, Checkbox, Select, DatePicker, ConfigProvider, Row
 import Swal from 'sweetalert2';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { formatDate, formatDayOfWeek, formatPhone, formatSlot } from '../../../utils/utils';
-import { arrangeMakeUpClass, getMakeUpClass, getSlots } from '../../../api/classesApi';
+import { getSlots } from '../../../api/classesApi';
+import { arrangeMakeUpClass, getMakeUpClass, setNotMakeUp } from '../../../api/student';
 import { compareAsc } from 'date-fns';
 import dayjs from 'dayjs';
 import { getSessionOfStudent, getStudent } from '../../../api/student';
@@ -13,10 +14,13 @@ const { Search } = Input;
 
 export default function MakeUpClass() {
     const navigate = useNavigate()
+    const location = useLocation()
+    const action = location.state
 
     const [student, setStudent] = useState(null)
     const [schedule, setSchedule] = useState(null)
     const [apiLoading, setApiLoading] = useState(false);
+    const [apiMakeUpLoading, setApiMakeUpLoading] = useState(false)
     const [classes, setClasses] = useState([])
     const [loading, setLoading] = useState(false);
     const [slots, setSlots] = useState([])
@@ -80,6 +84,40 @@ export default function MakeUpClass() {
         } finally {
             setApiLoading(false)
         }
+    }
+    const handleAbsentStudent = () => {
+        Swal.fire({
+            title: "Bạn chắc chắn không xếp lịch học bù cho bé?",
+            showCancelButton: true,
+            confirmButtonText: "Lưu",
+            cancelButtonText: "Hủy"
+        }).then(async (result) => {
+            if (result.isConfirmed) {
+                try {
+                    setApiMakeUpLoading(true)
+                    await setNotMakeUp(scheduleId, studentId)
+                        .then(() => Swal.fire({
+                            position: "center",
+                            icon: "success",
+                            title: "Đã thêm học sinh vào danh sách chưa được xếp lớp học bù",
+                            showConfirmButton: false,
+                            timer: 2000
+                        })).then(() => {
+                            navigate(-1)
+                        })
+                } catch (error) {
+                    Swal.fire({
+                        position: "center",
+                        icon: "error",
+                        title: error.response?.data?.Error,
+                        showConfirmButton: false,
+                        timer: 2000
+                    })
+                } finally {
+                    setApiMakeUpLoading(false)
+                }
+            }
+        });
     }
     async function getListsOfSlots() {
         const data = await getSlots();
@@ -286,8 +324,8 @@ export default function MakeUpClass() {
                                     <Col span={24}>
                                         {schedule.contents.map((content, index) => (
                                             <div key={index}>
-                                                <p className={styles.classDetail} style={{textAlign: 'left', marginLeft: 10}}> {content.content}:</p>
-                                                {content.details.map((detail) => <p className={styles.classDetail} style={{textAlign: 'left', marginLeft: 10}}>&emsp;-&nbsp;{detail}</p>)}
+                                                <p className={styles.classDetail} style={{ textAlign: 'left', marginLeft: 10 }}> {content.content}:</p>
+                                                {content.details.map((detail) => <p className={styles.classDetail} style={{ textAlign: 'left', marginLeft: 10 }}>&emsp;-&nbsp;{detail}</p>)}
                                             </div>
                                         ))}
                                     </Col>
@@ -339,9 +377,14 @@ export default function MakeUpClass() {
                 scroll={{ y: 'calc(100vh - 220px)' }}
             />
             <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 8 }}>
-                <Button loading={apiLoading} disabled={!makeUpScheduleId} onClick={handleSaveMakeUpClass} className={styles.saveButton}>
+                <Button loading={apiLoading} disabled={!makeUpScheduleId || apiMakeUpLoading} onClick={handleSaveMakeUpClass} className={styles.saveButton}>
                     Lưu
                 </Button>
+                {!action &&
+                    <Button loading={apiMakeUpLoading} disabled={apiLoading} onClick={handleAbsentStudent} className={styles.saveButton}>
+                        Thêm vào danh sách chưa học bù
+                    </Button>
+                }
                 <Button disabled={apiLoading} className={styles.cancelButton} onClick={() => { navigate(-1) }}>
                     Hủy
                 </Button>

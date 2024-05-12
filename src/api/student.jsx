@@ -30,3 +30,50 @@ export const getSessionOfStudent = async (sessionId) => {
     });
     return response.data;
 };
+export const getMakeUpClass = async (credential) => {
+    const response = await api.get(`/api/v1/classes/getMakeUpSchedule`, {
+        params: credential
+    });
+    return response.data;
+};
+export const arrangeMakeUpClass = async (scheduleId, studentId, makeUpScheduleId) => {
+    const response = await api.put(`/api/v1/classes/${studentId}/${scheduleId}/makeup`, { scheduleId: makeUpScheduleId });
+    return response.data;
+};
+export const setNotMakeUp = async (scheduleId, studentId) => {
+    const response = await api.put(`/api/v1/classes/${scheduleId}/${studentId}/setStatusNotCanMakeUp`);
+    return response.data;
+};
+export const getListMakeUpStudent = async (search, dateOfBirth) => {
+    const response = await api.get(`/api/v1/classes/getListCanNotMakeUp`, {
+        params: { search, dateOfBirth }
+    });
+    return response.data;
+};
+export const setReserve = async (classId, studentId) => {
+    console.log(classId, studentId)
+    const response = await api.put(`/api/v1/classes/${classId}/${studentId}/SaveCouse`);
+    return response.data;
+};
+export const getListReserve = async (search, dateOfBirth) => {
+    const response = await api.get(`/api/v1/classes/getListSavedCourse`, {
+        params: { search, dateOfBirth }
+    });
+    return response.data;
+};
+export const getSuitableReserveClass = async (courseId, studentId) => {
+    const response = await api.get(`/api/v1/classes/getClassToRegister`, {
+        params: { courseId, studentId }
+    });
+    return response.data;
+};
+export const addStudentToClass = async (courseId, classId, studentId) => {
+    const response = await api.get(`/api/v1/staff/courses/registerSaved`, {
+        params: {
+            courseId,
+            classId,
+            studentId
+        }
+    });
+    return response.data;
+};

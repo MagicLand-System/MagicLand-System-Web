@@ -266,7 +266,7 @@ export default function RegisterCourse() {
                         <AutoComplete
                             className={styles.input}
                             options={users?.map((user) => ({
-                                value: user.fullName,
+                                value: `${user.fullName} - ${user.phone}`,
                                 key: user.id,
                                 user: user,
                                 label: (
@@ -300,35 +300,39 @@ export default function RegisterCourse() {
                         <div style={{ height: '24px' }}>
                             {fullNameError && (<p style={{ color: 'red', fontSize: '14px', margin: '0' }}>{fullNameError}</p>)}
                         </div>
-                        <p className={styles.addTitle}><span>*</span> Số điện thoại:</p>
-                        <Input
-                            allowClear
-                            placeholder="Số điện thoại phụ huynh"
-                            name='phoneNumber'
-                            value={phoneNumber}
-                            onChange={(e) => setPhoneNumber(e.target.value)}
-                            className={styles.input}
-                            disabled={isExist}
-                            required
-                        />
-                        <div style={{ height: '24px', paddingLeft: '10px' }}>
-                            {phoneNumberError && (<p style={{ color: 'red', fontSize: '14px', margin: '0' }}>{phoneNumberError}</p>)}
-                        </div>
-                        <p className={styles.addTitle}><span>*</span> Email:</p>
-                        <Input
-                            allowClear
-                            placeholder="Email"
-                            type='email'
-                            name='email'
-                            value={email}
-                            onChange={(e) => setEmail(e.target.value)}
-                            className={styles.input}
-                            disabled={isExist}
-                            required
-                        />
-                        <div style={{ height: '24px' }}>
-                            {emailError && (<p style={{ color: 'red', fontSize: '14px', margin: '0' }}>{emailError}</p>)}
-                        </div>
+                        {!isExist &&
+                            <>
+                                <p className={styles.addTitle}><span>*</span> Số điện thoại:</p>
+                                <Input
+                                    allowClear
+                                    placeholder="Số điện thoại phụ huynh"
+                                    name='phoneNumber'
+                                    value={phoneNumber}
+                                    onChange={(e) => setPhoneNumber(e.target.value)}
+                                    className={styles.input}
+                                    disabled={isExist}
+                                    required
+                                />
+                                <div style={{ height: '24px', paddingLeft: '10px' }}>
+                                    {phoneNumberError && (<p style={{ color: 'red', fontSize: '14px', margin: '0' }}>{phoneNumberError}</p>)}
+                                </div>
+                                <p className={styles.addTitle}><span>*</span> Email:</p>
+                                <Input
+                                    allowClear
+                                    placeholder="Email"
+                                    type='email'
+                                    name='email'
+                                    value={email}
+                                    onChange={(e) => setEmail(e.target.value)}
+                                    className={styles.input}
+                                    disabled={isExist}
+                                    required
+                                />
+                                <div style={{ height: '24px' }}>
+                                    {emailError && (<p style={{ color: 'red', fontSize: '14px', margin: '0' }}>{emailError}</p>)}
+                                </div>
+                            </>
+                        }
                         <div style={{ display: 'flex', marginTop: 20, justifyContent: 'space-between' }}>
                             <h5 style={{ fontSize: '1.2rem', margin: 0, marginLeft: 10 }}>Thông tin bé</h5>
                             <Button onClick={() => { setNewChildrensList([...newChildrensList, { fullName: null, dateOfBirth: dayjs().subtract(3, 'year'), gender: "Khác" }]) }} className={styles.addButton} icon={<PlusOutlined />}>

@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react'
 import styles from './ViewStudentReserve.module.css'
-import { Button, Input, Table, Tabs, ConfigProvider, DatePicker, } from 'antd';
+import { Button, Input, Table, Tabs, ConfigProvider, DatePicker, Avatar, } from 'antd';
 import { SwapOutlined } from '@ant-design/icons';
 import { useNavigate, useParams } from 'react-router-dom';
-import { getClasses } from '../../../api/classesApi';
 import { formatDate, formatDayOfWeek } from '../../../utils/utils';
 import dayjs from 'dayjs';
+import { getListReserve } from '../../../api/student';
 
 const { Search } = Input;
 
@@ -13,7 +13,7 @@ export default function ViewStudentReserve() {
     const navigate = useNavigate()
     const [search, setSearch] = useState(null)
     const [date, setDate] = useState(null)
-    const [classes, setClasses] = useState([]);
+    const [students, setStudents] = useState([]);
     const [loading, setLoading] = useState(false);
     const [tableParams, setTableParams] = useState({
         pagination: {
@@ -21,12 +21,11 @@ export default function ViewStudentReserve() {
             pageSize: 10,
         },
     });
-    async function getListOfClasses(searchString, date) {
+    async function getListOfStudents(searchString, date) {
         try {
             setLoading(true);
-            // const data = await getClasses(searchString, date);
-            const data = []
-            setClasses(data);
+            const data = await getListReserve(searchString, date);
+            setStudents(data);
             setTableParams({
                 pagination: {
                     current: 1,
@@ -41,7 +40,7 @@ export default function ViewStudentReserve() {
         }
     };
     useEffect(() => {
-        getListOfClasses(search, date)
+        getListOfStudents(search, date)
     }, [search, date])
 
     const handleTableChange = (pagination, filters, sorter, extra) => {
@@ -52,7 +51,7 @@ export default function ViewStudentReserve() {
             ...sorter,
         });
         if (pagination.pageSize !== tableParams.pagination?.pageSize) {
-            setClasses([]);
+            setStudents([]);
         }
     };
 
@@ -72,27 +71,32 @@ export default function ViewStudentReserve() {
             render: (_, record) => (record.studentResponse?.dateOfBirth && formatDate(record.studentResponse?.dateOfBirth)),
         },
         {
+            title: 'Tên phụ huynh',
+            render: (_, record) => record.parentResponse.fullName,
+        },
+        {
             title: 'Tên khóa học',
             dataIndex: 'courseName',
             sorter: (a, b) => a.courseName.toLowerCase().localeCompare(b.courseName.toLowerCase()),
         },
-        // {
-        //     title: 'Trạng thái',
-        //     dataIndex: 'status',
-        //     render: (status) => {
-        //         if (status) {
-        //             if (status.toLowerCase().includes('present')) {
-        //                 return <div style={{ backgroundColor: '#d4edda', color: '#155724', whiteSpace: 'nowrap' }} className={styles.status}>Chưa xếp lớp</div>
-        //             } else if (status.toLowerCase().includes('absent')) {
-        //                 return <div style={{ backgroundColor: '#FFE5E5', color: '#FF0000', whiteSpace: 'nowrap' }} className={styles.status}>Đã xếp lớp</div>
-        //             }
-        //         }
-        //     }
-        // },
+        {
+            title: 'Trạng thái',
+            dataIndex: 'status',
+            render: (status) => {
+                if (status) {
+                    if (status.toLowerCase().includes('reserved')) {
+                        return <div style={{ backgroundColor: '#d4edda', color: '#155724', whiteSpace: 'nowrap' }} className={styles.status}>Bảo lưu</div>
+                    } else if (status.toLowerCase().includes('expired')) {
+                        return <div style={{ backgroundColor: '#FFE5E5', color: '#FF0000', whiteSpace: 'nowrap' }} className={styles.status}>Đã hết hạn</div>
+                    }
+                }
+            }
+        },
         {
             title: 'Xếp lớp',
             render: (_, record) => (
-                <Button type='link' onClick={() => navigate(`/student-management/view-reserve/${record.studentId}/register/${record.courseId}`)} icon={<SwapOutlined />} size='large' />
+                // <Button type='link' onClick={() => navigate(`/student-management/view-reserve/${record.studentResponse.studentId}/register/${record.courseId}`)} icon={<SwapOutlined />} size='large' />
+                <Button type='link' onClick={() => navigate(`/student-management/view-reserve/${record.studentResponse.studentId}/register/f58b4085-bc3a-42ba-9ea9-48f5dca91496`)} icon={<SwapOutlined />} size='large' />
             ),
             width: 120,
         },
@@ -122,7 +126,7 @@ export default function ViewStudentReserve() {
             <Table
                 columns={columns}
                 rowKey={(record) => record.id}
-                dataSource={classes}
+                dataSource={students}
                 pagination={tableParams.pagination}
                 loading={loading}
                 onChange={handleTableChange}

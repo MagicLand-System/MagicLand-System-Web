@@ -141,7 +141,7 @@ export default function SyllabusManagement() {
         e.preventDefault();
         if (excelFile !== null) {
             setApiLoading(true)
-            const syllabusDetail = await handleImportSyllabus(excelFile, fileInput)
+            const syllabusDetail = await handleImportSyllabus(excelFile, fileInput, "add")
             if (syllabusDetail) {
                 navigate('add-syllabus', { state: { syllabusDetail } })
             }
@@ -156,7 +156,7 @@ export default function SyllabusManagement() {
                 <Button onClick={() => setImportModalOpen(true)} className={styles.importButton} icon={<PlusOutlined />}>Thêm chương trình học</Button>
                 <Search className={styles.searchBar} placeholder="Tìm kiếm mã chương trình học, tên chương trình học" onSearch={(value, e) => { setSearch(value) }} enterButton />
             </div>
-            <h5 style={{ fontSize: '1rem', color: '#888888', fontWeight: 'normal', margin: '0 10px 10px' }}>Số lượng chương trình học: {numberOfSyllabus}</h5>
+            <h5 style={{ fontSize: '1rem', color: '#888888', fontWeight: 'normal', margin: '0 10px 10px' }}>Tổng số chương trình học: {numberOfSyllabus}</h5>
             <Table
                 columns={columns}
                 rowKey={(record) => record.syllabusId}

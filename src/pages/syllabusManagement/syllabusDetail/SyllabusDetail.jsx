@@ -276,7 +276,7 @@ export default function SyllabusDetail() {
         e.preventDefault();
         if (excelFile !== null) {
             setApiLoading(true)
-            const syllabusDetail = await handleImportSyllabus(excelFile, fileInput)
+            const syllabusDetail = await handleImportSyllabus(excelFile, fileInput, "update")
             if (syllabusDetail) {
                 navigate(`/syllabus-management/update-syllabus/${id}`, { state: { syllabusDetail } })
             }

@@ -1,40 +1,48 @@
 import React, { useState, useEffect } from 'react'
 import styles from './StaffManagement.module.css'
-import { Button, DatePicker, Input, Table, Avatar, ConfigProvider, Modal, Row, Col, Select, Tabs } from 'antd';
+import { Button, DatePicker, Input, Table, Avatar, ConfigProvider, Modal, Row, Col, Select, Tabs, Spin, Empty } from 'antd';
 import { PlusOutlined } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
 import { getStudentsOfClass } from '../../api/classesApi';
 import { formatDate, formatPhone } from '../../utils/utils';
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
+import { addStaff, getLecturerCareer, getUsers } from '../../api/user';
+import Swal from 'sweetalert2';
 
 const { Search } = Input;
 const searchRoleList = [
     {
         label: 'Nhân viên',
-        key: 'staff',
-        value: 'staff',
+        key: 'STAFF',
+        value: 'STAFF',
     },
     {
         label: 'Quản trị viên',
-        key: 'admin',
-        value: 'admin',
+        key: 'ADMIN',
+        value: 'ADMIN',
     },
     {
         label: 'Giáo viên',
-        key: 'teacher',
-        value: 'teacher',
+        key: 'LECTURER',
+        value: 'LECTURER',
     },
 ]
 
 export default function StaffManagement() {
 
-    const navigate = useNavigate();
-    const [searchRole, setSearchRole] = useState("staff");
+    const [searchRole, setSearchRole] = useState("STAFF");
     const [search, setSearch] = useState(null)
     const [users, setUsers] = useState([]);
 
     const [loading, setLoading] = useState(false);
+
+    const [careers, setCareers] = useState([]);
+    const [careersLoading, setCareersLoading] = useState(false)
+    const [lecturerCareerId, setLecturerCareerId] = useState(null);
+    const [careersError, setCareersError] = useState(null);
+    const [careersOptions, setCareersOptions] = useState([]);
+
     const [tableParams, setTableParams] = useState({
         pagination: {
             current: 1,
@@ -44,29 +52,10 @@ export default function StaffManagement() {
 
     const [addModalOpen, setAddModalOpen] = useState(false);
     const [apiLoading, setApiLoading] = useState(false)
-    async function getUsers(search, searchRole) {
+    async function getListOfUsers(search, searchRole) {
         try {
-            // const data = await getUser(search, searchRole);
-            const data = [
-                {
-                    id: 1,
-                    fullName: "Heo hồng",
-                    phone: "+84912344640",
-                    gender: "Nam",
-                    email: "a@gmail.com",
-                    dateOfBirth: "2000-10-05T14:48:00.000Z",
-                    role: "admin"
-                },
-                {
-                    id: 2,
-                    fullName: "Bo Su",
-                    phone: "+84935447505",
-                    gender: "Nam",
-                    email: "b@gmail.com",
-                    dateOfBirth: "2000-10-05T14:48:00.000Z",
-                    role: "admin"
-                },
-            ]
+            setLoading(true)
+            const data = await getUsers(searchRole, search);
             setUsers(data);
             setTableParams({
                 ...tableParams,
@@ -82,10 +71,25 @@ export default function StaffManagement() {
             setLoading(false)
         }
     };
+    async function getCareer() {
+        try {
+            setCareersLoading(true)
+            const data = await getLecturerCareer();
+            setCareers(data);
+            setCareersOptions(data)
+        } catch (error) {
+            console.log(error);
+        } finally {
+            setCareersLoading(false)
+        }
+    };
 
     useEffect(() => {
-        getUsers(search, searchRole)
+        getListOfUsers(search, searchRole)
     }, [search, searchRole])
+    useEffect(() => {
+        getCareer()
+    }, [])
 
     const handleTableChange = (pagination, filters, sorter) => {
         setTableParams({
@@ -107,85 +111,86 @@ export default function StaffManagement() {
             ),
         },
         {
+            title: 'Email',
+            dataIndex: 'email',
+            render: (email) => email ? email : 'Chưa có'
+        },
+        {
             title: 'Số điện thoại',
             dataIndex: 'phone',
             render: (phone) => phone && formatPhone(phone)
-        },
-        {
-            title: 'Email',
-            dataIndex: 'email',
         },
         {
             title: 'Ngày sinh',
             dataIndex: 'dateOfBirth',
             render: (_, record) => (record.dateOfBirth && formatDate(record.dateOfBirth)),
         },
-        {
-            title: 'Giới tính',
-            dataIndex: 'gender',
-            render: (gender) => {
-                if (gender === 'Nữ') {
-                    return <div style={{ backgroundColor: '#ffb6c1', color: '#800000', whiteSpace: 'nowrap' }} className={styles.status}>Nữ</div>
-                } else if (gender === 'Nam') {
-                    return <div style={{ backgroundColor: '#87ceeb', color: '#000080', whiteSpace: 'nowrap' }} className={styles.status}>Nam</div>
-                }
-            },
-            filters: [
-                {
-                    text: 'Nữ',
-                    value: 'Nữ',
-                },
-                {
-                    text: 'Nam',
-                    value: 'Nam',
-                },
-            ],
-            filterMode: 'tree',
-            filterSearch: true,
-            onFilter: (value, record) => record.gender === value,
-        },
     ];
     const formik = useFormik({
         initialValues: {
-            name: "",
-            email: "",
-            phone: "",
+            userName: "",
+            userPhone: "",
             role: null,
         },
         onSubmit: async values => {
-            try {
-                // await addStaff(values)
-                //     .then(() => {
-                Swal.fire({
-                    position: "center",
-                    icon: "success",
-                    title: "Thêm nhân viên thành công",
-                    showConfirmButton: false,
-                    timer: 2000
-                })
-                    // })
-                    .then(() => {
-                        getUsers(search, searchRole)
-                        setAddModalOpen(false)
-                        formik.resetForm()
+            if (values.role === 'LECTURER' && !lecturerCareerId) {
+                setCareersError("Vui lòng chọn chuyên ngành giáo viên")
+            } else {
+                setApiLoading(true)
+                setCareersError(null)
+                try {
+                    if (values.role === 'LECTURER') {
+                        await addStaff({ ...values, lecturerCareerId })
+                            .then(() => {
+                                Swal.fire({
+                                    position: "center",
+                                    icon: "success",
+                                    title: "Thêm nhân viên thành công",
+                                    showConfirmButton: false,
+                                    timer: 2000
+                                })
+                            })
+                            .then(() => {
+                                getListOfUsers(search, searchRole)
+                                setAddModalOpen(false)
+                                formik.resetForm()
+                            })
+                    } else {
+                        await addStaff(values)
+                            .then(() => {
+                                Swal.fire({
+                                    position: "center",
+                                    icon: "success",
+                                    title: "Thêm nhân viên thành công",
+                                    showConfirmButton: false,
+                                    timer: 2000
+                                })
+                            })
+                            .then(() => {
+                                getListOfUsers(search, searchRole)
+                                setAddModalOpen(false)
+                                formik.resetForm()
+                            })
+                    }
+                } catch (error) {
+                    console.log(error)
+                    Swal.fire({
+                        position: "center",
+                        icon: "error",
+                        title: error.response?.data?.Error,
+                        showConfirmButton: false,
+                        timer: 2000
                     })
-            } catch (error) {
-                console.log(error)
-                Swal.fire({
-                    position: "center",
-                    icon: "error",
-                    title: error.response?.data?.Error,
-                })
-            } finally {
-                setApiLoading(false)
+                } finally {
+                    setApiLoading(false)
+                }
             }
         },
         validationSchema: Yup.object({
-            name: Yup.string().required("Vui lòng điền tên nhân viên"),
-            email: Yup.string().email("Vui lòng nhập đúng email").required("Vui lòng điền email nhân viên"),
-            phone: Yup.string().required("Vui lòng điền số học viên tối đa").matches(/^\+?[0-9]{10,11}$/, 'Số điện thoại không hợp lệ')
+            userName: Yup.string().required("Vui lòng điền tên nhân viên"),
+            userPhone: Yup.string().required("Vui lòng điền số học viên tối đa").matches(/^\+?[0-9]{10,11}$/, 'Số điện thoại không hợp lệ')
                 .min(10, 'Số điện thoại có tối thiểu 10 kí tự')
-                .max(11, 'Số điện thoại có tối đa 12 kí tự'),
+                .max(12, 'Số điện thoại có tối đa 12 kí tự'),
             role: Yup.string().required("Vui lòng chọn vai trò nhân viên"),
         }),
     });
@@ -210,7 +215,7 @@ export default function StaffManagement() {
                     type="card"
                     size="middle"
                     tabPosition='top'
-                    onChange={activeKey => setStatus(activeKey)}
+                    onChange={activeKey => setSearchRole(activeKey)}
                     tabBarExtraContent={<Search className={styles.searchBar} placeholder="Tìm kiếm nhân viên" onSearch={(value, e) => { setSearch(value) }} enterButton />}
                     items={searchRoleList.map(status => (
                         {
@@ -260,17 +265,17 @@ export default function StaffManagement() {
                                 <div style={{ display: 'flex', gap: '8px' }}>
                                     <Input
                                         placeholder="Họ và tên"
-                                        name='name'
-                                        value={formik.values.name}
+                                        name='userName'
+                                        value={formik.values.userName}
                                         onChange={formik.handleChange}
-                                        error={formik.touched.name && formik.errors.name}
+                                        error={formik.touched.userName && formik.errors.userName}
                                         className={styles.input}
                                         required
                                         disabled={apiLoading}
                                     />
                                 </div>
                                 <div style={{ height: '24px', paddingLeft: '10px' }}>
-                                    {formik.errors.name && formik.touched.name && (<p style={{ color: 'red', fontSize: '14px', margin: '0' }}>{formik.errors.name}</p>)}
+                                    {formik.errors.userName && formik.touched.userName && (<p style={{ color: 'red', fontSize: '14px', margin: '0' }}>{formik.errors.userName}</p>)}
                                 </div>
                             </Col>
                         </Row>
@@ -282,39 +287,17 @@ export default function StaffManagement() {
                                 <div style={{ display: 'flex', gap: '8px' }}>
                                     <Input
                                         placeholder="Số điện thoại"
-                                        name='phone'
-                                        value={formik.values.phone}
+                                        name='userPhone'
+                                        value={formik.values.userPhone}
                                         onChange={formik.handleChange}
-                                        error={formik.touched.phone && formik.errors.phone}
+                                        error={formik.touched.userPhone && formik.errors.userPhone}
                                         className={styles.input}
                                         required
                                         disabled={apiLoading}
                                     />
                                 </div>
                                 <div style={{ height: '24px', paddingLeft: '10px' }}>
-                                    {formik.errors.phone && formik.touched.phone && (<p style={{ color: 'red', fontSize: '14px', margin: '0' }}>{formik.errors.phone}</p>)}
-                                </div>
-                            </Col>
-                        </Row>
-                        <Row>
-                            <Col span={6}>
-                                <p className={styles.addTitle} ><span>*</span> Email:</p>
-                            </Col>
-                            <Col span={18}>
-                                <div style={{ display: 'flex', gap: '8px' }}>
-                                    <Input
-                                        placeholder="Email"
-                                        name='email'
-                                        value={formik.values.email}
-                                        onChange={formik.handleChange}
-                                        error={formik.touched.email && formik.errors.email}
-                                        className={styles.input}
-                                        required
-                                        disabled={apiLoading}
-                                    />
-                                </div>
-                                <div style={{ height: '24px', paddingLeft: '10px' }}>
-                                    {formik.errors.email && formik.touched.email && (<p style={{ color: 'red', fontSize: '14px', margin: '0' }}>{formik.errors.email}</p>)}
+                                    {formik.errors.userPhone && formik.touched.userPhone && (<p style={{ color: 'red', fontSize: '14px', margin: '0' }}>{formik.errors.userPhone}</p>)}
                                 </div>
                             </Col>
                         </Row>
@@ -337,6 +320,57 @@ export default function StaffManagement() {
                                 </div>
                             </Col>
                         </Row>
+                        {formik.values.role === 'LECTURER' &&
+                            <Row>
+                                <Col span={6}>
+                                    <p className={styles.addTitle} ><span>*</span> Chuyên ngành:</p>
+                                </Col>
+                                <Col span={18}>
+                                    <Select
+                                        showSearch
+                                        value={lecturerCareerId}
+                                        suffixIcon={null}
+                                        filterOption={false}
+                                        className={styles.input}
+                                        placeholder="Chọn chuyên ngành"
+                                        onSelect={(data) => { setLecturerCareerId(data) }}
+                                        notFoundContent={
+                                            careersLoading
+                                                ? <div style={{ width: '100%', textAlign: 'center' }}>
+                                                    <Spin size='small' />
+                                                </div>
+                                                : <Empty
+                                                    image={Empty.PRESENTED_IMAGE_SIMPLE}
+                                                    description={
+                                                        <span>
+                                                            Không tìm thấy chuyên ngành
+                                                        </span>
+                                                    } />
+                                        }
+                                        options={
+                                            careersOptions
+                                                .map((career) => ({
+                                                    value: career.careerId,
+                                                    label: career.careerName
+                                                }))}
+                                        onSearch={(value) => {
+                                            if (value) {
+                                                const filteredOptions = careers.filter(
+                                                    (career) => career.careerName.toLowerCase().includes(value?.toLowerCase())
+                                                );
+                                                setCareersOptions(filteredOptions);
+                                            } else {
+                                                setCareersOptions(careers);
+                                            }
+                                        }}
+                                        disabled={apiLoading}
+                                    />
+                                    <div style={{ height: '24px', paddingLeft: '10px' }}>
+                                        {careersError && (<p style={{ color: 'red', fontSize: '14px', margin: '0' }}>{careersError}</p>)}
+                                    </div>
+                                </Col>
+                            </Row>
+                        }
                         <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
                             <Button loading={apiLoading} className={styles.saveButton} htmlType='submit'>
                                 Lưu

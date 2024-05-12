@@ -2,7 +2,7 @@ import api from "./api";
 export const searchSyllabuses = async (keyWord) => {
   const response = await api.get("/api/v1/Syllabus/staff/filter", {
     params: {
-      keyWords: [keyWord]
+      keyWords: keyWord
     }
   });
   return response.data;

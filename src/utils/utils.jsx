@@ -58,7 +58,7 @@ export function handleDownloadExcelFile(base64file, downloadName) {
         downloadName
     );
 }
-export async function handleImportSyllabus(excelFile, fileInput) {
+export async function handleImportSyllabus(excelFile, fileInput, action) {
     let errors = []
     let syllabusDetail = null
     XLSX.SSF.is_date("dd/mm/yyyy");
@@ -86,7 +86,7 @@ export async function handleImportSyllabus(excelFile, fileInput) {
         if (!generalData.syllabusName || !generalData.subjectCode || !generalData.type || !generalData.timePerSession || !generalData.numOfSessions || !generalData.description || !generalData.studentTasks || !generalData.scoringScale || !generalData.effectiveDate || !generalData.minAvgMarkToPass) {
             errors.push("Vui lòng điền đủ các thông tin chung")
         }
-        if (generalData.syllabusName && generalData.subjectCode) {
+        if (generalData.syllabusName && generalData.subjectCode && action === "add") {
             try {
                 const data = await checkSyllabusInfo(generalData.syllabusName, generalData.subjectCode)
                 if (data !== "Thông Tin Giáo Trình Hợp Lệ") {

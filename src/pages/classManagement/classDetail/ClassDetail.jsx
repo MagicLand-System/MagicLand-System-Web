@@ -363,6 +363,8 @@ export default function ClassDetail() {
                     return <div style={{ backgroundColor: '#e7e9ea', color: '#495057', whiteSpace: 'nowrap' }} className={styles.status}>Sắp tới</div>
                 } else if (status.toLowerCase().includes('completed')) {
                     return <div style={{ backgroundColor: '#d4edda', color: '#155724', whiteSpace: 'nowrap' }} className={styles.status}>Đã hoàn thành</div>
+                } else if (status.toLowerCase().includes('canceled')) {
+                    return <div style={{ backgroundColor: '#FFE5E5', color: '#FF0000', whiteSpace: 'nowrap' }} className={styles.status}>Đã hủy</div>
                 }
             }
         },
@@ -427,18 +429,18 @@ export default function ClassDetail() {
                             <div className={styles.classPart}>
                                 <h5 className={styles.classPartTitle}>Học vụ</h5>
                                 <Row>
-                                    <Col span={8}>
+                                    <Col span={12}>
                                         <p className={styles.classTitle}>Ngày bắt đầu:</p>
                                     </Col>
-                                    <Col span={16}>
+                                    <Col span={12}>
                                         <p className={styles.classDetail}>{classData && `${formatDate(classData.startDate)}`}</p>
                                     </Col>
                                 </Row>
                                 <Row>
-                                    <Col span={8}>
+                                    <Col span={12}>
                                         <p className={styles.classTitle}>Ngày kết thúc:</p>
                                     </Col>
-                                    <Col span={16}>
+                                    <Col span={12}>
                                         <p className={styles.classDetail}>{classData && `${formatDate(classData.endDate)}`}</p>
                                     </Col>
                                 </Row>
@@ -505,21 +507,21 @@ export default function ClassDetail() {
                             <div className={styles.classPart}>
                                 <h5 className={styles.classPartTitle}>Giáo viên</h5>
                                 <Row>
-                                    <Col span={8}>
+                                    <Col span={10}>
                                         <p className={styles.classTitle}>Tên giáo viên:</p>
                                     </Col>
-                                    <Col span={16}>
+                                    <Col span={14}>
                                         <p className={styles.classDetail} style={{ textTransform: 'capitalize' }}>{classData.lecturerResponse.fullName}</p>
                                     </Col>
                                 </Row>
-                                <Row>
-                                    <Col span={8}>
+                                {/* <Row>
+                                    <Col span={10}>
                                         <p className={styles.classTitle}>Số điện thoại:</p>
                                     </Col>
-                                    <Col span={16}>
+                                    <Col span={14}>
                                         <p className={styles.classDetail}>{formatPhone(classData.lecturerResponse.phone)}</p>
                                     </Col>
-                                </Row>
+                                </Row> */}
                                 <Row>
                                     <Col span={8}>
                                         <p className={styles.classTitle}>Email:</p>
@@ -531,13 +533,13 @@ export default function ClassDetail() {
                             </div>
                         </Col>
                     </Row>
-                    {!classData.status.toLowerCase().includes('canceled') && !classData.status.toLowerCase().includes('completed') && (
+                    {/* {!classData.status.toLowerCase().includes('canceled') && !classData.status.toLowerCase().includes('completed') && (
                         <div style={{ display: 'flex', marginBottom: '20px' }}>
                             <Button className={styles.cancelButton} onClick={handleCancelClass}>
                                 Hủy lớp học
                             </Button>
                         </div>
-                    )}
+                    )} */}
                 </>
             )}
             <ConfigProvider

@@ -34,9 +34,6 @@
   background: #ffeebc !important;
   color: black !important;
 }
-.searchBar {
-  min-width: 500px;
-}
 .searchBar input:hover {
   border-color: #ffd766 !important;
 }
@@ -161,4 +158,8 @@
 }
 .currencyInput::placeholder {
   color: #bfbfbf;
+}
+.currencyInput:focus-visible {
+  box-shadow: 0 0 0 2px rgba(5, 145, 255, 0.1);
+  outline: 0;
 }

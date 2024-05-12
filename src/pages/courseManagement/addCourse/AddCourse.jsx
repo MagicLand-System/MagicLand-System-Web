@@ -418,7 +418,7 @@ export default function AddCourse() {
                                             <TextArea
                                                 disabled={apiLoading}
                                                 className={styles.input}
-                                                placeholder={`Nội dung ${index + 1}`}
+                                                placeholder={`Mô tả: Chi tiết mô tả`}
                                                 value={subDescription?.subDescriptionContentRequests}
                                                 onChange={(e) => handleContentChange(index, e.target.value)}
                                                 required

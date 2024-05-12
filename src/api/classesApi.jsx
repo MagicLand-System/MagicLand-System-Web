@@ -88,17 +88,6 @@ export const cancelClass = async (id) => {
   const response = await api.put(`/api/v1/classes/cancel/${id}`);
   return response.data;
 };
-export const getMakeUpClass = async (credential) => {
-  const response = await api.get(`/api/v1/classes/getMakeUpSchedule`, {
-    params: credential
-  });
-  return response.data;
-};
-export const arrangeMakeUpClass = async (scheduleId, studentId, makeUpScheduleId) => {
-  const response = await api.put(`/api/v1/classes/${studentId}/${scheduleId}/makeup`, { scheduleId: makeUpScheduleId });
-  return response.data;
-};
-
 export const importClass = async (credential) => {
   const response = await api.post("/api/v1/classes/insertClassesV2", credential);
   return response.data;
@@ -108,7 +97,6 @@ export const saveImport = async (credential) => {
   const response = await api.post("/api/v1/classes/insertClasses/save", credential);
   return response.data;
 };
-
 export const getRoomChangeClass = async (classId) => {
   const response = await api.get(`/api/v1/classes/getRoomForUpdate`, { params: { classId } });
   return response.data;

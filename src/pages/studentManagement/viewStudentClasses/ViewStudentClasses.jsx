@@ -5,7 +5,8 @@ import { SwapOutlined } from '@ant-design/icons';
 import { useNavigate, useParams } from 'react-router-dom';
 import { getClasses } from '../../../api/classesApi';
 import { formatDate, formatDayOfWeek, formatPhone } from '../../../utils/utils';
-import { getClassOfStudent, getStudent } from '../../../api/student';
+import { getClassOfStudent, getStudent, setReserve } from '../../../api/student';
+import Swal from 'sweetalert2';
 
 const { Search } = Input;
 
@@ -44,6 +45,40 @@ export default function ViewStudentClasses() {
             pageSize: 10,
         },
     });
+    const [apiLoading, setApiLoading] = useState(false)
+    const handleReserve = (classId) => {
+        Swal.fire({
+            title: "Bạn chắc chắn muốn bảo lưu bé?",
+            showCancelButton: true,
+            confirmButtonText: "Lưu",
+            cancelButtonText: "Hủy"
+        }).then(async (result) => {
+            if (result.isConfirmed) {
+                try {
+                    setApiLoading(true)
+                    await setReserve(classId, studentId)
+                        .then(() => Swal.fire({
+                            position: "center",
+                            icon: "success",
+                            title: "Bảo lưu học viên thành công",
+                            showConfirmButton: false,
+                            timer: 2000
+                        }))
+                        .then(() => getListOfClasses(studentId, search, status, date))
+                } catch (error) {
+                    Swal.fire({
+                        position: "center",
+                        icon: "error",
+                        title: error.response?.data?.Error,
+                        showConfirmButton: false,
+                        timer: 2000
+                    })
+                } finally {
+                    setApiLoading(false)
+                }
+            }
+        });
+    }
     async function getListOfClasses(studentId, searchString, status, date) {
         try {
             setLoading(true);
@@ -117,16 +152,68 @@ export default function ViewStudentClasses() {
             ,
         },
         {
+            title: 'Bảo lưu',
+            render: (_, record) => {
+                if (status && status !== 'completed' && record.canChangeClass === true) {
+                    return <Button loading={apiLoading} onClick={() => handleReserve(record.classId)} className={styles.cancelButton}>
+                        Bảo lưu
+                    </Button>
+                }
+            },
+            width: 120,
+        },
+        {
             title: 'Chuyển lớp',
             render: (_, record) => {
-                if (status && status !== 'completed') {
+                if (status && status !== 'completed' && record.canChangeClass === true) {
                     return <Button type='link' onClick={() => navigate(`change-class/${record.classId}`)} icon={<SwapOutlined />} size='large' />
                 }
             },
             width: 120,
         },
     ];
-    const columnsNotChange = [
+    const columnsCancel = [
+        {
+            title: 'Mã lớp học',
+            dataIndex: 'classCode',
+            sorter: (a, b) => a.classCode.toLowerCase().localeCompare(b.classCode.toLowerCase()),
+        },
+        {
+            title: 'Tên khóa học',
+            dataIndex: 'courseName',
+            sorter: (a, b) => a.courseName.toLowerCase().localeCompare(b.courseName.toLowerCase()),
+        },
+        {
+            title: 'Giáo viên',
+            dataIndex: 'lecturerName',
+        },
+        {
+            title: 'Ngày bắt đầu',
+            dataIndex: 'startDate',
+            render: (startDate) => startDate && formatDate(startDate)
+        },
+        {
+            title: 'Lịch học',
+            dataIndex: 'schedules',
+            render: (schedules) =>
+                schedules.map((session, index) => (
+                    <p style={{ margin: 0 }} key={index}>
+                        {formatDayOfWeek(session.dayOfWeek)}: {session.startTime} - {session.endTime}
+                    </p>
+                ))
+            ,
+        },
+        {
+            title: 'Chuyển lớp',
+            render: (_, record) => {
+                if (status && status !== 'completed' && record.canChangeClass === true) {
+                    return <Button type='link' onClick={() => navigate(`change-class/${record.classId}`)} icon={<SwapOutlined />} size='large' />
+                }
+            },
+            width: 120,
+        },
+    ];
+    const columnsComplete = [
         {
             title: 'Mã lớp học',
             dataIndex: 'classCode',
@@ -179,12 +266,14 @@ export default function ViewStudentClasses() {
             dataIndex: 'status',
             render: (status) => {
                 if (status) {
-                    if (status.toLowerCase().includes('chưa diễn ra')) {
-                        return <div style={{ backgroundColor: '#e7e9ea', color: '#495057', whiteSpace: 'nowrap' }} className={styles.status}>Chưa diễn ra</div>
-                    } else if (status.toLowerCase().includes('có mặt')) {
+                    if (status.toLowerCase().includes('upcomming')) {
+                        return <div style={{ backgroundColor: '#E5F2FF', color: '#0066FF', whiteSpace: 'nowrap' }} className={styles.status}>Chưa diễn ra</div>
+                    } else if (status.toLowerCase().includes('present')) {
                         return <div style={{ backgroundColor: '#d4edda', color: '#155724', whiteSpace: 'nowrap' }} className={styles.status}>Có mặt</div>
-                    } else if (status.toLowerCase().includes('vắng mặt')) {
+                    } else if (status.toLowerCase().includes('absent')) {
                         return <div style={{ backgroundColor: '#FFE5E5', color: '#FF0000', whiteSpace: 'nowrap' }} className={styles.status}>Vắng mặt</div>
+                    } else if (status.toLowerCase().includes('canceled')) {
+                        return <div style={{ backgroundColor: '#e7e9ea', color: '#495057', whiteSpace: 'nowrap' }} className={styles.status}>Đã hủy</div>
                     }
                 }
             }
@@ -196,6 +285,40 @@ export default function ViewStudentClasses() {
                 <Button type='link' onClick={() => navigate(`make-up-class/${record.id}`)} icon={<SwapOutlined />} size='large' />
             ),
             width: 120,
+        },
+    ];
+    const scheduleColumnsNotMakeUp = [
+        {
+            title: 'Buổi học',
+            dataIndex: 'index',
+            width: 120
+        },
+        {
+            title: 'Ngày học',
+            render: (_, record) => {
+                return record.date && formatDate(record.date)
+            }
+        },
+        {
+            title: 'Giờ học',
+            render: (_, record) => `${record.startTime} - ${record.endTime}`
+        },
+        {
+            title: 'Trạng thái',
+            dataIndex: 'status',
+            render: (status) => {
+                if (status) {
+                    if (status.toLowerCase().includes('upcomming')) {
+                        return <div style={{ backgroundColor: '#87ceeb', color: '#000080', whiteSpace: 'nowrap' }} className={styles.status}>Chưa diễn ra</div>
+                    } else if (status.toLowerCase().includes('present')) {
+                        return <div style={{ backgroundColor: '#d4edda', color: '#155724', whiteSpace: 'nowrap' }} className={styles.status}>Có mặt</div>
+                    } else if (status.toLowerCase().includes('absent')) {
+                        return <div style={{ backgroundColor: '#FFE5E5', color: '#FF0000', whiteSpace: 'nowrap' }} className={styles.status}>Vắng mặt</div>
+                    } else if (status.toLowerCase().includes('canceled')) {
+                        return <div style={{ backgroundColor: '#e7e9ea', color: '#495057', whiteSpace: 'nowrap' }} className={styles.status}>Đã hủy</div>
+                    }
+                }
+            }
         },
     ];
     return (
@@ -300,7 +423,7 @@ export default function ViewStudentClasses() {
                                 <>
                                     <h5 style={{ fontSize: '1rem', color: '#888888', fontWeight: 'normal', margin: '0 10px 10px' }}>Số lượng lớp <span style={{ textTransform: "lowercase" }}>{statusL.label}</span>: {!loading && numberOfClasses}</h5>
                                     <Table
-                                        columns={status !== 'completed' ? columns : columnsNotChange}
+                                        columns={status === 'completed' ? columnsComplete : status === 'upcoming' ? columns : columnsCancel}
                                         expandable={{
                                             expandedRowRender: (record) =>
                                                 <ConfigProvider
@@ -314,7 +437,7 @@ export default function ViewStudentClasses() {
                                                     }}
                                                 >
                                                     <Table
-                                                        columns={scheduleColumns}
+                                                        columns={(record.status === 'COMPLETED' || record.status === 'CANCELED') ? scheduleColumnsNotMakeUp : scheduleColumns}
                                                         rowKey={(record) => record.id}
                                                         dataSource={record.classScheduleResponses}
                                                         sticky={{ offsetHeader: 128 }}
