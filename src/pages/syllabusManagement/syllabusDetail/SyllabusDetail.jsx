@@ -4,7 +4,7 @@ import { Button, Table, Row, Col, Tabs, ConfigProvider, Divider, Modal, DatePick
 import { EditOutlined, CloudDownloadOutlined, CloudUploadOutlined, EyeOutlined } from '@ant-design/icons';
 import { useNavigate, useParams } from 'react-router-dom';
 import * as XLSX from 'xlsx';
-import { getSyllabus, updateSyllabusGeneral } from '../../../api/syllabus';
+import { getSyllabus, getSyllabusGeneral, updateSyllabusGeneral, getSyllabusMaterial, getSyllabusExam, getSyllabusSession, getSyllabusQuestion } from '../../../api/syllabus';
 import { getQuiz } from '../../../api/quiz';
 import { getSubjects } from '../../../api/courseApi';
 import { useFormik } from 'formik';
@@ -13,6 +13,7 @@ import dayjs from 'dayjs'
 
 import TextArea from 'antd/es/input/TextArea';
 import Swal from 'sweetalert2';
+import { handleDownloadExcelFile, handleImportSyllabus } from '../../../utils/utils';
 
 export default function SyllabusDetail() {
     const params = useParams();
@@ -21,13 +22,16 @@ export default function SyllabusDetail() {
 
     const [importModalOpen, setImportModalOpen] = useState(false);
     const [syllabusDetail, setSyllabusDetail] = useState(null);
+    const [sessions, setSessions] = useState([])
+    const [exams, setExams] = useState([])
+    const [questionPackages, setQuestionPackages] = useState([])
+    const [materials, setMaterials] = useState([])
     const [tab, setTab] = useState("syllabus");
 
     const fileInputRef = useRef(null);
     const [fileInput, setFileInput] = useState(null);
     const [excelFile, setExcelFile] = useState(null);
 
-    const [questionList, setQuestionList] = useState([]);
     const [flashcardList, setFlashCardList] = useState([]);
     const [multipleChoiceList, setMultipleChoiceList] = useState([]);
     const [questionListType, setQuestionListType] = useState(null);
@@ -56,6 +60,7 @@ export default function SyllabusDetail() {
     const [effectiveDate, setEffectiveDate] = useState(null);
     const [effectiveDateError, setEffectiveDateError] = useState(null)
     const [apiLoading, setApiLoading] = useState(false)
+
     const formik = useFormik({
         initialValues: {
             syllabusName: "",
@@ -86,7 +91,7 @@ export default function SyllabusDetail() {
                             Swal.fire({
                                 position: "center",
                                 icon: "success",
-                                title: "Chỉnh sửa giáo trình thành công",
+                                title: "Chỉnh sửa chương trình học thành công",
                                 showConfirmButton: false,
                                 timer: 2000
                             })
@@ -105,6 +110,7 @@ export default function SyllabusDetail() {
                         position: "center",
                         icon: "error",
                         title: error.response?.data?.Error,
+                        showConfirmButton: false,
                     })
                 } finally {
                     setApiLoading(false)
@@ -112,7 +118,7 @@ export default function SyllabusDetail() {
             }
         },
         validationSchema: Yup.object({
-            syllabusName: Yup.string().required("Vui lòng điền tên khóa học"),
+            syllabusName: Yup.string().required("Vui lòng điền tên chương trình học"),
             minAvgMarkToPass: Yup.number().required("Vui lòng điền số điểm hoàn thành").min(0, "Số điểm hoàn thành ít nhất là 0"),
             studentTasks: Yup.string().required("Vui lòng điền nhiệm vụ học sinh"),
             description: Yup.string().required("Vui lòng điền mô tả"),
@@ -124,8 +130,24 @@ export default function SyllabusDetail() {
     useEffect(() => {
         getSyllabusDetail(id)
     }, [id])
+    useEffect(() => {
+        switch (tab) {
+            case "syllabus":
+                getSession(id)
+                break;
+            case "assessment":
+                getExam(id)
+                break;
+            case "exercise":
+                getQuestion(id)
+                break;
+            case "material":
+                getMaterial(id)
+                break;
+        }
+    }, [tab])
     async function getSyllabusDetail(id) {
-        const data = await getSyllabus(id);
+        const data = await getSyllabusGeneral(id);
         setSyllabusDetail(data);
         setCategory(data.category);
         setEffectiveDate(dayjs(data.effectiveDate, 'DD/MM/YYYY'));
@@ -135,6 +157,54 @@ export default function SyllabusDetail() {
             studentTasks: data.studentTasks,
             description: data.description
         })
+    }
+    async function getMaterial(id) {
+        const data = await getSyllabusMaterial(id);
+        setMaterials(data);
+        setTableParams({
+            ...tableParams,
+            pagination: {
+                current: 1,
+                pageSize: 10,
+                total: data?.length
+            },
+        });
+    }
+    async function getExam(id) {
+        const data = await getSyllabusExam(id);
+        setExams(data);
+        setTableParams({
+            ...tableParams,
+            pagination: {
+                current: 1,
+                pageSize: 10,
+                total: data?.length
+            },
+        });
+    }
+    async function getSession(id) {
+        const data = await getSyllabusSession(id);
+        setSessions(data);
+        setTableParams({
+            ...tableParams,
+            pagination: {
+                current: 1,
+                pageSize: 10,
+                total: data?.length
+            },
+        });
+    }
+    async function getQuestion(id) {
+        const data = await getSyllabusQuestion(id);
+        setQuestionPackages(data);
+        setTableParams({
+            ...tableParams,
+            pagination: {
+                current: 1,
+                pageSize: 10,
+                total: data?.length
+            },
+        });
     }
     async function getListOfCategory() {
         const data = await getSubjects();
@@ -166,7 +236,6 @@ export default function SyllabusDetail() {
         setQuestionListType(type)
         const data = await getQuiz(id);
         if (data) {
-            setQuestionList(data)
             if (type === 'flashcard') {
                 const newData = transformFlashCardData(data)
                 setFlashCardList(newData)
@@ -198,180 +267,21 @@ export default function SyllabusDetail() {
             ...sorter,
         });
         if (pagination.pageSize !== tableParams.pagination?.pageSize) {
-            setQuestionList([]);
+            setFlashCardList([]);
+            setMultipleChoiceList([])
         }
     };
 
     const handleImport = async (e) => {
         e.preventDefault();
-        let errors = []
-        let syllabusDetail = null
         if (excelFile !== null) {
-            XLSX.SSF.is_date("dd/mm/yyyy");
-            const workbook = XLSX.read(excelFile, { type: 'buffer' });
-            //sheet general
-            const worksheetGeneral = workbook.Sheets['Thông tin chung'];
-            const dataGeneral = XLSX.utils.sheet_to_json(worksheetGeneral);
-            let numOfSessions = 0;
-            if (dataGeneral.length === 1) {
-                let newDataGeneral = dataGeneral.map(row => ({
-                    syllabusName: row['Tên giáo trình'] || null,
-                    subjectCode: row['Mã giáo trình'] || null,
-                    type: row['Loại'] || null,
-                    timePerSession: row['Thời gian / buổi'] || null,
-                    numOfSessions: row['Số buổi học'] || null,
-                    preRequisite: row['Điều kiện tiên quyết'] || null,
-                    description: row['Mô tả'] || null,
-                    studentTasks: row['Nhiệm vụ học sinh'] || null,
-                    scoringScale: row['Thang điểm'] || null,
-                    effectiveDate: row['Ngày hiệu lực'] || null,
-                    minAvgMarkToPass: row['Số điểm hoàn thành'] || null,
-                }))
-                const generalData = newDataGeneral[0];
-                numOfSessions = generalData.numOfSessions;
-                if (!generalData.syllabusName || !generalData.subjectCode || !generalData.type || !generalData.timePerSession || !generalData.numOfSessions || !generalData.description || !generalData.studentTasks || !generalData.scoringScale || !generalData.effectiveDate || !generalData.minAvgMarkToPass) {
-                    errors.push("Vui lòng điền đủ các thông tin chung")
-                }
-                if (generalData.effectiveDate) {
-                    const today = new Date()
-                    today.setHours(0, 0, 0, 0)
-
-                    const date = new parse(generalData.effectiveDate, "dd/MM/yyyy", new Date())
-                    date.setHours(12, 0, 0, 0)
-                    if (date < today) {
-                        errors.push("Ngày hiệu lực không hợp lệ")
-                    }
-                }
-                newDataGeneral.forEach(data => {
-                    const preRequisite = data.preRequisite?.split("\r\n");
-                    data.preRequisite = preRequisite
-                });
-                syllabusDetail = { generalData }
-            } else {
-                errors.push("Vui lòng điền đủ các thông tin chung")
-            }
-            //sheet syllabus
-            const worksheetSyllabus = workbook.Sheets['Giáo trình'];
-            const dataSyllabus = XLSX.utils.sheet_to_json(worksheetSyllabus);
-            let syllabusLength = 0
-            if (dataSyllabus.length > 0) {
-                let newDataSyllabus = dataSyllabus.map(row => ({
-                    index: row['STT'] || null,
-                    topicName: row['Chủ đề'] || null,
-                    order: row['Buổi'] || null,
-                    content: row['Nội dung'] || null,
-                    detail: row['Chi tiết'] || null,
-                }))
-                newDataSyllabus.forEach((item, index) => {
-                    if (item.detail) {
-                        if (!item.index && index > 0) {
-                            item.index = newDataSyllabus[index - 1].index;
-                        }
-                        if (!item.topicName && index > 0) {
-                            item.topicName = newDataSyllabus[index - 1].topicName;
-                        }
-                        if (!item.order && index > 0) {
-                            item.order = newDataSyllabus[index - 1].order;
-                        }
-                        if (!item.content && index > 0) {
-                            item.content = newDataSyllabus[index - 1].content;
-                        }
-                    } else {
-                        if (!errors.includes("Vui lòng điền đủ các thông tin giáo trình")) {
-                            errors.push("Vui lòng điền đủ các thông tin giáo trình");
-                        }
-                    }
-                });
-                const groupedSyllabus = groupDataByOrder(newDataSyllabus)
-                syllabusLength = groupedSyllabus.length
-                syllabusDetail = { ...syllabusDetail, syllabus: newDataSyllabus, groupedSyllabus }
-            } else {
-                errors.push("Vui lòng điền đủ các thông tin giáo trình");
-            }
-            if (!syllabusLength > 0 && !numOfSessions > 0 || syllabusLength !== numOfSessions) {
-                if (!errors.includes("Vui lòng điền đủ các thông tin giáo trình")) {
-                    errors.push("Thông tin số buổi và giáo trình không phù hợp");
-                }
-            }
-            //sheet assessment
-            const worksheetAssessment = workbook.Sheets['Đánh giá'];
-            const dataAssessment = XLSX.utils.sheet_to_json(worksheetAssessment);
-            if (dataAssessment.length > 0) {
-                let newDataAssessment = dataAssessment.map(row => ({
-                    type: row['Loại bài tập'] || null,
-                    contentName: row['Nội dung'] || null,
-                    part: row['Số lượng'] || null,
-                    weight: row['Trọng số'] || null,
-                    completionCriteria: row['Điểm tối thiểu'] >= 0 ? row['Điểm tối thiểu'] : null,
-                    method: row['Phương thức'] || null,
-                    duration: row['Thời gian'] || null,
-                    questionType: row['Loại câu hỏi'] || null,
-                }))
-                let sumWeight = 0;
-                newDataAssessment.forEach(data => {
-                    const weight = data.weight.replace("%", "");
-                    data.weight = weight
-                    sumWeight = sumWeight + parseInt(weight);
-                    const duration = data.duration?.toString();
-                    data.duration = duration
-                    if (!data.type || !data.contentName || !data.part || !data.weight || !(data.completionCriteria >= 0) || !data.method) {
-                        if (!errors.includes("Vui lòng điền đủ các thông tin đánh giá")) {
-                            errors.push("Vui lòng điền đủ các thông tin đánh giá");
-                        }
-                    }
-                });
-                if (sumWeight !== 100) {
-                    errors.push("Vui lòng điền đúng đánh giá trọng số");
-                }
-                syllabusDetail = { ...syllabusDetail, examSyllabusRequests: newDataAssessment }
-            } else {
-                errors.push("Vui lòng điền đủ các thông tin đánh giá");
-            }
-            if (errors.length === 0) {
-                syllabusDetail = { ...syllabusDetail, syllabusFile: fileInput }
+            setApiLoading(true)
+            const syllabusDetail = await handleImportSyllabus(excelFile, fileInput, "update")
+            if (syllabusDetail) {
                 navigate(`/syllabus-management/update-syllabus/${id}`, { state: { syllabusDetail } })
-            } else {
-                Swal.fire({
-                    icon: "error",
-                    title: 'Có lỗi xảy ra',
-                    html: errors.map(err => `${err}<br/>`).join(''),
-                })
             }
         }
-
-    }
-    function groupDataByOrder(inputData) {
-        const groupedData = [];
-
-        inputData.forEach(item => {
-            const existingGroup = groupedData.find(group => group.order === item.order && group.topicName === item.topicName);
-
-            if (!existingGroup) {
-                groupedData.push({
-                    order: item.order,
-                    index: item.index,
-                    topicName: item.topicName,
-                    contents: [{
-                        content: item.content,
-                        details: item.detail ? [item.detail] : []
-                    }]
-                });
-            } else {
-                const existingContent = existingGroup.contents.find(content => content.content === item.content);
-                if (!existingContent) {
-                    existingGroup.contents.push({
-                        content: item.content,
-                        details: item.detail ? [item.detail] : []
-                    });
-                } else {
-                    if (item.detail) {
-                        existingContent.details.push(item.detail);
-                    }
-                }
-            }
-        });
-
-        return groupedData;
+        setApiLoading(false)
     }
     const handleFileChange = (e) => {
         let selectedFile = e.target.files[0];
@@ -483,7 +393,9 @@ export default function SyllabusDetail() {
             dataIndex: 'questionRequests',
             render: (text, record, index) =>
             (<>
-                <Button type='link' onClick={() => getQuesionList(record.questionPackageId, record.type)} icon={<EyeOutlined />} size='large' />
+                {record.type !== "offline" &&
+                    <Button type='link' onClick={() => getQuesionList(record.questionPackageId, record.type)} icon={<EyeOutlined />} size='large' />
+                }
                 {/* <Button type='link' onClick={() => console.log('update')} icon={<EditOutlined />} size='large' /> */}
             </>)
         },
@@ -603,18 +515,18 @@ export default function SyllabusDetail() {
     ]
     return (
         <div className={styles.container}>
-            <h2 className={styles.title}>Chi tiết giáo trình</h2>
+            <h2 className={styles.title}>Chi tiết chương trình học</h2>
             {syllabusDetail && (
                 <Row style={{ marginBottom: 20 }}>
-                    <Col span={4}>
+                    {/* <Col span={4}>
                         <p className={styles.syllabusTitle}>Tên khóa học:</p>
                     </Col>
                     <Col span={20} style={{ paddingLeft: 10 }}>
                         <p className={styles.syllabusDetail}>{syllabusDetail?.linkedCourse?.courseName ? syllabusDetail?.linkedCourse.courseName : 'Chưa có'}</p>
-                    </Col>
+                    </Col> */}
                     <Divider style={{ margin: 0 }} />
                     <Col span={4}>
-                        <p className={styles.syllabusTitle}>Tên giáo trình:</p>
+                        <p className={styles.syllabusTitle}>Tên chương trình học:</p>
                     </Col>
                     <Col span={20} style={{ paddingLeft: 10 }}>
                         <p className={styles.syllabusDetail}>{syllabusDetail?.syllabusName}</p>
@@ -628,7 +540,7 @@ export default function SyllabusDetail() {
                     </Col>
                     <Divider style={{ margin: 0 }} />
                     <Col span={4}>
-                        <p className={styles.syllabusTitle}>Mã giáo trình:</p>
+                        <p className={styles.syllabusTitle}>Mã chương trình học:</p>
                     </Col>
                     <Col span={20} style={{ paddingLeft: 10 }}>
                         <p className={styles.syllabusDetail}>{syllabusDetail?.subjectCode}</p>
@@ -684,7 +596,7 @@ export default function SyllabusDetail() {
                         <p className={styles.syllabusDetail}>{syllabusDetail?.minAvgMarkToPass}</p>
                     </Col>
                     <Col span={4}>
-                        <p className={styles.syllabusTitle}>Tệp giáo trình:</p>
+                        <p className={styles.syllabusTitle}>Tệp chương trình học:</p>
                     </Col>
                     <Col span={20} style={{ paddingLeft: 10 }}>
                         <a href={syllabusDetail?.syllabusLink} target="_blank" className={styles.syllabusDetail}>Tải tại đây</a>
@@ -705,48 +617,29 @@ export default function SyllabusDetail() {
                     type="card"
                     size="middle"
                     tabPosition='top'
-                    onChange={activeKey => {
-                        setTab(activeKey)
-                        let length = 0
-                        if (activeKey === 'syllabus') {
-                            length = syllabusDetail.sessionResponses?.length
-                        } else if (activeKey === 'assessment') {
-                            length = syllabusDetail.exams?.length
-                        } else if (activeKey === 'exercise') {
-                            length = syllabusDetail.questionPackages?.length
-                        } else if (activeKey === 'material') {
-                            length = syllabusDetail.materials?.length
-                        }
-                        setTableParams({
-                            pagination: {
-                                current: 1,
-                                pageSize: 10,
-                                total: length
-                            },
-                        });
-                    }}
+                    onChange={activeKey => { setTab(activeKey) }}
                     tabBarExtraContent={
                         <>
                             <Button onClick={() => setEditModalOpen(true)} className={styles.saveButton}>
                                 Chỉnh sửa thông tin
                             </Button>
                             <Button onClick={() => setImportModalOpen(true)} className={styles.cancelButton}>
-                                Cập nhật giáo trình
+                                Cập nhật chương trình học
                             </Button>
                         </>
                     }
                     items={[
                         {
-                            label: 'Giáo trình',
+                            label: 'Chương trình học',
                             key: 'syllabus',
                             children: (
                                 <Table
                                     columns={syllabusColumns}
                                     rowKey={(record) => record.sessionId}
-                                    dataSource={syllabusDetail?.sessionResponses}
+                                    dataSource={sessions}
                                     pagination={tableParams.pagination}
                                     onChange={handleTableChange}
-                                    scroll={{ y: 'calc(100vh - 220px)' }}
+                                    sticky={{ offsetHeader: 72}}
                                 />
                             )
                         },
@@ -757,10 +650,10 @@ export default function SyllabusDetail() {
                                 <Table
                                     columns={assessmentColumns}
                                     rowKey={(record) => record.examSyllabusId}
-                                    dataSource={syllabusDetail?.exams}
+                                    dataSource={exams}
                                     pagination={tableParams.pagination}
                                     onChange={handleTableChange}
-                                    scroll={{ y: 'calc(100vh - 220px)' }}
+                                    sticky={{ offsetHeader: 72}}
                                 />
                             )
                         },
@@ -771,10 +664,10 @@ export default function SyllabusDetail() {
                                 <Table
                                     columns={exerciseColumns}
                                     rowKey={(record) => record.questionPackageId}
-                                    dataSource={syllabusDetail?.questionPackages}
+                                    dataSource={questionPackages}
                                     pagination={tableParams.pagination}
                                     onChange={handleTableChange}
-                                    scroll={{ y: 'calc(100vh - 220px)' }}
+                                    sticky={{ offsetHeader: 72}}
                                 />
                             )
                         },
@@ -785,10 +678,10 @@ export default function SyllabusDetail() {
                                 <Table
                                     columns={materialColumns}
                                     rowKey={(record) => record.materialId}
-                                    dataSource={syllabusDetail?.materials}
+                                    dataSource={materials}
                                     pagination={tableParams.pagination}
                                     onChange={handleTableChange}
-                                    scroll={{ y: 'calc(100vh - 220px)' }}
+                                    sticky={{ offsetHeader: 72}}
                                 />
                             )
                         }
@@ -805,7 +698,7 @@ export default function SyllabusDetail() {
                 }}
             >
                 <Modal
-                    title="Cập nhật giáo trình"
+                    title="Cập nhật chương trình học"
                     centered
                     open={importModalOpen}
                     footer={null}
@@ -813,7 +706,11 @@ export default function SyllabusDetail() {
                     classNames={{ header: styles.modalHeader }}
                 >
                     <div style={{ display: 'flex', alignItems: 'center' }}>
-                        <Button className={styles.addButton} icon={<CloudDownloadOutlined />} onClick={() => handleDownloadExcelFile(TEMPLATE_ADD_SYLLABUS_FILE, 'Mau-tao-giao-trinh.xlsx')} >Tải mẫu lớp học</Button>
+                        <Button className={styles.addButton} icon={<CloudDownloadOutlined />} onClick={() => {
+                            handleDownloadExcelFile(TEMPLATE_ADD_SYLLABUS_FILE, 'Mau-tao-giao-trinh.xlsx')
+                            handleDownloadExcelFile(TEMPLATE_FLASHCARD, 'Mau-ghep-the.xlsx')
+                            handleDownloadExcelFile(TEMPLATE_MULTIPLE_CHOICE, 'Mau-trac-nghiem.xlsx')
+                        }} >Tải mẫu chương trình học</Button>
                         <Button type='primary' className={styles.importButton} icon={<CloudUploadOutlined />} onClick={() => fileInputRef.current.click()}>Chọn tệp</Button>
                         <input accept='application/vnd.ms-excel, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' type='file' style={{ display: 'none' }} ref={fileInputRef} onChange={handleFileChange} />
                         <p>{fileInput ? fileInput.name : 'Chưa có tệp nào được chọn'}</p>
@@ -895,12 +792,12 @@ export default function SyllabusDetail() {
                     <form onSubmit={formik.handleSubmit}>
                         <Row>
                             <Col span={7}>
-                                <p className={styles.addTitle}><span>*</span> Tên giáo trình:</p>
+                                <p className={styles.addTitle}><span>*</span> Tên chương trình học:</p>
                             </Col>
                             <Col span={17}>
                                 <Input
                                     className={styles.input}
-                                    placeholder="Tên giáo trình"
+                                    placeholder="Tên chương trình học"
                                     name='syllabusName'
                                     value={formik.values.syllabusName}
                                     onChange={formik.handleChange}
@@ -923,13 +820,13 @@ export default function SyllabusDetail() {
                                     suffixIcon={null}
                                     filterOption={false}
                                     className={styles.input}
-                                    placeholder="Chọn loại giáo trình"
+                                    placeholder="Chọn loại chương trình học"
                                     notFoundContent={
                                         <Empty
                                             image={Empty.PRESENTED_IMAGE_SIMPLE}
                                             description={
                                                 <span>
-                                                    Không tìm thấy loại giáo trình
+                                                    Không tìm thấy loại chương trình học
                                                 </span>
                                             } />
                                     }
@@ -1051,35 +948,22 @@ export default function SyllabusDetail() {
                             </Col>
                         </Row>
                         <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
-                            {apiLoading ? (
-                                <>
-                                    <Button loading className={styles.saveButton}>
-                                        Lưu
-                                    </Button>
-                                    <Button disabled className={styles.cancelButton}>
-                                        Hủy
-                                    </Button>
-                                </>
-                            ) : (
-                                <>
-                                    <Button className={styles.saveButton} htmlType='submit'>
-                                        Lưu
-                                    </Button>
-                                    <Button className={styles.cancelButton} onClick={() => {
-                                        setEditModalOpen(false)
-                                        setCategory(syllabusDetail.category);
-                                        setEffectiveDate(dayjs(syllabusDetail.effectiveDate, 'DD/MM/YYYY'));
-                                        formik.setValues({
-                                            syllabusName: syllabusDetail.syllabusName,
-                                            minAvgMarkToPass: syllabusDetail.minAvgMarkToPass,
-                                            studentTasks: syllabusDetail.studentTasks,
-                                            description: syllabusDetail.description
-                                        })
-                                    }}>
-                                        Hủy
-                                    </Button>
-                                </>
-                            )}
+                            <Button loading={apiLoading} className={styles.saveButton} htmlType='submit'>
+                                Lưu
+                            </Button>
+                            <Button disabled={apiLoading} className={styles.cancelButton} onClick={() => {
+                                setEditModalOpen(false)
+                                setCategory(syllabusDetail.category);
+                                setEffectiveDate(dayjs(syllabusDetail.effectiveDate, 'DD/MM/YYYY'));
+                                formik.setValues({
+                                    syllabusName: syllabusDetail.syllabusName,
+                                    minAvgMarkToPass: syllabusDetail.minAvgMarkToPass,
+                                    studentTasks: syllabusDetail.studentTasks,
+                                    description: syllabusDetail.description
+                                })
+                            }}>
+                                Hủy
+                            </Button>
                         </div>
                     </form>
                 </Modal>

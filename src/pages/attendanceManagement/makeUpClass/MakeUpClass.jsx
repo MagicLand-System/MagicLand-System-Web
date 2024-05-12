@@ -1,19 +1,26 @@
 import React, { useEffect, useState } from 'react'
 import styles from './MakeUpClass.module.css'
-import { Button, Input, Table, Checkbox, Select, DatePicker, ConfigProvider } from 'antd';
+import { Button, Input, Table, Checkbox, Select, DatePicker, ConfigProvider, Row, Col } from 'antd';
 import Swal from 'sweetalert2';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
-import { formatDate, formatDayOfWeek, formatSlot } from '../../../utils/utils';
-import { arrangeMakeUpClass, getMakeUpClass, getSlots } from '../../../api/classesApi';
+import { formatDate, formatDayOfWeek, formatPhone, formatSlot } from '../../../utils/utils';
+import { getSlots } from '../../../api/classesApi';
+import { arrangeMakeUpClass, getMakeUpClass, setNotMakeUp } from '../../../api/student';
 import { compareAsc } from 'date-fns';
 import dayjs from 'dayjs';
+import { getSessionOfStudent, getStudent } from '../../../api/student';
 
 const { Search } = Input;
 
 export default function MakeUpClass() {
     const navigate = useNavigate()
     const location = useLocation()
-    const { student } = location.state
+    const action = location.state
+
+    const [student, setStudent] = useState(null)
+    const [schedule, setSchedule] = useState(null)
+    const [apiLoading, setApiLoading] = useState(false);
+    const [apiMakeUpLoading, setApiMakeUpLoading] = useState(false)
     const [classes, setClasses] = useState([])
     const [loading, setLoading] = useState(false);
     const [slots, setSlots] = useState([])
@@ -45,6 +52,7 @@ export default function MakeUpClass() {
     };
     const handleSaveMakeUpClass = async () => {
         try {
+            setApiLoading(true)
             if (!makeUpScheduleId) {
                 Swal.fire({
                     position: "center",
@@ -73,7 +81,43 @@ export default function MakeUpClass() {
                 showConfirmButton: false,
                 timer: 2000
             })
+        } finally {
+            setApiLoading(false)
         }
+    }
+    const handleAbsentStudent = () => {
+        Swal.fire({
+            title: "Bạn chắc chắn không xếp lịch học bù cho bé?",
+            showCancelButton: true,
+            confirmButtonText: "Lưu",
+            cancelButtonText: "Hủy"
+        }).then(async (result) => {
+            if (result.isConfirmed) {
+                try {
+                    setApiMakeUpLoading(true)
+                    await setNotMakeUp(scheduleId, studentId)
+                        .then(() => Swal.fire({
+                            position: "center",
+                            icon: "success",
+                            title: "Đã thêm học sinh vào danh sách chưa được xếp lớp học bù",
+                            showConfirmButton: false,
+                            timer: 2000
+                        })).then(() => {
+                            navigate(-1)
+                        })
+                } catch (error) {
+                    Swal.fire({
+                        position: "center",
+                        icon: "error",
+                        title: error.response?.data?.Error,
+                        showConfirmButton: false,
+                        timer: 2000
+                    })
+                } finally {
+                    setApiMakeUpLoading(false)
+                }
+            }
+        });
     }
     async function getListsOfSlots() {
         const data = await getSlots();
@@ -93,7 +137,7 @@ export default function MakeUpClass() {
                 pagination: {
                     current: 1,
                     pageSize: 10,
-                    total: data.length
+                    total: data?.length
                 },
             });
         } catch (error) {
@@ -105,13 +149,27 @@ export default function MakeUpClass() {
     useEffect(() => {
         getListsOfSlots()
     }, [])
+    async function getScheduleDetail(scheduleId) {
+        const data = await getSessionOfStudent(scheduleId);
+        setSchedule(data);
+    };
+    async function getStudentData(studentId) {
+        const data = await getStudent(studentId);
+        setStudent(data[0]);
+    };
+    useEffect(() => {
+        getStudentData(studentId);
+    }, [studentId]);
+    useEffect(() => {
+        getScheduleDetail(scheduleId);
+    }, [scheduleId]);
     useEffect(() => {
         getListOfMakeUpClasses(scheduleId, studentId, search, findDate, slot)
     }, [scheduleId, studentId, search, findDate, slot])
     const classesColumn = [
         {
             render: (_, record) => (
-                <Checkbox checked={record.id === makeUpScheduleId} value={record.id} onChange={(e) => { setMakeUpScheduleId(e.target.value) }} />
+                <Checkbox checked={record.scheduleId === makeUpScheduleId} value={record.scheduleId} onChange={(e) => { setMakeUpScheduleId(e.target.value) }} />
             ),
             width: 120,
         },
@@ -145,7 +203,7 @@ export default function MakeUpClass() {
             title: 'Giờ học',
             dataIndex: 'slot',
             render: (slot) => (
-                `${slot.startTime} - ${slot.endTime}`
+                `${slot.startTimeString} - ${slot.endTimeString}`
             ),
         },
         {
@@ -158,7 +216,125 @@ export default function MakeUpClass() {
     return (
         <div className={styles.container}>
             <h2 className={styles.title}>Xếp lịch học bù</h2>
-            <p className={styles.classDetailTitle}>Học viên: <span className={styles.classDetail}>{student.student.fullName}</span></p>
+            {schedule && student && (
+                <>
+                    <Row>
+                        <Col md={6} xs={12} style={{ marginBottom: '40px' }}>
+                            <div className={styles.classPart}>
+                                <h5 className={styles.classPartTitle}>Học viên</h5>
+                                <Row>
+                                    <Col span={8}>
+                                        <p className={styles.classTitle}>Họ và tên:</p>
+                                    </Col>
+                                    <Col span={16}>
+                                        <p className={styles.classDetail}>{student?.studentResponse?.fullName}</p>
+                                    </Col>
+                                </Row>
+                                <Row>
+                                    <Col span={8}>
+                                        <p className={styles.classTitle}>Ngày sinh:</p>
+                                    </Col>
+                                    <Col span={16}>
+                                        <p className={styles.classDetail}>{student?.studentResponse?.dateOfBirth && `${formatDate(student.studentResponse.dateOfBirth)}`}</p>
+                                    </Col>
+                                </Row>
+                                <Row>
+                                    <Col span={8}>
+                                        <p className={styles.classTitle}>Giới tính:</p>
+                                    </Col>
+                                    <Col span={16}>
+                                        <p className={styles.classDetail}>{student?.studentResponse?.gender}</p>
+                                    </Col>
+                                </Row>
+                            </div>
+                        </Col>
+                        <Col md={6} xs={12} style={{ marginBottom: '40px' }}>
+                            <div className={styles.classPart}>
+                                <h5 className={styles.classPartTitle}>Phụ huynh</h5>
+                                <Row>
+                                    <Col span={8}>
+                                        <p className={styles.classTitle}>Họ và tên:</p>
+                                    </Col>
+                                    <Col span={16}>
+                                        <p className={styles.classDetail}>{student?.parent?.fullName}</p>
+                                    </Col>
+                                </Row>
+                                <Row>
+                                    <Col span={8}>
+                                        <p className={styles.classTitle}>Số điện thoại:</p>
+                                    </Col>
+                                    <Col span={16}>
+                                        <p className={styles.classDetail}>{student?.parent?.phone && `${formatPhone(student.parent.phone)}`}</p>
+                                    </Col>
+                                </Row>
+                            </div>
+                        </Col>
+                        <Col md={6} xs={12} style={{ marginBottom: '40px' }}>
+                            <div className={styles.classPart}>
+                                <h5 className={styles.classPartTitle}>Buổi học ban đầu</h5>
+                                <Row>
+                                    <Col span={10}>
+                                        <p className={styles.classTitle}>Khóa học:</p>
+                                    </Col>
+                                    <Col span={14}>
+                                        <p className={styles.classDetail}>{schedule.courseName}</p>
+                                    </Col>
+                                </Row>
+                                <Row>
+                                    <Col span={10}>
+                                        <p className={styles.classTitle}>Buổi học thứ:</p>
+                                    </Col>
+                                    <Col span={14}>
+                                        <p className={styles.classDetail}>{schedule.index}</p>
+                                    </Col>
+                                </Row>
+                                <Row>
+                                    <Col span={8}>
+                                        <p className={styles.classTitle}>Ngày học:</p>
+                                    </Col>
+                                    <Col span={16}>
+                                        <p className={styles.classDetail}>{schedule.date && formatDate(schedule.date)}</p>
+                                    </Col>
+                                </Row>
+                                <Row>
+                                    <Col span={8}>
+                                        <p className={styles.classTitle}>Giờ học:</p>
+                                    </Col>
+                                    <Col span={16}>
+                                        <p className={styles.classDetail}>{`${schedule.startTime} - ${schedule.endTime}`}</p>
+                                    </Col>
+                                </Row>
+                            </div>
+                        </Col>
+                        <Col md={6} xs={12} style={{ marginBottom: '40px' }}>
+                            <div className={styles.classPart}>
+                                <h5 className={styles.classPartTitle}>Nội dung buổi học</h5>
+                                <Row>
+                                    <Col span={10}>
+                                        <p className={styles.classTitle}>Chủ đề:</p>
+                                    </Col>
+                                    <Col span={14}>
+                                        <p className={styles.classDetail}>{schedule.topicName}</p>
+                                    </Col>
+                                </Row>
+                                <Row>
+                                    <Col span={24}>
+                                        <p className={styles.classTitle}>Nội dung buổi học:</p>
+                                    </Col>
+                                    <Col span={24}>
+                                        {schedule.contents.map((content, index) => (
+                                            <div key={index}>
+                                                <p className={styles.classDetail} style={{ textAlign: 'left', marginLeft: 10 }}> {content.content}:</p>
+                                                {content.details.map((detail) => <p className={styles.classDetail} style={{ textAlign: 'left', marginLeft: 10 }}>&emsp;-&nbsp;{detail}</p>)}
+                                            </div>
+                                        ))}
+                                    </Col>
+                                </Row>
+                            </div>
+                        </Col>
+                    </Row>
+                </>
+            )}
             <div style={{ display: 'flex', marginBottom: '16px', gap: '8px' }}>
                 <Search className={styles.searchBar} placeholder="Tìm kiếm lớp học, giáo viên" onSearch={(value, e) => { setSearch(value) }} enterButton />
                 <ConfigProvider
@@ -180,6 +356,7 @@ export default function MakeUpClass() {
                         placeholder="Tìm kiếm ngày" />
                 </ConfigProvider>
                 <Select
+                    allowClear
                     className={styles.input}
                     value={slot}
                     placeholder="Giờ học"
@@ -199,11 +376,16 @@ export default function MakeUpClass() {
                 onChange={handleTableChange}
                 scroll={{ y: 'calc(100vh - 220px)' }}
             />
-            <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
-                <Button onClick={handleSaveMakeUpClass} className={styles.saveButton}>
+            <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 8 }}>
+                <Button loading={apiLoading} disabled={!makeUpScheduleId || apiMakeUpLoading} onClick={handleSaveMakeUpClass} className={styles.saveButton}>
                     Lưu
                 </Button>
-                <Button className={styles.cancelButton} onClick={() => { navigate(-1) }}>
+                {!action &&
+                    <Button loading={apiMakeUpLoading} disabled={apiLoading} onClick={handleAbsentStudent} className={styles.saveButton}>
+                        Thêm vào danh sách chưa học bù
+                    </Button>
+                }
+                <Button disabled={apiLoading} className={styles.cancelButton} onClick={() => { navigate(-1) }}>
                     Hủy
                 </Button>
             </div>

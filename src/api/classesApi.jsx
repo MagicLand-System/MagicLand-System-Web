@@ -68,15 +68,19 @@ export const updateSession = async (id, credential) => {
   const response = await api.put(`/api/v1/classes/${id}/updateSession`, credential);
   return response.data;
 };
-export const getSuitableClass = async (credential) => {
+export const getSuitableClass = async (classId, studentId) => {
   const response = await api.get(`/api/v1/classes/staff/change/suitable`, {
-    params: credential
+    params: { classId, studentId }
   });
   return response.data;
 };
-export const changeClass = async (credential) => {
+export const changeClass = async (fromClassId, toClassId, studentId) => {
   const response = await api.get(`/api/v1/classes/staff/change`, {
-    params: credential
+    params: {
+      fromClassId,
+      toClassId,
+      studentId
+    }
   });
   return response.data;
 };
@@ -84,19 +88,28 @@ export const cancelClass = async (id) => {
   const response = await api.put(`/api/v1/classes/cancel/${id}`);
   return response.data;
 };
-export const getMakeUpClass = async (credential) => {
-  const response = await api.get(`/api/v1/classes/getMakeUpSchedule`, {
-    params: credential
-  });
-  return response.data;
-};
-export const arrangeMakeUpClass = async (scheduleId, studentId, makeUpScheduleId) => {
-  const response = await api.put(`/api/v1/classes/${studentId}/${scheduleId}/makeup`, { scheduleId: makeUpScheduleId });
-  return response.data;
-};
-
 export const importClass = async (credential) => {
-  const response = await api.post("/api/v1/classes/insertClasses", credential);
+  const response = await api.post("/api/v1/classes/insertClassesV2", credential);
   return response.data;
 };
 
+export const saveImport = async (credential) => {
+  const response = await api.post("/api/v1/classes/insertClasses/save", credential);
+  return response.data;
+};
+export const getRoomChangeClass = async (classId) => {
+  const response = await api.get(`/api/v1/classes/getRoomForUpdate`, { params: { classId } });
+  return response.data;
+};
+export const getLecturerChangeClass = async (classId) => {
+  const response = await api.get(`/api/v1/classes/getLecturerForUpdate`, { params: { classId } });
+  return response.data;
+};
+export const getRoomSession = async (classId, slotId, date) => {
+  const response = await api.get(`/api/v1/classes/getRoomForUpdateSession`, { params: { classId, slotId, date } });
+  return response.data;
+};
+export const getLecturerSession = async (classId, slotId, date) => {
+  const response = await api.get(`/api/v1/classes/getLecturerForUpdateSession`, { params: { classId, slotId, date } });
+  return response.data;
+};

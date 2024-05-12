@@ -1,10 +1,10 @@
 import React, { useEffect, useRef, useState } from 'react'
 import styles from './AddCourse.module.css'
-import { Button, Col, Collapse, Empty, Input, Row, Select } from 'antd';
+import { Button, Col, Collapse, Empty, Input, Row, Select, Spin } from 'antd';
 import Swal from 'sweetalert2';
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
-import { addCourse, getCourse } from '../../../api/courseApi';
+import { addCourse, getCourse, updateCourse } from '../../../api/courseApi';
 import TextArea from 'antd/es/input/TextArea';
 import CurrencyInput from 'react-currency-input-field';
 import { storage } from '../../../../firebase.config';
@@ -12,11 +12,10 @@ import { ref, uploadBytes, getDownloadURL } from 'firebase/storage'
 import { v4 } from 'uuid'
 import { CloudUploadOutlined, DeleteOutlined } from '@ant-design/icons';
 import { useNavigate, useParams } from 'react-router-dom';
-import { getAvailableSyllabuses, getSyllabus } from '../../../api/syllabus';
+import { getAvailableSyllabuses, getSyllabus, getSyllabusGeneral } from '../../../api/syllabus';
 
 
 export default function AddCourse() {
-
     const params = useParams();
     const id = params.id;
     const navigate = useNavigate()
@@ -40,6 +39,7 @@ export default function AddCourse() {
     const [syllabusError, setSyllabusError] = useState(null)
 
     const [apiLoading, setApiLoading] = useState(false)
+    const [loading, setLoading] = useState(false)
 
     const handleImageChange = (e) => {
         if (e.target.files[0]) {
@@ -69,12 +69,19 @@ export default function AddCourse() {
         setSubDescriptions(updatedSubDescriptions);
     };
     async function getListOfSyllabuses() {
-        const data = await getAvailableSyllabuses();
-        setSyllabuses(data);
-        setSyllabusesOptions(data);
+        try {
+            const data = await getAvailableSyllabuses();
+            setSyllabuses(data);
+            setSyllabusesOptions(data);
+            setLoading(true)
+        } catch (error) {
+            console.log(error)
+        } finally {
+            setLoading(false);
+        }
     };
     async function getSyllabusDetail(id) {
-        const data = await getSyllabus(id);
+        const data = await getSyllabusGeneral(id);
         setSyllabusDetail(data);
     };
     async function getCourseDetail(id) {
@@ -87,9 +94,8 @@ export default function AddCourse() {
                 maxAge: data.maxYearOldsStudent,
             })
             const newSubDescriptions = [...data.subDescriptionTitles]
-            console.log(data.subDescriptionTitles)
             newSubDescriptions.map((sub) => {
-                sub.subDescriptionContentRequests = sub.contents.map(content => `${content.content}: ${content.description}`).join('\n')
+                sub.subDescriptionContentRequests = sub.contents.map(content => `${content.content}${content.description ? `: ${content.description}` : ''}`).join('\n')
             })
             setImageUrl(data.image)
             setSubDescriptions(newSubDescriptions)
@@ -121,13 +127,13 @@ export default function AddCourse() {
             const hasNullDescriptions = subDescriptions.some((subDescription) => {
                 return subDescription.title === null || subDescription.subDescriptionContentRequests === null;
             });
-            if (!syllabusId || !image || hasNullDescriptions || (!id && !price)) {
-                if (syllabusId === null) {
-                    setSyllabusError("Hãy cung cấp hình ảnh khóa học")
+            if ((!syllabusId && !id) || (!image && !id) || hasNullDescriptions || !price) {
+                if (!syllabusId && !id) {
+                    setSyllabusError("Vui lòng chọn chương trình học")
                 } else {
                     setSyllabusError(null)
                 }
-                if (image === null) {
+                if (!image && !id) {
                     setImageError("Hãy cung cấp hình ảnh khóa học")
                 } else {
                     setImageError(null)
@@ -137,7 +143,7 @@ export default function AddCourse() {
                 } else {
                     setSubDescriptionsError(null)
                 }
-                if (!id && !price) {
+                if (!price) {
                     setPriceError("Hãy nhập chi phí khóa học")
                 } else {
                     setPriceError(null)
@@ -161,7 +167,7 @@ export default function AddCourse() {
                 //image
                 if (id && !image) {
                     try {
-                        await updateCourse(id, { ...values, subDescriptions: newSubDescriptions, syllabusId })
+                        await updateCourse(id, { ...values, subDescriptions: newSubDescriptions, price })
                             .then(() => {
                                 Swal.fire({
                                     position: "center",
@@ -187,9 +193,8 @@ export default function AddCourse() {
                     uploadBytes(imageRef, image).then(() => {
                         getDownloadURL(imageRef).then(async (url) => {
                             try {
-                                setApiLoading(true)
                                 if (id) {
-                                    await updateCourse(id, { ...values, subDescriptions: newSubDescriptions, syllabusId })
+                                    await updateCourse(id, { ...values, subDescriptions: newSubDescriptions, price })
                                         .then(() => {
                                             Swal.fire({
                                                 position: "center",
@@ -256,22 +261,26 @@ export default function AddCourse() {
                         <Row>
                             {!id &&
                                 <Col span={24} className={styles.column}>
-                                    <p className={styles.addTitle}><span>*</span> Giáo trình:</p>
+                                    <p className={styles.addTitle}><span>*</span> Chương trình học:</p>
                                     <Select
                                         showSearch
                                         value={syllabusId}
                                         suffixIcon={null}
                                         filterOption={false}
                                         className={styles.input}
-                                        placeholder="Chọn giáo trình"
+                                        placeholder="Chọn chương trình học"
                                         notFoundContent={
-                                            <Empty
-                                                image={Empty.PRESENTED_IMAGE_SIMPLE}
-                                                description={
-                                                    <span>
-                                                        Không tìm thấy giáo trình
-                                                    </span>
-                                                } />
+                                            loading
+                                                ? <div style={{ width: '100%', textAlign: 'center' }}>
+                                                    <Spin size='small' />
+                                                </div>
+                                                : <Empty
+                                                    image={Empty.PRESENTED_IMAGE_SIMPLE}
+                                                    description={
+                                                        <span>
+                                                            Không tìm thấy chương trình học
+                                                        </span>
+                                                    } />
                                         }
                                         onSelect={(data) => { setSyllabusId(data) }}
                                         options={
@@ -291,6 +300,7 @@ export default function AddCourse() {
                                                 setSyllabusesOptions(syllabuses);
                                             }
                                         }}
+                                        disabled={apiLoading}
                                     />
                                     <div style={{ height: '24px', paddingLeft: '10px' }}>
                                         {syllabusError && (<p style={{ color: 'red', fontSize: '14px', margin: '0' }}>{syllabusError}</p>)}
@@ -307,12 +317,13 @@ export default function AddCourse() {
                                     onChange={formik.handleChange}
                                     error={formik.touched.courseName && formik.errors.courseName}
                                     required
+                                    disabled={apiLoading}
                                 />
                                 <div style={{ height: '24px', paddingLeft: '10px' }}>
                                     {formik.errors.courseName && formik.touched.courseName && (<p style={{ color: 'red', fontSize: '14px', margin: '0' }}>{formik.errors.courseName}</p>)}
                                 </div>
                             </Col>
-                            <Col xs={id ? 24 : 12} lg={id ? 12 : 6} className={styles.column}>
+                            <Col xs={12} lg={6} className={styles.column}>
                                 <p className={styles.addTitle}><span>*</span> Độ tuổi phù hợp (tối thiểu - tối đa):</p>
                                 <div style={{ display: 'flex', gap: '8px' }}>
                                     <Input
@@ -326,6 +337,7 @@ export default function AddCourse() {
                                         error={formik.touched.minAge && formik.errors.minAge}
                                         className={styles.input}
                                         required
+                                        disabled={apiLoading}
                                     />
                                     <Input
                                         placeholder="Tối đa"
@@ -338,6 +350,7 @@ export default function AddCourse() {
                                         error={formik.touched.maxAge && formik.errors.maxAge}
                                         className={styles.input}
                                         required
+                                        disabled={apiLoading}
                                     />
                                 </div>
                                 <div style={{ height: '24px', paddingLeft: '10px' }}>
@@ -345,10 +358,10 @@ export default function AddCourse() {
                                     {formik.errors.maxAge && formik.touched.maxAge && (<p style={{ color: 'red', fontSize: '14px', margin: '0' }}>{formik.errors.maxAge}</p>)}
                                 </div>
                             </Col>
-                            <Col xs={id ? 0 : 12} lg={id ? 0 : 6} className={styles.column}>
+                            <Col xs={12} lg={6} className={styles.column}>
                                 <p className={styles.addTitle}><span>*</span> Chi phí:</p>
                                 <CurrencyInput
-                                    className={`ant-input css-dev-only-do-not-override-1adbn6x ${styles.input}  ${styles.inputNumber}`}
+                                    className={`ant-input ${styles.currencyInput} ${styles.input} ${styles.inputNumber}`}
                                     placeholder="Chi phí"
                                     allowDecimals={false}
                                     value={price}
@@ -356,6 +369,7 @@ export default function AddCourse() {
                                     onValueChange={(value, name, values) => setPrice(parseInt(value))}
                                     required
                                     intlConfig={{ locale: 'vi-VN', currency: 'VND' }}
+                                    disabled={apiLoading}
                                 />
                                 <div style={{ height: '24px', paddingLeft: '10px' }}>
                                     {priceError && (<p style={{ color: 'red', fontSize: '14px', margin: '0' }}>{priceError}</p>)}
@@ -372,6 +386,7 @@ export default function AddCourse() {
                                     onChange={formik.handleChange}
                                     error={formik.touched.mainDescription && formik.errors.mainDescription}
                                     required
+                                    disabled={apiLoading}
                                 />
                                 <div style={{ height: '24px', paddingLeft: '10px' }}>
                                     {formik.errors.mainDescription && formik.touched.mainDescription && (<p style={{ color: 'red', fontSize: '14px', margin: '0' }}>{formik.errors.mainDescription}</p>)}
@@ -383,7 +398,7 @@ export default function AddCourse() {
                                         <p className={styles.addTitle}><span>*</span> Mô tả chi tiết:</p>
                                     </Col>
                                     <Col span={16} style={{ display: 'flex', alignItems: 'center', justifyContent: 'right', marginBottom: 8 }}>
-                                        <Button onClick={() => { setSubDescriptions([...subDescriptions, { title: null, subDescriptionContentRequests: null }]) }}>
+                                        <Button disabled={apiLoading} onClick={() => { setSubDescriptions([...subDescriptions, { title: null, subDescriptionContentRequests: null }]) }}>
                                             + Thêm mô tả
                                         </Button>
                                     </Col>
@@ -391,6 +406,7 @@ export default function AddCourse() {
                                 <Collapse items={subDescriptions.map((subDescription, index) => ({
                                     key: index,
                                     label: <Input
+                                        disabled={apiLoading}
                                         placeholder={`Mô tả ${index + 1}`}
                                         value={subDescription?.title}
                                         onChange={(e) => handleTitleChange(index, e.target.value)}
@@ -400,50 +416,32 @@ export default function AddCourse() {
                                     children:
                                         <div style={{ margin: '10px 0' }} key={index}>
                                             <TextArea
+                                                disabled={apiLoading}
                                                 className={styles.input}
-                                                placeholder={`Nội dung ${index + 1}`}
+                                                placeholder={`Mô tả: Chi tiết mô tả`}
                                                 value={subDescription?.subDescriptionContentRequests}
                                                 onChange={(e) => handleContentChange(index, e.target.value)}
                                                 required
                                             />
                                         </div>,
                                     extra: index !== 0 ? (
-                                        <DeleteOutlined style={{ fontSize: '1rem' }} onClick={() => handleDeleteSubDescription(index)} />
-                                    ) : (<DeleteOutlined style={{ fontSize: '1rem', color: '#e6e6e6' }} />)
+                                        <DeleteOutlined disabled={apiLoading} style={{ fontSize: '1rem' }} onClick={() => handleDeleteSubDescription(index)} />
+                                    ) : (<DeleteOutlined disabled={apiLoading} style={{ fontSize: '1rem', color: '#e6e6e6' }} />)
                                 }))} />
                                 <div style={{ height: '24px', paddingLeft: '10px' }}>
                                     {subDescriptionsError && (<p style={{ color: 'red', fontSize: '14px', margin: '0' }}>{subDescriptionsError}</p>)}
                                 </div>
                             </Col>
                             <Col span={24} className={styles.imageCol}>
-                                <img className={styles.image} alt="image" src={imageUrl ? imageUrl : '../../src/assets/images/empty_image.jpg'} />
-                                <input type='file' accept='image/*' ref={imageInputRef} onChange={handleImageChange} style={{ display: 'none' }} />
-                                <Button style={{ width: '180px' }} onClick={() => imageInputRef.current.click()} icon={<CloudUploadOutlined />} className={styles.button}>
+                                {imageUrl &&
+                                    <img className={styles.image} alt="image" src={imageUrl} />
+                                }
+                                <input type='file' disabled={apiLoading} accept='image/*' ref={imageInputRef} onChange={handleImageChange} style={{ display: 'none' }} />
+                                <Button disabled={apiLoading} style={{ width: '180px' }} onClick={() => imageInputRef.current.click()} icon={<CloudUploadOutlined />} className={styles.button}>
                                     Tải hình lên
                                 </Button>
                                 <div style={{ height: '24px', paddingLeft: '10px' }}>
                                     {imageError && (<p style={{ color: 'red', fontSize: '14px', margin: '0' }}>{imageError}</p>)}
-                                </div>
-                                <div style={{ display: 'flex' }}>
-                                    {id ?
-                                        apiLoading ? (
-                                            <Button loading className={styles.saveButton}>
-                                                Lưu
-                                            </Button>
-                                        ) : (
-                                            <Button htmlType='submit' className={styles.saveButton}>
-                                                Lưu
-                                            </Button>
-                                        )
-                                        : apiLoading ? (
-                                            <Button loading className={styles.saveButton}>
-                                                Tạo khóa học
-                                            </Button>
-                                        ) : (
-                                            <Button htmlType='submit' className={styles.saveButton}>
-                                                Tạo khóa học
-                                            </Button>
-                                        )}
                                 </div>
                             </Col>
                         </Row>
@@ -451,10 +449,10 @@ export default function AddCourse() {
                     <Col xs={24} lg={8}>
                         {syllabusDetail &&
                             <div style={{ border: '1px solid #d9d9d9', borderRadius: 6, padding: '30px 20px' }}>
-                                <h5 style={{ fontSize: '1.2rem', margin: 0 }}>Giáo trình</h5>
+                                <h5 style={{ fontSize: '1.2rem', margin: 0 }}>Chương trình học</h5>
                                 <Row style={{ marginTop: 10 }}>
                                     <Col span={6} >
-                                        <p className={styles.syllabusTitle}> Mã giáo trình:</p>
+                                        <p className={styles.syllabusTitle}> Mã chương trình học:</p>
                                     </Col>
                                     <Col span={18}>
                                         <p className={styles.syllabusInfo}>{syllabusDetail.subjectCode}</p>
@@ -462,7 +460,7 @@ export default function AddCourse() {
                                 </Row>
                                 <Row style={{ marginTop: 20 }}>
                                     <Col span={6} >
-                                        <p className={styles.syllabusTitle}> Tên giáo trình:</p>
+                                        <p className={styles.syllabusTitle}> Tên chương trình học:</p>
 
                                     </Col>
                                     <Col span={18} >
@@ -495,6 +493,16 @@ export default function AddCourse() {
                                 </Row>
                             </div>
                         }
+                        <div style={{ width: '100%', textAlign: 'center', marginTop: 20 }}>
+                            {id ?
+                                <Button loading={apiLoading} htmlType='submit' className={styles.saveButton}>
+                                    Lưu
+                                </Button>
+                                : <Button loading={apiLoading} htmlType='submit' className={styles.saveButton}>
+                                    Tạo khóa học
+                                </Button>
+                            }
+                        </div>
                     </Col>
                 </Row>
             </form >

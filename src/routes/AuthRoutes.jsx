@@ -13,12 +13,10 @@ const AuthRoutes = ({ role }) => {
         if (!user) {
             dispatch(fetchUser());
         } else {
-            if (user.role.name === role) {
+            if (user?.role?.name && role?.toLowerCase().includes(user.role.name.toLowerCase())) {
                 return <Outlet />;
-            } else if (user.role.name === 'STAFF') {
-                return <Navigate to="/class-management" state={{ from: location }} replace />
-            } else if (user.role.name === 'ADMIN') {
-                return <Navigate to="/course-management" state={{ from: location }} replace />
+            } else if (user?.role?.name?.toLowerCase().includes("staff") || user?.role?.name?.toLowerCase().includes("admin")) {
+                return <Navigate to="/dashboard" state={{ from: location }} replace />
             }
             else {
                 return <Navigate to="/error404" state={{ from: location }} replace />

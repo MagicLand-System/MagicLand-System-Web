@@ -43,7 +43,7 @@ export default function AttendanceManagement() {
                     pagination: {
                         current: 1,
                         pageSize: 10,
-                        total: data.length
+                        total: data?.length
                     },
                 });
             }
@@ -94,28 +94,6 @@ export default function AttendanceManagement() {
     return (
         <div className={styles.container}>
             <h2 className={styles.title}>Điểm danh</h2>
-            <div style={{ display: 'flex', marginBottom: '16px', gap: '8px' }}>
-                <Search className={styles.searchBar} placeholder="Tìm kiếm mã lớp, tên khóa học" onSearch={(value, e) => { setSearch(value) }} enterButton />
-                <ConfigProvider
-                    theme={{
-                        components: {
-                            DatePicker: {
-                                activeBorderColor: '#f2c955'
-                            },
-                        },
-                    }}
-                >
-                    <DatePicker
-                        value={date}
-                        className={styles.picker}
-                        onChange={(value) => setDate(value)}
-                        style={{ marginBottom: '0 !important' }}
-                        placeholder={['Ngày bắt đầu', 'Ngày kết thúc']}
-                        allowClear={false}
-                        format={'DD/MM/YYYY'}
-                    />
-                </ConfigProvider>
-            </div>
             <ConfigProvider
                 theme={{
                     components: {
@@ -131,6 +109,30 @@ export default function AttendanceManagement() {
                     size="middle"
                     tabPosition='top'
                     onChange={activeKey => setAttendanceStatus(activeKey)}
+                    tabBarExtraContent={
+                        <div style={{ display: 'flex', marginBottom: '16px', gap: '8px' }}>
+                            <Search className={styles.searchBar} placeholder="Tìm kiếm mã lớp, tên khóa học" onSearch={(value, e) => { setSearch(value) }} enterButton />
+                            <ConfigProvider
+                                theme={{
+                                    components: {
+                                        DatePicker: {
+                                            activeBorderColor: '#f2c955'
+                                        },
+                                    },
+                                }}
+                            >
+                                <DatePicker
+                                    value={date}
+                                    className={styles.picker}
+                                    onChange={(value) => setDate(value)}
+                                    style={{ marginBottom: '0 !important' }}
+                                    placeholder={['Ngày bắt đầu', 'Ngày kết thúc']}
+                                    allowClear={false}
+                                    format={'DD/MM/YYYY'}
+                                />
+                            </ConfigProvider>
+                        </div>
+                    }
                     items={[
                         {
                             label: 'Đã điểm danh',

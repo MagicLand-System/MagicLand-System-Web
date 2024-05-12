@@ -5,6 +5,11 @@ import { useNavigate } from 'react-router-dom';
 import { getRoomDailySchedule, getRoomSchedule } from '../../api/room';
 import { getRooms, getSlots } from '../../api/classesApi';
 import dayjs from 'dayjs';
+import { compareAsc, startOfWeek, endOfWeek } from 'date-fns';
+import viLocale from 'date-fns/locale/vi';
+import { formatDate, formatSlot } from '../../utils/utils';
+
+const { Search } = Input;
 
 export default function RoomManagement() {
     const navigate = useNavigate()
@@ -17,6 +22,7 @@ export default function RoomManagement() {
     const [dailyDate, setDailyDate] = useState(dayjs())
     const [slots, setSlots] = useState([])
     const [tab, setTab] = useState("daily")
+    const [search, setSearch] = useState(null)
 
     const [dailySchedules, setDailySchedules] = useState([]);
     const [tableParams, setTableParams] = useState({
@@ -30,17 +36,35 @@ export default function RoomManagement() {
         try {
             setLoading(true);
             const data = await getRoomSchedule({ searchString: room, startDate, endDate });
-            setSchedules(data);
+            const groupedData = []
+            data?.forEach(item => {
+                const check = groupedData.filter(group => item.startTime === group.startTime)
+                if (check.length === 0) {
+                    groupedData.push({
+                        startTime: item.startTime,
+                        endTime: item.endTime,
+                        rooms: [item]
+                    })
+                } else {
+                    check[0].rooms.push(item)
+                }
+            });
+            groupedData.sort((a, b) => {
+                const timeA = formatSlot(a.startTime);
+                const timeB = formatSlot(b.startTime);
+                return compareAsc(timeA, timeB);
+            })
+            setSchedules(groupedData);
         } catch (error) {
             console.log(error);
         } finally {
             setLoading(false);
         }
     };
-    async function getListsOfDailySchedule(date) {
+    async function getListsOfDailySchedule(date, search) {
         try {
             setLoading(true);
-            const data = await getRoomDailySchedule({ date });
+            const data = await getRoomDailySchedule(date, search);
             setDailySchedules(data);
         } catch (error) {
             console.log(error);
@@ -64,26 +88,14 @@ export default function RoomManagement() {
         getListsOfSlots();
     }, []);
     useEffect(() => {
-        if (tab === "monthly") {
-            getListsOfSchedule(room, startOfMonth(new Date(date)), endOfMonth(new Date(date)));
+        if (tab === "weekly") {
+            if (room) {
+                getListsOfSchedule(room, startOfWeek(new Date(date), { locale: viLocale }), endOfWeek(new Date(date), { locale: viLocale }));
+            }
         } else {
-            getListsOfDailySchedule(dailyDate)
+            getListsOfDailySchedule(dailyDate, search)
         }
-    }, [tab, room, date, dailyDate]);
-    function startOfWeek(date) {
-        var diff = date.getDate() - date.getDay() + (date.getDay() === 0 ? -6 : 1);
-        return new Date(date.setDate(diff));
-    }
-    function endOfWeek(date) {
-        var lastday = date.getDate() - (date.getDay() - 1) + 6;
-        return new Date(date.setDate(lastday));
-    }
-    function endOfMonth(date) {
-        return new Date(date.getFullYear(), date.getMonth() + 1, 0);
-    }
-    function startOfMonth(date) {
-        return new Date(date.getFullYear(), date.getMonth(), 1);
-    }
+    }, [tab, room, date, dailyDate, search]);
     const handleTableChange = (pagination, filters, sorter, extra) => {
         pagination.total = extra.currentDataSource.length
         setTableParams({
@@ -98,9 +110,7 @@ export default function RoomManagement() {
     const columns = [
         {
             title: 'Tên lớp học',
-            render: (_, record) => {
-                return `${record.name}`
-            },
+            dataIndex: 'name',
             sorter: (a, b) => a.name.toLowerCase().localeCompare(b.name.toLowerCase()),
         },
         {
@@ -200,14 +210,197 @@ export default function RoomManagement() {
             }
         },
     ];
-    const timeColors = {
-        '7:00': '#3E618D',
-        '9:15': '#C83D64',
-        '12:00': '#FFB100',
-        '14:15': '#507E31',
-        '16:30': '#865FAB',
-        '19:00': '#FF782D'
-    };
+    const weeklyColumns = [
+        {
+            title: 'Thời gian',
+            render: (_, record) => {
+                return `${record.startTime} - ${record.endTime}`
+            },
+            width: 120,
+        },
+        {
+            title: `Thứ 2 - ${formatDate(startOfWeek(new Date(date), { locale: viLocale }))}`,
+            render: (_, record) => {
+                const schedules = record.rooms?.filter((room) => {
+                    const dateA = startOfWeek(new Date(date), { locale: viLocale })
+                    dateA.setHours(0, 0, 0, 0)
+                    const dateB = new Date(room.date)
+                    dateB.setHours(0, 0, 0, 0)
+                    return compareAsc(dateA, dateB) === 0
+                })
+                if (schedules) {
+                    return (
+                        <>
+                            {schedules.map(schedule => (
+                                <>
+                                    <p style={{ margin: 0, fontWeight: 'bold' }}>{schedule.classCode}</p>
+                                    <p style={{ margin: 0 }}>{schedule.lecturerName}</p>
+                                </>
+                            ))}
+                        </>
+                    )
+                } else {
+                    return null
+                }
+            }
+        }, {
+            title: `Thứ 3 - ${formatDate(new Date(new Date(startOfWeek(new Date(date), { locale: viLocale })).getTime() + 24 * 60 * 60 * 1000))}`,
+            render: (_, record) => {
+                const schedules = record.rooms?.filter((room) => {
+                    const dateA = new Date(new Date(startOfWeek(new Date(date), { locale: viLocale })).getTime() + 24 * 60 * 60 * 1000)
+                    dateA.setHours(0, 0, 0, 0)
+                    const dateB = new Date(room.date)
+                    dateB.setHours(0, 0, 0, 0)
+                    return compareAsc(dateA, dateB) === 0
+                })
+                if (schedules) {
+                    return (
+                        <>
+                            {schedules.map(schedule => (
+                                <>
+                                    <p style={{ margin: 0, fontWeight: 'bold' }}>{schedule.classCode}</p>
+                                    <p style={{ margin: 0 }}>{schedule.lecturerName}</p>
+                                </>
+                            ))}
+                        </>
+                    )
+                } else {
+                    return null
+                }
+            }
+        },
+        {
+            title: `Thứ 4 - ${formatDate(new Date(new Date(startOfWeek(new Date(date), { locale: viLocale })).getTime() + 2 * 24 * 60 * 60 * 1000))}`,
+            render: (_, record) => {
+                const schedules = record.rooms?.filter((room) => {
+                    const dateA = new Date(new Date(startOfWeek(new Date(date), { locale: viLocale })).getTime() + 2 * 24 * 60 * 60 * 1000)
+                    dateA.setHours(0, 0, 0, 0)
+                    const dateB = new Date(room.date)
+                    dateB.setHours(0, 0, 0, 0)
+                    return compareAsc(dateA, dateB) === 0
+                })
+                if (schedules) {
+                    return (
+                        <>
+                            {schedules.map(schedule => (
+                                <>
+                                    <p style={{ margin: 0, fontWeight: 'bold' }}>{schedule.classCode}</p>
+                                    <p style={{ margin: 0 }}>{schedule.lecturerName}</p>
+                                </>
+                            ))}
+                        </>
+                    )
+                } else {
+                    return null
+                }
+            }
+        },
+        {
+            title: `Thứ 5 - ${formatDate(new Date(new Date(startOfWeek(new Date(date), { locale: viLocale })).getTime() + 3 * 24 * 60 * 60 * 1000))}`,
+            render: (_, record) => {
+                const schedules = record.rooms?.filter((room) => {
+                    const dateA = new Date(new Date(startOfWeek(new Date(date), { locale: viLocale })).getTime() + 3 * 24 * 60 * 60 * 1000)
+                    dateA.setHours(0, 0, 0, 0)
+                    const dateB = new Date(room.date)
+                    dateB.setHours(0, 0, 0, 0)
+                    return compareAsc(dateA, dateB) === 0
+                })
+                if (schedules) {
+                    return (
+                        <>
+                            {schedules.map(schedule => (
+                                <>
+                                    <p style={{ margin: 0, fontWeight: 'bold' }}>{schedule.classCode}</p>
+                                    <p style={{ margin: 0 }}>{schedule.lecturerName}</p>
+                                </>
+                            ))}
+                        </>
+                    )
+                } else {
+                    return null
+                }
+            }
+        },
+        {
+            title: `Thứ 6 - ${formatDate(new Date(new Date(startOfWeek(new Date(date), { locale: viLocale })).getTime() + 4 * 24 * 60 * 60 * 1000))}`,
+            render: (_, record) => {
+                const schedules = record.rooms?.filter((room) => {
+                    const dateA = new Date(new Date(startOfWeek(new Date(date), { locale: viLocale })).getTime() + 4 * 24 * 60 * 60 * 1000)
+                    dateA.setHours(0, 0, 0, 0)
+                    const dateB = new Date(room.date)
+                    dateB.setHours(0, 0, 0, 0)
+                    return compareAsc(dateA, dateB) === 0
+                })
+                if (schedules) {
+                    return (
+                        <>
+                            {schedules.map(schedule => (
+                                <>
+                                    <p style={{ margin: 0, fontWeight: 'bold' }}>{schedule.classCode}</p>
+                                    <p style={{ margin: 0 }}>{schedule.lecturerName}</p>
+                                </>
+                            ))}
+                        </>
+                    )
+                } else {
+                    return null
+                }
+            }
+        },
+        {
+            title: `Thứ 7 - ${formatDate(new Date(new Date(startOfWeek(new Date(date), { locale: viLocale })).getTime() + 5 * 24 * 60 * 60 * 1000))}`,
+            render: (_, record) => {
+                const schedules = record.rooms?.filter((room) => {
+                    const dateA = new Date(new Date(startOfWeek(new Date(date), { locale: viLocale })).getTime() + 5 * 24 * 60 * 60 * 1000)
+                    dateA.setHours(0, 0, 0, 0)
+                    const dateB = new Date(room.date)
+                    dateB.setHours(0, 0, 0, 0)
+                    return compareAsc(dateA, dateB) === 0
+                })
+                if (schedules) {
+                    return (
+                        <>
+                            {schedules.map(schedule => (
+                                <>
+                                    <p style={{ margin: 0, fontWeight: 'bold' }}>{schedule.classCode}</p>
+                                    <p style={{ margin: 0 }}>{schedule.lecturerName}</p>
+                                </>
+                            ))}
+                        </>
+                    )
+                } else {
+                    return null
+                }
+            }
+        },
+
+        {
+            title: `Chủ nhật - ${formatDate(endOfWeek(new Date(date), { locale: viLocale }))}`,
+            render: (_, record) => {
+                const schedules = record.rooms?.filter((room) => {
+                    const dateA = endOfWeek(new Date(date), { locale: viLocale })
+                    dateA.setHours(0, 0, 0, 0)
+                    const dateB = new Date(room.date)
+                    dateB.setHours(0, 0, 0, 0)
+                    return compareAsc(dateA, dateB) === 0
+                })
+                if (schedules) {
+                    return (
+                        <>
+                            {schedules.map(schedule => (
+                                <>
+                                    <p style={{ margin: 0, fontWeight: 'bold' }}>{schedule.classCode}</p>
+                                    <p style={{ margin: 0 }}>{schedule.lecturerName}</p>
+                                </>
+                            ))}
+                        </>
+                    )
+                } else {
+                    return null
+                }
+            }
+        },
+    ];
 
     return (
         <div className={styles.container}>
@@ -229,11 +422,11 @@ export default function RoomManagement() {
                     onChange={activeKey => setTab(activeKey)}
                     items={[
                         {
-                            label: "Ngày học",
+                            label: "Ngày",
                             key: "daily",
                             children: (
                                 <>
-                                    <div style={{ display: 'flex', marginBottom: '16px' }}>
+                                    <div style={{ display: 'flex', marginBottom: '16px', gap: 10 }}>
                                         <ConfigProvider
                                             theme={{
                                                 components: {
@@ -246,33 +439,27 @@ export default function RoomManagement() {
                                                 value={dailyDate}
                                                 format={'DD/MM/YYYY'}
                                                 allowClear={false}
-                                                className={styles.input}
+                                                className={styles.picker}
                                                 onChange={(date) => setDailyDate(date)}
                                                 placeholder="Chọn thời gian" />
                                         </ConfigProvider>
+                                        <Search className={styles.searchBar} placeholder="Tìm kiếm mã lớp, tên giáo viên" onSearch={(value, e) => { setSearch(value) }} enterButton />
                                     </div>
-                                    {
-                                        loading ?
-                                            <div style={{ textAlign: 'center' }}>
-                                                <Spin />
-                                            </div>
-                                            : dailySchedules.length > 0
-                                            && <Table
-                                                columns={columns}
-                                                rowKey={(record) => record.name}
-                                                dataSource={dailySchedules}
-                                                pagination={tableParams.pagination}
-                                                loading={loading}
-                                                onChange={handleTableChange}
-                                                scroll={{ y: 'calc(100vh - 220px)' }}
-                                            />
-                                    }
+                                    {<Table
+                                        columns={columns}
+                                        rowKey={(record) => record.name}
+                                        dataSource={dailySchedules}
+                                        pagination={tableParams.pagination}
+                                        loading={loading}
+                                        onChange={handleTableChange}
+                                        sticky={{ offsetHeader: 72 }}
+                                    />}
                                 </>
                             )
                         },
                         {
-                            label: "Phòng học",
-                            key: "monthly",
+                            label: "Tuần",
+                            key: "weekly",
                             children: (
                                 <>
                                     <div style={{ display: 'flex', marginBottom: '16px' }}>
@@ -286,16 +473,14 @@ export default function RoomManagement() {
                                             }}>
                                             <DatePicker
                                                 value={date}
-                                                picker={"month"}
-                                                format={'MM/YYYY'}
+                                                picker={"week"}
+                                                format={`${formatDate(startOfWeek(new Date(date), { locale: viLocale }))} ~ ${formatDate(endOfWeek(new Date(date), { locale: viLocale }))}`}
                                                 allowClear={false}
-                                                className={styles.input}
+                                                className={styles.picker}
                                                 onChange={(date) => setDate(date)}
                                                 placeholder="Chọn thời gian" />
                                         </ConfigProvider>
                                         <Select
-                                            allowClear
-                                            onClear={(data) => { setRoom(null) }}
                                             style={{ width: '100%', marginLeft: 10 }}
                                             showSearch
                                             value={room}
@@ -328,30 +513,17 @@ export default function RoomManagement() {
                                         />
                                     </div>
                                     {
-                                        loading ?
-                                            <div style={{ textAlign: 'center' }}>
-                                                <Spin />
-                                            </div> : room && schedules.length > 0 ?
-                                                <Calendar
-                                                    value={date}
-                                                    cellRender={(value) => {
-                                                        const schedulesOnThisDay = schedules.filter(schedule => {
-                                                            const date = new Date(schedule.date).setHours(0, 0, 0, 0)
-                                                            const valueDate = new Date(value).setHours(0, 0, 0, 0)
-                                                            return date === valueDate
-                                                        });
-                                                        return (
-                                                            <ul>
-                                                                {schedulesOnThisDay.map((schedule, index) => (
-                                                                    <li key={index} style={{ color: timeColors[schedule.startTime] }}>{schedule.classCode}: <br />{schedule.startTime} - {schedule.endTime}</li>
-                                                                ))}
-                                                            </ul>
-                                                        );
-                                                    }}
-                                                    headerRender={() => { <></> }}
-                                                    onSelect={(date) => setDate(date)}
-                                                />
-                                                : <p> Vui lòng chọn phòng học cần tìm</p>
+                                        room
+                                            ? <Table
+                                                columns={weeklyColumns}
+                                                rowKey={(record) => record.startTime}
+                                                dataSource={schedules}
+                                                pagination={null}
+                                                loading={loading}
+                                                onChange={handleTableChange}
+                                                sticky={{ offsetHeader: 72 }}
+                                            />
+                                            : <h5 style={{ textAlign: 'center', fontSize: '1.2rem' }}>Vui lòng chọn phòng học</h5>
                                     }
                                 </>
                             )

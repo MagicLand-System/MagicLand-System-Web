@@ -29,7 +29,9 @@ export default function Login() {
         'callback': (response) => {
           onLogin()
         },
-        'expired-callback': () => { }
+        'expired-callback': () => {
+          // window.recaptchaVerifier.reset()
+        }
       }, auth);
     }
   }
@@ -38,35 +40,40 @@ export default function Login() {
       setErrorMessage('')
       setLoading(true)
       const formatPhone = '+' + phone;
-      const response = await checkExist({ phone: formatPhone })
-      if (response.status === 200) {
-        // onCaptchVerify()
-        // const appVerifier = window.recaptchaVerifier;
-        // signInWithPhoneNumber(auth, formatPhone, appVerifier)
-        //   .then((confirmationResult) => {
-        //     window.confirmationResult = confirmationResult;
-        //     setLoading(false)
-        //     setErrorMessage('')
-        //     setShowOtp(true)
-        //   }).catch((error) => {
-        //     console.log(error)
-        //   })
-        const data = await authUser({ phone: formatPhone })
-        const accessToken = data.accessToken;
-        localStorage.setItem('accessToken', accessToken)
-        dispatch(fetchUser())
-          .then(Swal.fire({
-            position: "center",
-            icon: "success",
-            title: "Đăng nhập thành công",
-            showConfirmButton: false,
-            timer: 2000
-          }))
-          .then(() => {
-            setErrorMessage('')
-            navigate('/')
-          })
-        setLoading(false)
+      const data = await checkExist({ phone: formatPhone })
+      if (data) {
+        if (data.role === "STAFF" || data.role === "ADMIN") {
+          // onCaptchVerify()
+          // const appVerifier = window.recaptchaVerifier;
+          // signInWithPhoneNumber(auth, formatPhone, appVerifier)
+          //   .then((confirmationResult) => {
+          //     window.confirmationResult = confirmationResult;
+          //     setLoading(false)
+          //     setErrorMessage('')
+          //     setShowOtp(true)
+          //   }).catch((error) => {
+          //     console.log(error)
+          //   })
+          const data = await authUser({ phone: formatPhone })
+          const accessToken = data.accessToken;
+          localStorage.setItem('accessToken', accessToken)
+          dispatch(fetchUser())
+            .then(Swal.fire({
+              position: "center",
+              icon: "success",
+              title: "Đăng nhập thành công",
+              showConfirmButton: false,
+              timer: 2000
+            }))
+            .then(() => {
+              setErrorMessage('')
+              navigate('/')
+            })
+          setLoading(false)
+        } else {
+          setLoading(false)
+          setErrorMessage('Tài khoản của bạn không được hỗ trợ trên nền tảng này')
+        }
       }
     } catch (error) {
       console.log(error)
@@ -128,7 +135,7 @@ export default function Login() {
           <>
             <h2 className={styles.title}>Đăng nhập</h2>
             <div className={styles.form}>
-              <PhoneInput country={'vn'} className={styles.input} value={phone} onChange={setPhone} />
+              <PhoneInput country={'vn'} className={styles.input} value={phone} onChange={setPhone} disabled={loading} />
               {loading ? (
                 <Button loading className={styles.button}>Gửi OTP</Button>
               ) : phone === '' ? (
@@ -149,7 +156,7 @@ export default function Login() {
                 onChange={setOtp}
                 OTPLength={6}
                 otpType="number"
-                disabled={false}
+                disabled={loading}
                 autoFocus
                 className={styles.otpInput}
               >
@@ -171,7 +178,6 @@ export default function Login() {
       </div>
       <div className={styles.right}>
         <div className={styles.rightLink}>
-          <Link to={'/'} className={styles.link}>Trang chủ</Link>
           <Link className={`${styles.link} ${styles.linkActive}`}>Đăng nhập</Link>
           <Link to={'/register'} className={styles.link}>Đăng kí</Link>
         </div>

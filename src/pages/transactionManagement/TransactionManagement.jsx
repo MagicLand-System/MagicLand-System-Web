@@ -69,27 +69,27 @@ export default function TransactionManagement() {
     {
       title: 'Thời gian',
       dataIndex: 'createdTime',
-      render: (_, record) => {
-        return formatDateTime(record.createdTime)
+      render: (createdTime) => {
+        return createdTime && formatDateTime(createdTime)
       }
     },
     {
       title: 'Người giao dịch',
       render: (_, record) => {
-        return record.parent.fullName
+        return record?.parent?.fullName
       }
     },
     {
       title: 'Số điện thoại',
       render: (_, record) => {
-        return formatPhone(record.parent.phone)
+        return record.parent.phone && formatPhone(record?.parent?.phone)
       }
     },
     {
       title: 'Số tiền',
       dataIndex: 'money',
       render: (_, record) => {
-        return record.money.toLocaleString()
+        return record?.money?.toLocaleString()
       }
     },
     {
@@ -139,7 +139,7 @@ export default function TransactionManagement() {
         pagination={tableParams.pagination}
         loading={loading}
         onChange={handleTableChange}
-        scroll={{ y: 'calc(100vh - 220px)' }}
+        sticky={{ offsetHeader: 72 }}
       />
       <ConfigProvider
         theme={{
@@ -162,69 +162,93 @@ export default function TransactionManagement() {
             <>
               <p className={styles.detailTitle}>Giao dịch:</p>
               <Row>
-                <Col span={8}>
+                <Col span={10}>
                   <p className={styles.classDetailTitle}>Mã giao dịch:</p>
                 </Col>
-                <Col span={16}>
+                <Col span={14}>
                   <p className={styles.classDetail}>{transaction.transactionCode}</p>
                 </Col>
               </Row>
               <Row>
-                <Col span={8}>
+                <Col span={10}>
                   <p className={styles.classDetailTitle}>Người giao dịch:</p>
                 </Col>
-                <Col span={16}>
+                <Col span={14}>
                   <p className={styles.classDetail}>{transaction.parent.fullName}</p>
                 </Col>
               </Row>
               <Row>
-                <Col span={8}>
+                <Col span={10}>
                   <p className={styles.classDetailTitle}>Số điện thoại:</p>
                 </Col>
-                <Col span={16}>
-                  <p className={styles.classDetail}>{formatPhone(transaction.parent.phone)}</p>
+                <Col span={14}>
+                  <p className={styles.classDetail}>{transaction?.parent?.phone && formatPhone(transaction.parent.phone)}</p>
                 </Col>
               </Row>
               <Row>
-                <Col span={8}>
+                <Col span={10}>
                   <p className={styles.classDetailTitle}>Thời gian:</p>
                 </Col>
-                <Col span={16}>
-                  <p className={styles.classDetail}>{formatDateTime(transaction.createdTime)}</p>
+                <Col span={14}>
+                  <p className={styles.classDetail}>{transaction?.createdTime && formatDateTime(transaction.createdTime)}</p>
                 </Col>
               </Row>
               <Row>
-                <Col span={8}>
+                <Col span={10}>
+                  <p className={styles.classDetailTitle}>Phương thức thanh toán:</p>
+                </Col>
+                <Col span={14}>
+                  <p className={styles.classDetail}>
+                    {transaction?.method === 'DirectionTransaction'
+                      ? 'Trực tiếp'
+                      : transaction?.method === 'SystemWallet'
+                        ? 'Ví' : transaction?.method
+                    }
+                  </p>
+                </Col>
+              </Row>
+              {transaction?.method === 'DirectionTransaction' &&
+                <Row>
+                  <Col span={10}>
+                    <p className={styles.classDetailTitle}>Nhân viên thanh toán:</p>
+                  </Col>
+                  <Col span={14}>
+                    <p className={styles.classDetail}>{transaction.createBy}</p>
+                  </Col>
+                </Row>
+              }
+              <Row>
+                <Col span={10}>
                   <p className={styles.classDetailTitle}>Số tiền:</p>
                 </Col>
-                <Col span={16}>
-                  <p className={styles.classDetail}>{transaction.money.toLocaleString()}</p>
+                <Col span={14}>
+                  <p className={styles.classDetail}>{transaction?.money?.toLocaleString()} đ</p>
                 </Col>
               </Row>
               <p className={styles.detailTitle}>Thông tin học viên:</p>
               <Row>
-                <Col span={8}>
+                <Col span={10}>
                   <p className={styles.classDetailTitle}>Học viên đăng ký:</p>
                 </Col>
-                <Col span={16}>
+                <Col span={14}>
                   {transaction?.students?.map(student => (
                     <p className={styles.classDetail}>{student.fullName}</p>
                   ))}
                 </Col>
               </Row>
               <Row>
-                <Col span={8}>
+                <Col span={10}>
                   <p className={styles.classDetailTitle}>Khóa học:</p>
                 </Col>
-                <Col span={16}>
+                <Col span={14}>
                   <p className={styles.classDetail}>{transaction.courseName}</p>
                 </Col>
               </Row>
               <Row>
-                <Col span={8}>
+                <Col span={10}>
                   <p className={styles.classDetailTitle}>Mã lớp đăng kí:</p>
                 </Col>
-                <Col span={16}>
+                <Col span={14}>
                   <p className={styles.classDetail}>{transaction.myClassResponse?.classCode}</p>
                 </Col>
               </Row>

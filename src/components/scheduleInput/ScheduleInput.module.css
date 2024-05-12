@@ -1,0 +1,104 @@
+@import url("https://fonts.googleapis.com/css2?family=Baloo+2:wght@700&family=Shojumaru&display=swap");
+.container {
+  width: calc(100% - 32px);
+  padding: 16px;
+}
+.title {
+  font-family: "Baloo 2", sans-serif;
+  font-size: 2rem;
+  color: #3a0ca3;
+  text-align: center;
+  margin-top: 40px;
+}
+.status {
+  text-align: center;
+  border-radius: 20px;
+  padding: 2px 15px;
+}
+.importButton {
+  background-color: #f2c955;
+  color: black !important;
+  margin-right: 8px;
+}
+.importButton:hover {
+  background: #ffd766 !important;
+  color: black !important;
+}
+.addButton {
+  background-color: #fef9ea;
+  border: 1px solid #f2c955 !important;
+  margin-right: 8px;
+}
+.addButton:hover {
+  background: #ffeebc !important;
+  color: black !important;
+}
+.searchBar {
+  min-width: 500px;
+}
+.searchBar input:hover {
+  border-color: #ffd766 !important;
+}
+.searchBar input:focus {
+  border-color: #ffd766 !important;
+}
+.searchBar button {
+  color: black;
+  background-color: #f2c955;
+}
+.searchBar button:hover {
+  background: #ffd766 !important;
+  color: black !important;
+}
+.input {
+  width: 100%;
+  color: black;
+  height: 40px;
+}
+.input:focus {
+  border-color: #f2c955;
+}
+.input:hover {
+  border-color: #f2c955 !important;
+}
+.input div:focus {
+  border-color: #f2c955;
+}
+.input div:hover {
+  border-color: #f2c955 !important;
+}
+.saveButton {
+  background-color: #f2c955;
+  color: black !important;
+  margin-right: 8px;
+}
+.saveButton:hover {
+  background: #ffd766 !important;
+  color: black !important;
+  border: 1px solid #ffd766 !important;
+}
+.cancelButton {
+  background-color: #FF6868;
+  margin-right: 8px;
+  color: white !important;
+}
+.cancelButton:hover {
+  background: #fb5959 !important;
+  color: white !important;
+  border: 1px solid #FF6868 !important;
+}
+.addTitle {
+  text-align: right;
+  height: 40px;
+  margin: 0;
+  line-height: 40px;
+  margin-right: 16px;
+}
+.addTitle span {
+  color: red;
+}
+.modalHeader {
+  padding-bottom: 5px;
+  margin-bottom: 12px !important;
+  border-bottom: 1px solid #f2c955 !important;
+}

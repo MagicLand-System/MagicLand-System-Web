@@ -1,12 +1,12 @@
-import axios from "axios";
 import Swal from "sweetalert2";
+import axios from "axios";
 
-const URL = "https://magiclandapiv2.somee.com";
-
+const url = import.meta.env.VITE_API_URL;
 const instance = axios.create({
-  baseURL: URL,
+  baseURL: url,
   headers: {
     "Content-Type": "application/json",
+    "ngrok-skip-browser-warning": true,
   },
 });
 
@@ -20,6 +20,7 @@ instance.interceptors.response.use(
         Swal.fire({
           icon: 'error',
           title: 'Hãy đăng nhập để tiếp tục!',
+          showConfirmButton: false
         }).then(() => {
           localStorage.removeItem('accessToken');
           window.location.replace("/login")

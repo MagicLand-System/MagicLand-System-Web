@@ -8,7 +8,8 @@
   font-size: 2rem;
   color: #3a0ca3;
   text-align: center;
-  margin-top: 40px;
+  margin-top: 20px;
+  margin-bottom: 20px;
 }
 .status {
   text-align: center;
@@ -32,9 +33,6 @@
 .addButton:hover {
   background: #ffeebc !important;
   color: black !important;
-}
-.searchBar {
-  min-width: 500px;
 }
 .searchBar input:hover {
   border-color: #ffd766 !important;
@@ -132,7 +130,7 @@
   align-items: center;
 }
 .image {
-  width: 50%;
+  width: 30%;
   margin-bottom: 20px;
 }
 .steps {
@@ -151,4 +149,17 @@
   color: #888888;
   margin: 0;
   font-size: 1rem;
+}
+.currencyInput {
+  border: 1px solid #d9d9d9;
+  box-sizing: border-box;
+  border-radius: 6px;
+  padding: 4px 11px 4px;
+}
+.currencyInput::placeholder {
+  color: #bfbfbf;
+}
+.currencyInput:focus-visible {
+  box-shadow: 0 0 0 2px rgba(5, 145, 255, 0.1);
+  outline: 0;
 }

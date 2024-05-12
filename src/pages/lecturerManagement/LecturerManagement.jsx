@@ -5,6 +5,9 @@ import { useNavigate } from 'react-router-dom';
 import { getLecturerSchedule } from '../../api/user';
 import { getLecturer, getSlots } from '../../api/classesApi';
 import dayjs from 'dayjs';
+import { formatDate, formatSlot } from '../../utils/utils';
+import { compareAsc, startOfWeek, endOfWeek } from 'date-fns';
+import viLocale from 'date-fns/locale/vi';
 
 export default function LecturerManagement() {
     const navigate = useNavigate()
@@ -12,6 +15,7 @@ export default function LecturerManagement() {
     const [lecturers, setLecturers] = useState([]);
     const [lecturersOptions, setLecturersOptions] = useState(lecturers)
     const [schedules, setSchedules] = useState([]);
+    const [lecturerLoading, setLecturerLoading] = useState(false);
     const [loading, setLoading] = useState(false);
     const [date, setDate] = useState(dayjs())
     const [slots, setSlots] = useState([])
@@ -26,7 +30,25 @@ export default function LecturerManagement() {
         try {
             setLoading(true);
             const data = await getLecturerSchedule({ searchString: lecturer, startDate, endDate });
-            setSchedules(data);
+            const groupedData = []
+            data?.forEach(item => {
+                const check = groupedData.filter(group => item.startTime === group.startTime)
+                if (check.length === 0) {
+                    groupedData.push({
+                        startTime: item.startTime,
+                        endTime: item.endTime,
+                        lecturers: [item]
+                    })
+                } else {
+                    check[0].lecturers.push(item)
+                }
+            });
+            groupedData.sort((a, b) => {
+                const timeA = formatSlot(a.startTime);
+                const timeB = formatSlot(b.startTime);
+                return compareAsc(timeA, timeB);
+            })
+            setSchedules(groupedData);
         } catch (error) {
             console.log(error);
         } finally {
@@ -34,9 +56,16 @@ export default function LecturerManagement() {
         }
     };
     async function getListsOfLecturers() {
-        const data = await getLecturer();
-        setLecturers(data);
-        setLecturersOptions(data);
+        try {
+            setLecturerLoading(true)
+            const data = await getLecturer();
+            setLecturers(data);
+            setLecturersOptions(data);
+        } catch (error) {
+            console.log(error);
+        } finally {
+            setLecturerLoading(false);
+        }
     };
     async function getListsOfSlots() {
         const data = await getSlots();
@@ -50,23 +79,9 @@ export default function LecturerManagement() {
 
     useEffect(() => {
         if (lecturer) {
-            getListsOfSchedule(lecturer, startOfMonth(new Date(date)), endOfMonth(new Date(date)));
+            getListsOfSchedule(lecturer, startOfWeek(new Date(date), { locale: viLocale }), endOfWeek(new Date(date), { locale: viLocale }));
         }
     }, [lecturer, date]);
-    function startOfWeek(date) {
-        var diff = date.getDate() - date.getDay() + (date.getDay() === 0 ? -6 : 1);
-        return new Date(date.setDate(diff));
-    }
-    function endOfWeek(date) {
-        var lastday = date.getDate() - (date.getDay() - 1) + 6;
-        return new Date(date.setDate(lastday));
-    }
-    function endOfMonth(date) {
-        return new Date(date.getFullYear(), date.getMonth() + 1, 0);
-    }
-    function startOfMonth(date) {
-        return new Date(date.getFullYear(), date.getMonth(), 1);
-    }
     const handleTableChange = (pagination, filters, sorter, extra) => {
         pagination.total = extra.currentDataSource.length
         setTableParams({
@@ -78,53 +93,197 @@ export default function LecturerManagement() {
             setCourses([]);
         }
     };
-    // const columns = [
-    //     {
-    //         title: 'Tên khóa học',
-    //         render: (_, record) => {
-    //             return `${record.courseDetail.courseName}`
-    //         },
-    //         sorter: (a, b) => a.courseDetail.courseName.toLowerCase().localeCompare(b.courseDetail.courseName.toLowerCase()),
-    //     },
-    //     {
-    //         title: 'Loại khóa học',
-    //         render: (_, record) => {
-    //             return `${record.courseDetail.subject}`
-    //         },
-    //         sorter: (a, b) => a.courseDetail.subject.toLowerCase().localeCompare(b.courseDetail.subject.toLowerCase()),
-    //         filters: subjects.map((subject) => ({
-    //             text: subject.name,
-    //             value: subject.name
-    //         })),
-    //         onFilter: (value, record) => record.courseDetail.subject === value,
-    //     },
-    //     {
-    //         title: 'Giá tiền',
-    //         dataIndex: 'price',
-    //         render: (price) => price.toLocaleString()
-    //     },
-    //     {
-    //         title: 'Số lớp học hiện tại',
-    //         render: (_, record) => {
-    //             return `${record.numberClassOnGoing}`
-    //         }
-    //     },
-    //     {
-    //         title: 'Chi tiết',
-    //         render: (_, record) => (
-    //             <Button type='link' onClick={() => navigate(`detail/${record.courseId}`)} icon={<EyeOutlined />} size='large' />
-    //         ),
-    //         width: 120,
-    //     },
-    // ];
-    const timeColors = {
-        '7:00': '#3E618D',
-        '9:15': '#C83D64',
-        '12:00': '#FFB100',
-        '14:15': '#507E31',
-        '16:30': '#865FAB',
-        '19:00': '#FF782D'
-    };
+    const columns = [
+        {
+            title: 'Thời gian',
+            render: (_, record) => {
+                return `${record.startTime} - ${record.endTime}`
+            },
+            width: 120,
+        },
+        {
+            title: `Thứ 2 - ${formatDate(startOfWeek(new Date(date), { locale: viLocale }))}`,
+            render: (_, record) => {
+                const schedules = record.lecturers?.filter((lecturer) => {
+                    const dateA = startOfWeek(new Date(date), { locale: viLocale })
+                    dateA.setHours(0, 0, 0, 0)
+                    const dateB = new Date(lecturer.date)
+                    dateB.setHours(0, 0, 0, 0)
+                    return compareAsc(dateA, dateB) === 0
+                })
+                if (schedules) {
+                    return (
+                        <>
+                            {schedules.map(schedule => (
+                                <>
+                                    <p style={{ margin: 0, fontWeight: 'bold' }}>{schedule.classCode}</p>
+                                    <p style={{ margin: 0 }}>{schedule.classRoom}</p>
+                                </>
+                            ))}
+                        </>
+                    )
+                } else {
+                    return null
+                }
+            }
+        }, {
+            title: `Thứ 3 - ${formatDate(new Date(new Date(startOfWeek(new Date(date), { locale: viLocale })).getTime() + 24 * 60 * 60 * 1000))}`,
+            render: (_, record) => {
+                const schedules = record.lecturers?.filter((lecturer) => {
+                    const dateA = new Date(new Date(startOfWeek(new Date(date), { locale: viLocale })).getTime() + 24 * 60 * 60 * 1000)
+                    dateA.setHours(0, 0, 0, 0)
+                    const dateB = new Date(lecturer.date)
+                    dateB.setHours(0, 0, 0, 0)
+                    return compareAsc(dateA, dateB) === 0
+                })
+                if (schedules) {
+                    return (
+                        <>
+                            {schedules.map(schedule => (
+                                <>
+                                    <p style={{ margin: 0, fontWeight: 'bold' }}>{schedule.classCode}</p>
+                                    <p style={{ margin: 0 }}>{schedule.classRoom}</p>
+                                </>
+                            ))}
+                        </>
+                    )
+                } else {
+                    return null
+                }
+            }
+        },
+        {
+            title: `Thứ 4 - ${formatDate(new Date(new Date(startOfWeek(new Date(date), { locale: viLocale })).getTime() + 2 * 24 * 60 * 60 * 1000))}`,
+            render: (_, record) => {
+                const schedules = record.lecturers?.filter((lecturer) => {
+                    const dateA = new Date(new Date(startOfWeek(new Date(date), { locale: viLocale })).getTime() + 2 * 24 * 60 * 60 * 1000)
+                    dateA.setHours(0, 0, 0, 0)
+                    const dateB = new Date(lecturer.date)
+                    dateB.setHours(0, 0, 0, 0)
+                    return compareAsc(dateA, dateB) === 0
+                })
+                if (schedules) {
+                    return (
+                        <>
+                            {schedules.map(schedule => (
+                                <>
+                                    <p style={{ margin: 0, fontWeight: 'bold' }}>{schedule.classCode}</p>
+                                    <p style={{ margin: 0 }}>{schedule.classRoom}</p>
+                                </>
+                            ))}
+                        </>
+                    )
+                } else {
+                    return null
+                }
+            }
+        },
+        {
+            title: `Thứ 5 - ${formatDate(new Date(new Date(startOfWeek(new Date(date), { locale: viLocale })).getTime() + 3 * 24 * 60 * 60 * 1000))}`,
+            render: (_, record) => {
+                const schedules = record.lecturer?.filter((lecturer) => {
+                    const dateA = new Date(new Date(startOfWeek(new Date(date), { locale: viLocale })).getTime() + 3 * 24 * 60 * 60 * 1000)
+                    dateA.setHours(0, 0, 0, 0)
+                    const dateB = new Date(lecturer.date)
+                    dateB.setHours(0, 0, 0, 0)
+                    return compareAsc(dateA, dateB) === 0
+                })
+                if (schedules) {
+                    return (
+                        <>
+                            {schedules.map(schedule => (
+                                <>
+                                    <p style={{ margin: 0, fontWeight: 'bold' }}>{schedule.classCode}</p>
+                                    <p style={{ margin: 0 }}>{schedule.classRoom}</p>
+                                </>
+                            ))}
+                        </>
+                    )
+                } else {
+                    return null
+                }
+            }
+        },
+        {
+            title: `Thứ 6 - ${formatDate(new Date(new Date(startOfWeek(new Date(date), { locale: viLocale })).getTime() + 4 * 24 * 60 * 60 * 1000))}`,
+            render: (_, record) => {
+                const schedules = record.lecturers?.filter((lecturer) => {
+                    const dateA = new Date(new Date(startOfWeek(new Date(date), { locale: viLocale })).getTime() + 4 * 24 * 60 * 60 * 1000)
+                    dateA.setHours(0, 0, 0, 0)
+                    const dateB = new Date(lecturer.date)
+                    dateB.setHours(0, 0, 0, 0)
+                    return compareAsc(dateA, dateB) === 0
+                })
+                if (schedules) {
+                    return (
+                        <>
+                            {schedules.map(schedule => (
+                                <>
+                                    <p style={{ margin: 0, fontWeight: 'bold' }}>{schedule.classCode}</p>
+                                    <p style={{ margin: 0 }}>{schedule.classRoom}</p>
+                                </>
+                            ))}
+                        </>
+                    )
+                } else {
+                    return null
+                }
+            }
+        },
+        {
+            title: `Thứ 7 - ${formatDate(new Date(new Date(startOfWeek(new Date(date), { locale: viLocale })).getTime() + 5 * 24 * 60 * 60 * 1000))}`,
+            render: (_, record) => {
+                const schedules = record.lecturers?.filter((lecturer) => {
+                    const dateA = new Date(new Date(startOfWeek(new Date(date), { locale: viLocale })).getTime() + 5 * 24 * 60 * 60 * 1000)
+                    dateA.setHours(0, 0, 0, 0)
+                    const dateB = new Date(lecturer.date)
+                    dateB.setHours(0, 0, 0, 0)
+                    return compareAsc(dateA, dateB) === 0
+                })
+                if (schedules) {
+                    return (
+                        <>
+                            {schedules.map(schedule => (
+                                <>
+                                    <p style={{ margin: 0, fontWeight: 'bold' }}>{schedule.classCode}</p>
+                                    <p style={{ margin: 0 }}>{schedule.classRoom}</p>
+                                </>
+                            ))}
+                        </>
+                    )
+                } else {
+                    return null
+                }
+            }
+        },
+
+        {
+            title: `Chủ nhật - ${formatDate(endOfWeek(new Date(date), { locale: viLocale }))}`,
+            render: (_, record) => {
+                const schedules = record.lecturers?.filter((lecturer) => {
+                    const dateA = endOfWeek(new Date(date), { locale: viLocale })
+                    dateA.setHours(0, 0, 0, 0)
+                    const dateB = new Date(lecturer.date)
+                    dateB.setHours(0, 0, 0, 0)
+                    return compareAsc(dateA, dateB) === 0
+                })
+                if (schedules) {
+                    return (
+                        <>
+                            {schedules.map(schedule => (
+                                <>
+                                    <p style={{ margin: 0, fontWeight: 'bold' }}>{schedule.classCode}</p>
+                                    <p style={{ margin: 0 }}>{schedule.classRoom}</p>
+                                </>
+                            ))}
+                        </>
+                    )
+                } else {
+                    return null
+                }
+            }
+        },
+    ];
 
     return (
         <div className={styles.container}>
@@ -140,9 +299,10 @@ export default function LecturerManagement() {
                     }}>
                     <DatePicker
                         value={date}
-                        picker="month"
+                        picker="week"
+                        format={`${formatDate(startOfWeek(new Date(date), { locale: viLocale }))} ~ ${formatDate(endOfWeek(new Date(date), { locale: viLocale }))}`}
                         allowClear={false}
-                        className={styles.input}
+                        className={styles.picker}
                         onChange={(date) => setDate(date)}
                         placeholder="Chọn thời gian" />
                 </ConfigProvider>
@@ -156,13 +316,17 @@ export default function LecturerManagement() {
                     placeholder="Giáo viên"
                     onSelect={(data) => { setLecturer(data) }}
                     notFoundContent={
-                        <Empty
-                            image={Empty.PRESENTED_IMAGE_SIMPLE}
-                            description={
-                                <span>
-                                    Không tìm thấy giáo viên
-                                </span>
-                            } />
+                        lecturerLoading
+                            ? <div style={{ width: '100%', textAlign: 'center' }}>
+                                <Spin size='small' />
+                            </div>
+                            : <Empty
+                                image={Empty.PRESENTED_IMAGE_SIMPLE}
+                                description={
+                                    <span>
+                                        Không tìm thấy giáo viên
+                                    </span>
+                                } />
                     }
                     options={lecturersOptions.map((lecturer) => ({
                         value: lecturer.fullName,
@@ -178,41 +342,19 @@ export default function LecturerManagement() {
                     }}
                 />
             </div>
-            {loading ?
-                <div style={{ textAlign: 'center' }}>
-                    <Spin />
-                </div>
-                : lecturer && schedules.length > 0 ?
-                    <Calendar
-                        value={date}
-                        cellRender={(value) => {
-                            const schedulesOnThisDay = schedules.filter(schedule => {
-                                const date = new Date(schedule.date).setHours(0, 0, 0, 0)
-                                const valueDate = new Date(value).setHours(0, 0, 0, 0)
-                                return date === valueDate
-                            });
-                            return (
-                                <ul>
-                                    {schedulesOnThisDay.map((schedule, index) => (
-                                        <li key={index} style={{ color: timeColors[schedule.startTime] }}>{schedule.classCode}: <br />{schedule.startTime} - {schedule.endTime}</li>
-                                    ))}
-                                </ul>
-                            );
-                        }}
-                        headerRender={() => { <></> }}
-                        onSelect={(date) => setDate(date)}
+            {
+                lecturer
+                    ? <Table
+                        columns={columns}
+                        rowKey={(record) => record.startTime}
+                        dataSource={schedules}
+                        pagination={null}
+                        loading={loading}
+                        onChange={handleTableChange}
+                        sticky={{ offsetHeader: 72 }}
                     />
                     : <h5 style={{ textAlign: 'center', fontSize: '1.2rem' }}>Vui lòng chọn giáo viên</h5>
             }
-            {/* <Table
-                columns={columns}
-                rowKey={(record) => record.courseId}
-                dataSource={courses}
-                pagination={tableParams.pagination}
-                loading={loading}
-                onChange={handleTableChange}
-                scroll={{ y: 'calc(100vh - 220px)' }}
-            /> */}
         </div >
     )
 }

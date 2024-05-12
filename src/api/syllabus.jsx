@@ -1,8 +1,8 @@
 import api from "./api";
 export const searchSyllabuses = async (keyWord) => {
-  const response = await api.get("/api/v1/Syllabus/filter", {
+  const response = await api.get("/api/v1/Syllabus/staff/filter", {
     params: {
-      keyWords: [keyWord]
+      keyWords: keyWord
     }
   });
   return response.data;
@@ -30,6 +30,37 @@ export const updateSyllabusGeneral = async (id, credential) => {
 export const checkSyllabusInfo = async (name, code) => {
   const response = await api.get(`/api/v1/Syllabus/infor/checking`, {
     params: { name, code }
+  });
+  return response.data;
+};
+
+export const getSyllabusGeneral = async (id) => {
+  const response = await api.get(`/api/v1/Syllabus/staff/getGeneralInformation`, {
+    params: { id }
+  });
+  return response.data;
+};
+export const getSyllabusMaterial = async (id) => {
+  const response = await api.get(`/api/v1/Syllabus/staff/getMaterial`, {
+    params: { id }
+  });
+  return response.data;
+};
+export const getSyllabusExam = async (id) => {
+  const response = await api.get(`/api/v1/Syllabus/staff/getExamSyllabus`, {
+    params: { id }
+  });
+  return response.data;
+};
+export const getSyllabusSession = async (id) => {
+  const response = await api.get(`/api/v1/Syllabus/staff/getSessionSyllabus`, {
+    params: { id }
+  });
+  return response.data;
+};
+export const getSyllabusQuestion = async (id) => {
+  const response = await api.get(`/api/v1/Syllabus/staff/getQuestionSyllabus`, {
+    params: { id }
   });
   return response.data;
 };

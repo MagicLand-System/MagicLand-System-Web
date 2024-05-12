@@ -36,11 +36,12 @@
   border-bottom: 1px solid #f2c955 !important;
 }
 .classDetailTitle {
-  padding-left: 15px;
+  padding-left: 5px;
   margin: 5px;
 }
 .classDetail {
   font-weight: bold;
+  text-align: right;
   margin: 5px;
 }
 .detailTitle {

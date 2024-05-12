@@ -1,12 +1,14 @@
 import React, { useEffect, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom';
-import { getCourse } from '../../../api/courseApi';
+import { getCourse, getCoursePrices, updateCoursePrice } from '../../../api/courseApi';
 import { getSyllabus } from '../../../api/syllabus';
-import { Button, Col, ConfigProvider, DatePicker, Modal, Row } from 'antd';
+import { Button, Col, ConfigProvider, DatePicker, Modal, Row, Table } from 'antd';
 import styles from './CourseDetail.module.css'
 import CurrencyInput from 'react-currency-input-field';
 import { compareAsc } from 'date-fns';
 import dayjs from 'dayjs';
+import { formatDateTime } from '../../../utils/utils';
+import Swal from 'sweetalert2';
 
 export default function CourseDetail() {
   const params = useParams();
@@ -23,6 +25,17 @@ export default function CourseDetail() {
   const [price, setPrice] = useState(null);
   const [priceError, setPriceError] = useState(null);
 
+  const [prices, setPrices] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [tableParams, setTableParams] = useState({
+    pagination: {
+      current: 1,
+      pageSize: 10,
+    },
+  });
+
+  const [apiLoading, setApiLoading] = useState(false);
+
   async function getCourseDetail(id) {
     const data = await getCourse(id);
     if (data) {
@@ -34,8 +47,27 @@ export default function CourseDetail() {
     const data = await getSyllabus(id);
     setSyllabusData(data)
   }
+  async function getPrices(id) {
+    try {
+      setLoading(true);
+      const data = await getCoursePrices(id);
+      setPrices(data);
+      setTableParams({
+        pagination: {
+          current: 1,
+          pageSize: 10,
+          total: data?.length
+        },
+      });
+    } catch (error) {
+      console.log(error);
+    } finally {
+      setLoading(false)
+    }
+  }
   useEffect(() => {
     getCourseDetail(id)
+    getPrices(id)
   }, [id])
   const handleUpdatePrice = async () => {
     let flag = true;
@@ -49,7 +81,13 @@ export default function CourseDetail() {
       flag = false
       setStartError("Hãy chọn thời gian bắt đầu")
     } else {
-      setPriceError(null)
+      setStartError(null)
+    }
+    if (!end) {
+      flag = false
+      setEndError("Hãy chọn thời gian bắt đầu")
+    } else {
+      setEndError(null)
     }
     if (start && end && compareAsc(start, end) >= 0) {
       flag = false
@@ -58,49 +96,77 @@ export default function CourseDetail() {
       setEndError(null)
     }
     if (flag) {
-      console.log({ id, start, end, price })
-      Swal.fire({
-        position: "center",
-        icon: "success",
-        title: "Chỉnh sửa chi phí thành công",
-        showConfirmButton: false,
-        timer: 2000
-      })
-      // try {
-      //   await updatePrice({id, start, end, price})
-      //     .then(() => {
-      //       Swal.fire({
-      //         position: "center",
-      //         icon: "success",
-      //         title: "Chỉnh sửa chi phí thành công",
-      //         showConfirmButton: false,
-      //         timer: 2000
-      //       })
-      //     })
-      //     .then(() => {
-      //       getCourseDetail(id)
-      //       setPriceModalOpen(false)
-      //     })
-      // } catch (error) {
-      //   Swal.fire({
-      //     position: "center",
-      //     icon: "error",
-      //     title: error.response?.data?.Error,
-      //     showConfirmButton: false,
-      //     timer: 2000
-      //   })
-      // }
+      try {
+        setApiLoading(true)
+        await updateCoursePrice({ courseId: id, startTime: start, endTime: end, price })
+          .then(() => {
+            Swal.fire({
+              position: "center",
+              icon: "success",
+              title: "Chỉnh sửa chi phí thành công",
+              showConfirmButton: false,
+              timer: 2000
+            })
+          })
+          .then(() => {
+            getCourseDetail(id)
+            getPrices(id)
+            setPriceModalOpen(false)
+          })
+      } catch (error) {
+        Swal.fire({
+          position: "center",
+          icon: "error",
+          title: error.response?.data?.Error,
+          showConfirmButton: false,
+          timer: 2000
+        })
+      } finally {
+        setApiLoading(false)
+      }
     }
   }
+  const handleTableChange = (pagination, filters, sorter, extra) => {
+    pagination.total = extra.currentDataSource.length
+    setTableParams({
+      pagination,
+      filters,
+      ...sorter,
+    });
+    if (pagination.pageSize !== tableParams.pagination?.pageSize) {
+      setPrices([]);
+    }
+  };
+  const columns = [
+    {
+      title: 'Chi phí',
+      render: (_, record) => {
+        return `${record.price?.toLocaleString()} đ`
+      },
+      sorter: (a, b) => a.price - b.price,
+    },
+    {
+      title: 'Thời gian áp dụng',
+      render: (_, record) => {
+        return record.startDate && `${formatDateTime(record.startDate)}`
+      },
+    },
+    {
+      title: 'Thời gian kết thúc',
+      render: (_, record) => {
+        return record.endDate && `${formatDateTime(record.endDate)}`
+      },
+    },
+  ];
   return (
     <div className={styles.container}>
       <h2 className={styles.title}>Chi tiết khóa học</h2>
-      {courseData && (
+      {courseData && syllabusData && (
         <>
           <Row>
-            <Col xs={12} md={8} style={{ marginBottom: '40px' }}>
+            <Col xs={24} lg={8} style={{ marginBottom: '20px', boxSizing: 'border-box', padding: '0px 8px' }}>
               <div className={styles.classPart}>
-                <h5 className={styles.classPartTitle}>Thông tin khóa học:</h5>
+                <h5 className={styles.classPartTitle}>Thông tin khóa học</h5>
                 <Row style={{ marginTop: 12 }}>
                   <Col span={8}>
                     <p className={styles.classTitle}>Tên khóa học:</p>
@@ -143,56 +209,54 @@ export default function CourseDetail() {
                 </Row>
               </div>
             </Col>
-            {syllabusData &&
-              <Col xs={12} md={8} style={{ marginBottom: '40px' }}>
-                <div className={styles.classPart}>
-                  <h5 className={styles.classPartTitle}>Giáo trình:</h5>
-                  <Row style={{ marginTop: 12 }}>
-                    <Col span={8}>
-                      <p className={styles.classTitle}>Mã giáo trình:</p>
-                    </Col>
-                    <Col span={16}>
-                      <p className={styles.classDetail}>{syllabusData.subjectCode}</p>
-                    </Col>
-                  </Row>
-                  <Row style={{ marginTop: 12 }}>
-                    <Col span={8}>
-                      <p className={styles.classTitle}>Tên giáo trình:</p>
-                    </Col>
-                    <Col span={16}>
-                      <p className={styles.classDetail}>{syllabusData.syllabusName}</p>
-                    </Col>
-                  </Row>
-                  <Row style={{ marginTop: 12 }}>
-                    <Col span={8}>
-                      <p className={styles.classTitle}>Ngày hiệu lực:</p>
-                    </Col>
-                    <Col span={16}>
-                      <p className={styles.classDetail}>{syllabusData.effectiveDate}</p>
-                    </Col>
-                  </Row>
-                  <Row style={{ marginTop: 12 }}>
-                    <Col span={24}>
-                      <p className={styles.classTitle}>Mô tả:</p>
-                    </Col>
-                    <Col span={24}>
-                      <p className={styles.classDetail} style={{ textAlign: 'left' }}>{syllabusData.description}</p>
-                    </Col>
-                  </Row>
-                  <Row style={{ marginTop: 12 }}>
-                    <Col span={8}>
-                      <p className={styles.classTitle}>Chi tiết:</p>
-                    </Col>
-                    <Col span={16}>
-                      <Link to={`/syllabus-management/detail/${courseData.syllabusId}`} className={styles.classDetail} style={{ display: 'inline-block', width: '100%' }}>Xem tại đây</Link>
-                    </Col>
-                  </Row>
-                </div>
-              </Col>
-            }
-            <Col xs={12} md={8} style={{ marginBottom: '40px' }}>
+            <Col xs={24} lg={8} style={{ marginBottom: '20px', boxSizing: 'border-box', padding: '0px 8px' }}>
               <div className={styles.classPart}>
-                <h5 className={styles.classPartTitle}>Hình ảnh:</h5>
+                <h5 className={styles.classPartTitle}>Chương trình học</h5>
+                <Row style={{ marginTop: 12 }}>
+                  <Col span={10}>
+                    <p className={styles.classTitle}>Mã chương trình học:</p>
+                  </Col>
+                  <Col span={14}>
+                    <p className={styles.classDetail}>{syllabusData.subjectCode}</p>
+                  </Col>
+                </Row>
+                <Row style={{ marginTop: 12 }}>
+                  <Col span={10}>
+                    <p className={styles.classTitle}>Tên chương trình học:</p>
+                  </Col>
+                  <Col span={14}>
+                    <p className={styles.classDetail}>{syllabusData.syllabusName}</p>
+                  </Col>
+                </Row>
+                <Row style={{ marginTop: 12 }}>
+                  <Col span={8}>
+                    <p className={styles.classTitle}>Ngày hiệu lực:</p>
+                  </Col>
+                  <Col span={16}>
+                    <p className={styles.classDetail}>{syllabusData.effectiveDate}</p>
+                  </Col>
+                </Row>
+                <Row style={{ marginTop: 12 }}>
+                  <Col span={24}>
+                    <p className={styles.classTitle}>Mô tả:</p>
+                  </Col>
+                  <Col span={24}>
+                    <p className={styles.classDetail} style={{ textAlign: 'left' }}>{syllabusData.description}</p>
+                  </Col>
+                </Row>
+                <Row style={{ marginTop: 12 }}>
+                  <Col span={8}>
+                    <p className={styles.classTitle}>Chi tiết:</p>
+                  </Col>
+                  <Col span={16}>
+                    <Link to={`/syllabus-management/detail/${courseData.syllabusId}`} className={styles.classDetail} style={{ display: 'inline-block', width: '100%' }}>Xem tại đây</Link>
+                  </Col>
+                </Row>
+              </div>
+            </Col>
+            <Col xs={24} lg={8} style={{ marginBottom: '20px', boxSizing: 'border-box', padding: '0px 8px' }}>
+              <div className={styles.classPart}>
+                <h5 className={styles.classPartTitle}>Hình ảnh</h5>
                 <img style={{ width: '100%' }} src={courseData.image} alt="Hình ảnh" />
               </div>
             </Col>
@@ -206,7 +270,8 @@ export default function CourseDetail() {
             </Button>
           </div>
         </>
-      )}
+      )
+      }
       <ConfigProvider
         theme={{
           components: {
@@ -226,10 +291,10 @@ export default function CourseDetail() {
           classNames={{ header: styles.modalHeader }}
         >
           <Row>
-            <Col span={6}>
-              <p className={styles.addTitle}><span>*</span> Thời gian bắt đầu:</p>
+            <Col span={8}>
+              <p className={styles.addTitle}><span>*</span> Thời gian áp dụng:</p>
             </Col>
-            <Col span={18}>
+            <Col span={16}>
               <ConfigProvider
                 theme={{
                   components: {
@@ -239,15 +304,17 @@ export default function CourseDetail() {
                   },
                 }}>
                 <DatePicker
-                  format="dd/MM/yyyy HH:mm:ss"
+                  format={"DD/MM/YYYY HH:mm:ss"}
+                  showTime
                   className={styles.input}
                   value={start}
                   disabledDate={(current) => {
-                    return current && current < dayjs().startOf('day');
+                    return current && current < dayjs();
                   }}
                   onChange={(date) => setStart(date)}
                   allowClear={false}
-                  placeholder="Thời gian bắt đầu" />
+                  placeholder="Thời gian áp dụng"
+                  disabled={apiLoading} />
               </ConfigProvider>
               <div style={{ height: '24px', paddingLeft: '10px' }}>
                 {startError && (<p style={{ color: 'red', fontSize: '14px', margin: '0' }}>{startError}</p>)}
@@ -255,10 +322,10 @@ export default function CourseDetail() {
             </Col>
           </Row>
           <Row>
-            <Col span={6}>
+            <Col span={8}>
               <p className={styles.addTitle}><span>*</span> Thời gian kết thúc:</p>
             </Col>
-            <Col span={18}>
+            <Col span={16}>
               <ConfigProvider
                 theme={{
                   components: {
@@ -268,15 +335,17 @@ export default function CourseDetail() {
                   },
                 }}>
                 <DatePicker
-                  format="dd/MM/yyyy HH:mm:ss"
+                  format="DD/MM/YYYY HH:mm:ss"
+                  showTime
                   className={styles.input}
                   value={end}
                   disabledDate={(current) => {
-                    return current && current < dayjs().startOf('day');
+                    return current && current <= start;
                   }}
                   onChange={(date) => setEnd(date)}
                   allowClear={false}
-                  placeholder="Thời gian kết thúc" />
+                  placeholder="Thời gian kết thúc"
+                  disabled={apiLoading} />
               </ConfigProvider>
               <div style={{ height: '24px', paddingLeft: '10px' }}>
                 {endError && (<p style={{ color: 'red', fontSize: '14px', margin: '0' }}>{endError}</p>)}
@@ -284,12 +353,12 @@ export default function CourseDetail() {
             </Col>
           </Row>
           <Row>
-            <Col span={6}>
+            <Col span={8}>
               <p className={styles.addTitle}><span>*</span> Chi phí:</p>
             </Col>
-            <Col span={18}>
+            <Col span={16}>
               <CurrencyInput
-                className={`ant-input css-dev-only-do-not-override-1adbn6x ${styles.input}  ${styles.inputNumber}`}
+                className={`ant-input ${styles.currencyInput} ${styles.input}  ${styles.inputNumber}`}
                 placeholder="Chi phí"
                 allowDecimals={false}
                 value={price}
@@ -297,6 +366,7 @@ export default function CourseDetail() {
                 onValueChange={(value, name, values) => setPrice(parseInt(value))}
                 required
                 intlConfig={{ locale: 'vi-VN', currency: 'VND' }}
+                disabled={apiLoading}
               />
               <div style={{ height: '24px', paddingLeft: '10px' }}>
                 {priceError && (<p style={{ color: 'red', fontSize: '14px', margin: '0' }}>{priceError}</p>)}
@@ -304,10 +374,10 @@ export default function CourseDetail() {
             </Col>
           </Row>
           <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
-            <Button className={styles.saveButton} onClick={handleUpdatePrice}>
+            <Button loading={apiLoading} className={styles.saveButton} onClick={handleUpdatePrice}>
               Lưu
             </Button>
-            <Button className={styles.cancelButton} onClick={() => {
+            <Button disabled={apiLoading} className={styles.cancelButton} onClick={() => {
               setPriceModalOpen(false)
               setStart(null)
               setEnd(null)
@@ -318,6 +388,15 @@ export default function CourseDetail() {
           </div>
         </Modal>
       </ConfigProvider>
-    </div>
+      <Table
+        columns={columns}
+        rowKey={(record) => record.id}
+        dataSource={prices}
+        pagination={tableParams.pagination}
+        loading={loading}
+        onChange={handleTableChange}
+        sticky={{ offsetHeader: 72 }}
+      />
+    </div >
   )
 }

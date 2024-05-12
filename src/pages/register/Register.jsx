@@ -1,7 +1,7 @@
 import React, { useRef, useState } from 'react'
 import styles from './Register.module.css'
 import { Link, useNavigate } from 'react-router-dom'
-import { Button, DatePicker, Input, Radio } from 'antd'
+import { Button, ConfigProvider, DatePicker, Input, Radio } from 'antd'
 import Alert from 'antd/es/alert/Alert';
 import OtpInput from 'otp-input-react';
 import PhoneInput from 'react-phone-input-2';
@@ -22,7 +22,7 @@ export default function Register() {
   const [phone, setPhone] = useState('')
   const [loading, setLoading] = useState(false)
   const [showOtp, setShowOtp] = useState(false)
-  const [showFillInfo, setShowFillInfo] = useState(false)
+  const [showFillInfo, setShowFillInfo] = useState(true)
 
   const [dateOfBirth, setDateOfBirth] = useState(dayjs().subtract(3, 'year'))
   const [gender, setGender] = useState('Khác')
@@ -40,7 +40,9 @@ export default function Register() {
         'callback': (response) => {
           onSignup()
         },
-        'expired-callback': () => { }
+        'expired-callback': () => {
+          // window.recaptchaVerifier.reset()
+        }
       }, auth);
     }
   }
@@ -88,10 +90,17 @@ export default function Register() {
   const { ref: adrRef } = usePlacesWidget({
     apiKey: firebaseConfig.apiKey,
     onPlaceSelected: (place) => {
-      addressRef.current.setValue(place?.formatted_address)
-      setAddress(place?.formatted_address)
+      const formattedAddress = place.formatted_address;
+      if (addressRef.current && formattedAddress) {
+        addressRef.current.value = formattedAddress;
+        setAddress(formattedAddress);
+      }
     },
-    language: 'vi'
+    language: 'vi',
+    options: {
+      types: ["(regions)"],
+      componentRestrictions: { country: "vn" },
+    },
   })
   const formik = useFormik({
     initialValues: {
@@ -154,7 +163,7 @@ export default function Register() {
           <>
             <h2 className={styles.title}>Đăng kí</h2>
             <div className={styles.form}>
-              <PhoneInput country={'vn'} className={styles.phoneInput} value={phone} onChange={setPhone} />
+              <PhoneInput country={'vn'} className={styles.phoneInput} value={phone} onChange={setPhone} disabled={loading} />
               {loading ? (
                 <Button loading className={styles.button}>Gửi OTP</Button>
               ) : phone === '' ? (
@@ -175,7 +184,7 @@ export default function Register() {
                 onChange={setOtp}
                 OTPLength={6}
                 otpType="number"
-                disabled={false}
+                disabled={loading}
                 autoFocus
                 className={styles.otpInput}
               >
@@ -203,6 +212,7 @@ export default function Register() {
                 error={formik.touched.fullName && formik.errors.fullName}
                 className={styles.input}
                 required
+                disabled={loading}
               />
               <div style={{ height: '24px', paddingLeft: '10px' }}>
                 {formik.errors.fullName && formik.touched.fullName && (<p style={{ color: 'red', fontSize: '14px', margin: '0' }}>{formik.errors.fullName}</p>)}
@@ -216,6 +226,7 @@ export default function Register() {
                 error={formik.touched.email && formik.errors.email}
                 className={styles.input}
                 required
+                disabled={loading}
               />
               <div style={{ height: '24px', paddingLeft: '10px' }}>
                 {formik.errors.email && formik.touched.email && (<p style={{ color: 'red', fontSize: '14px', margin: '0' }}>{formik.errors.email}</p>)}
@@ -237,34 +248,45 @@ export default function Register() {
                     return (current > dayjs().subtract(3, 'year'))
                   }}
                   onChange={(date) => setDateOfBirth(date)}
-                  defaultValue={dateOfBirth}
+                  value={dateOfBirth}
                   format={'DD/MM/YYYY'}
-                  placeholder="Chọn ngày sinh" />
+                  placeholder="Chọn ngày sinh"
+                  disabled={loading} />
               </ConfigProvider>
               <div style={{ height: '24px', paddingLeft: '10px' }}>
                 {dateOfBirthError && (<p style={{ color: 'red', fontSize: '14px', margin: '0' }}>{dateOfBirthError}</p>)}
               </div>
               <p className={styles.addTitle}><span>*</span> Giới tính:</p>
               <div style={{ margin: '10px' }}>
-                <Radio.Group onChange={(e) => { setGender(e.target.value) }} value={gender}>
+                <Radio.Group disabled={loading} onChange={(e) => { setGender(e.target.value) }} value={gender}>
                   <Radio value='Nữ'>Nữ</Radio>
                   <Radio value='Nam'>Nam</Radio>
                   <Radio value='Khác'>Khác</Radio>
                 </Radio.Group>
               </div>
               <p className={styles.addTitle}><span>*</span> Địa chỉ:</p>
-              <Input
+              {/* <Input
                 ref={(c) => {
                   addressRef.current = c;
                   if (c) adrRef.current = c.input;
                 }}
                 className={styles.input}
                 required
+                disabled={loading}
+              /> */}
+              <Input
+                placeholder="Email"
+                name='email'
+                value={address}
+                onChange={(e) => { setAddress(e.target.value) }}
+                className={styles.input}
+                required
+                disabled={loading}
               />
               <div style={{ height: '24px', paddingLeft: '10px' }}>
                 {addressError && (<p style={{ color: 'red', fontSize: '14  px', margin: '0' }}>{addressError}</p>)}
               </div>
-              <Button htmlType='submit' className={styles.button}>
+              <Button loading={loading} htmlType='submit' className={styles.button}>
                 Xác nhận
               </Button>
             </form>
@@ -276,7 +298,6 @@ export default function Register() {
       </div>
       <div className={styles.right}>
         <div className={styles.rightLink}>
-          <Link to={'/'} className={styles.link}>Trang chủ</Link>
           <Link to={'/login'} className={styles.link}>Đăng nhập</Link>
           <Link className={`${styles.link} ${styles.linkActive}`}>Đăng kí</Link>
         </div>

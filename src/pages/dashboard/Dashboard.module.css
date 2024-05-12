@@ -1,0 +1,41 @@
+@import url("https://fonts.googleapis.com/css2?family=Baloo+2:wght@700&family=Shojumaru&display=swap");
+.container {
+  width: calc(100% - 32px);
+  padding: 16px;
+}
+.title {
+  font-family: "Baloo 2", sans-serif;
+  font-size: 2rem;
+  color: #3a0ca3;
+  text-align: center;
+  margin-top: 20px;
+}
+.subTitle {
+  font-family: "Baloo 2", sans-serif;
+  font-size: 1.6rem;
+  color: #3a0ca3;
+  text-align: center;
+  margin-top: 20px;
+}
+.input {
+  width: 100%;
+  color: black;
+  height: 40px;
+}
+.input:focus {
+  border-color: #f2c955;
+}
+.input:hover {
+  border-color: #f2c955 !important;
+}
+.input div:focus {
+  border-color: #f2c955;
+}
+.input div:hover {
+  border-color: #f2c955 !important;
+}
+.column {
+  width: 1000px !important;
+  height: 500px !important;
+  margin: 0px auto;
+}

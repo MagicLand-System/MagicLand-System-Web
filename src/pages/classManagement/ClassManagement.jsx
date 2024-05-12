@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react'
 import styles from './ClassManagement.module.css'
-import { Button, DatePicker, Radio, Input, Modal, Table, Select, Row, Col, Tabs, ConfigProvider, Alert, Empty } from 'antd';
-import { CloudUploadOutlined, EyeOutlined, PlusOutlined, DeleteOutlined, CloudDownloadOutlined } from '@ant-design/icons';
+import { Button, DatePicker, Radio, Input, Modal, Table, Select, Row, Col, Tabs, ConfigProvider, Alert, Empty, Spin } from 'antd';
+import { CloudUploadOutlined, EyeOutlined, PlusOutlined, DeleteOutlined, CloudDownloadOutlined, EditOutlined } from '@ant-design/icons';
 import Swal from 'sweetalert2';
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
@@ -9,10 +9,10 @@ import dayjs from 'dayjs'
 import { useNavigate } from 'react-router-dom';
 import { addClass, getClassCode, getClasses, getLecturer, getLecturerBySchedule, getRooms, getRoomsBySchedule, getSlots, importClass } from '../../api/classesApi';
 import { getCourses } from '../../api/courseApi';
-import { formatDate, formatSlot, handleDownloadExcelFile } from '../../utils/utils';
-import { compareAsc } from 'date-fns';
+import { formatDate, handleDownloadExcelFile } from '../../utils/utils';
 import { TEMPLATE_ADD_CLASS_FILE } from '../../constants/constants';
 import * as XLSX from 'xlsx';
+import { ScheduleInput } from '../../components/scheduleInput/ScheduleInput';
 
 const { Search } = Input;
 
@@ -35,73 +35,12 @@ const statusList = [
   },
 ]
 
-const ScheduleInput = ({ index, schedule, onDateChange, onSlotChange, onDelete, slots }) => {
-  const { dateOfWeek, slotId } = schedule;
-  const sortedSlots = slots.sort((a, b) => {
-    const timeA = formatSlot(a.startTime);
-    const timeB = formatSlot(b.startTime);
-    return compareAsc(timeA, timeB);
-  });
-  return (
-    <div style={{ display: 'flex', gap: '8px', marginBottom: '8px' }}>
-      <Select
-        className={styles.input}
-        placeholder={`Lịch học ${index + 1}`}
-        value={dateOfWeek}
-        onChange={(value) => onDateChange(index, value)}
-        options={[
-          {
-            value: 'Monday',
-            label: 'Thứ 2',
-          },
-          {
-            value: 'Tuesday',
-            label: 'Thứ 3',
-          },
-          {
-            value: 'Wednesday',
-            label: 'Thứ 4',
-          },
-          {
-            value: 'Thursday',
-            label: 'Thứ 5',
-          },
-          {
-            value: 'Friday',
-            label: 'Thứ 6',
-          },
-          {
-            value: 'Saturday',
-            label: 'Thứ 7',
-          },
-          {
-            value: 'Sunday',
-            label: 'Chủ nhật'
-          }
-        ]}
-      />
-      <Select
-        className={styles.input}
-        value={slotId}
-        placeholder="Giờ học"
-        onChange={(value) => onSlotChange(index, value)}
-        options={sortedSlots.map((slot) => ({
-          value: slot.id,
-          label: `${slot.startTime} - ${slot.endTime}`
-        }))}
-      />
-      {index !== 0 ? (
-        <DeleteOutlined style={{ fontSize: '1rem' }} onClick={() => onDelete(index)} />
-      ) : (<DeleteOutlined style={{ fontSize: '1rem', color: '#e6e6e6' }} />)}
-    </div>
-  );
-};
-
 export default function ClassManagement() {
   const navigate = useNavigate()
   const [status, setStatus] = useState("upcoming");
   const [search, setSearch] = useState(null)
   const [classes, setClasses] = useState([]);
+  const [numberOfClasses, setNumberOfClasses] = useState(null)
   const [loading, setLoading] = useState(false);
   const [tableParams, setTableParams] = useState({
     pagination: {
@@ -114,7 +53,7 @@ export default function ClassManagement() {
   const [courses, setCourses] = useState([]);
   const [coursesOptions, setCoursesOptions] = useState(courses);
 
-  const [lecturers, setlecturers] = useState([])
+  const [lecturers, setLecturers] = useState([])
   const [lecturersOptions, setLecturersOptions] = useState(lecturers);
 
   const [rooms, setRooms] = useState([])
@@ -122,16 +61,19 @@ export default function ClassManagement() {
 
   const [course, setCourse] = useState(null)
   const [courseError, setCourseError] = useState(null)
+  const [courseLoading, setCourseLoading] = useState(false)
 
   const [lecturer, setLecturer] = useState(null)
   const [lecturerError, setLecturerError] = useState(null)
+  const [lecturerLoading, setLecturerLoading] = useState(false)
 
   const [startDate, setStartDate] = useState(null);
   const [startDateError, setStartDateError] = useState(null)
 
-  const [method, setMethod] = useState('OFFLINE')
+  const [method, setMethod] = useState('offline')
   const [room, setRoom] = useState(null)
   const [roomError, setRoomError] = useState(null)
+  const [roomLoading, setRoomLoading] = useState(false)
 
   const [slots, setSlots] = useState([])
   const [slotsOptions, setSlotsOptions] = useState(slots)
@@ -144,8 +86,6 @@ export default function ClassManagement() {
   const [excelFile, setExcelFile] = useState(null);
 
   const [apiLoading, setApiLoading] = useState(false)
-
-  const [importRes, setImportRes] = useState(null)
 
   const handleFileChange = (e) => {
     let selectedFile = e.target.files[0];
@@ -198,7 +138,7 @@ export default function ClassManagement() {
         if (lecturer === null) {
           setLecturerError("Vui lòng chọn giáo viên")
         } else if (!checkLecturer) {
-          setRoomError("Vui lòng chọn phòng học hợp lệ")
+          setLecturerError("Vui lòng chọn giáo viên hợp lệ")
         } else {
           setLecturerError(null)
         }
@@ -227,13 +167,12 @@ export default function ClassManagement() {
         setStartDateError(null)
         setRoomError(null)
         setSchedulesError(null)
-        const startDateWeekFormat = dayjs(startDate).format('dddd')
-        const isStartDateCorrect = scheduleRequests.some((schedule) => schedule.dateOfWeek === startDateWeekFormat);
+        const startDateWeekFormat = dayjs(startDate).format('dddd').toLowerCase()
+        const isStartDateCorrect = scheduleRequests.some((schedule) => schedule.dateOfWeek.toLowerCase() === startDateWeekFormat);
         if (isStartDateCorrect) {
           setApiLoading(true)
-          const stringStartDate = startDate.toISOString()
           try {
-            await addClass({ ...values, startDate: stringStartDate, courseId: course, lecturerId: lecturer, method, scheduleRequests, roomId: room })
+            await addClass({ ...values, startDate, courseId: course, lecturerId: lecturer, method, scheduleRequests, roomId: room })
               .then(() => {
                 Swal.fire({
                   position: "center",
@@ -244,16 +183,22 @@ export default function ClassManagement() {
                 })
               })
               .then(() => {
-                getListOfClasses()
+                getListOfClasses(search, status)
                 setAddModalOpen(false)
                 setCourse(null)
-                setCoursesOptions(courses)
+                setCourses(courses)
                 setCourseError(null)
+
+                setLecturers([])
+                setLecturersOptions([])
 
                 setLecturer(null)
                 setLecturerError(null)
 
                 setStartDate(null)
+
+                setRooms([])
+                setRoomsOptions([])
 
                 setRoom(null)
                 setRoomError(null)
@@ -290,12 +235,13 @@ export default function ClassManagement() {
     try {
       setLoading(true);
       const data = await getClasses({ searchString, status });
-      setClasses(data);
+      setNumberOfClasses(data?.numberOfClasses)
+      setClasses(data?.myClassResponses);
       setTableParams({
         pagination: {
           current: 1,
           pageSize: 10,
-          total: data.length
+          total: data?.length
         },
       });
     } catch (error) {
@@ -305,9 +251,17 @@ export default function ClassManagement() {
     }
   };
   async function getListsOfCourses() {
-    const data = await getCourses();
-    setCourses(data);
-    setCoursesOptions(data);
+    try {
+      setCourseLoading(true)
+      const data = await getCourses();
+      setCourses(data);
+      setCoursesOptions(data);
+    } catch (error) {
+      console.log(error)
+    } finally {
+      setCourseLoading(false)
+    }
+
   };
   async function getListsOfSlots() {
     const data = await getSlots();
@@ -315,25 +269,36 @@ export default function ClassManagement() {
     setSlotsOptions(data);
   };
   async function getListsOfLecturer(startDate, schedules, courseId) {
-    const data = await getLecturerBySchedule({ startDate, schedules, courseId });
-    data.sort((a, b) => a.numberOfClassesTeaching - b.numberOfClassesTeaching);
-    setlecturers(data);
-    setLecturersOptions(data);
+    try {
+      setLecturerLoading(true)
+      const data = await getLecturerBySchedule({ startDate, schedules, courseId });
+      data.sort((a, b) => a.numberOfClassesTeaching - b.numberOfClassesTeaching);
+      setLecturers(data);
+      setLecturersOptions(data);
+    } catch (error) {
+      console.log(error);
+    } finally {
+      setLecturerLoading(false);
+    }
   };
-  async function getListsOfRooms(startDate, schedules, courseId) {
-    const data = await getRoomsBySchedule({ startDate, schedules, courseId });
-    setRooms(data);
-    setRoomsOptions(data);
+  async function getListsOfRooms(startDate, schedules, courseId, method) {
+    try {
+      setRoomLoading(true)
+      const data = await getRoomsBySchedule({ startDate, schedules, courseId, method });
+      setRooms(data);
+      setRoomsOptions(data);
+    } catch (error) {
+      console.log(error);
+    } finally {
+      setRoomLoading(false);
+    }
   };
   async function getClassCodeByCourseId(course) {
     const data = await getClassCode(course);
-    formik.setValues({
-      classCode: data.classCode
-    })
+    formik.setFieldValue("classCode", data.classCode)
   }
 
   useEffect(() => {
-    getListsOfCourses();
     getListsOfSlots();
   }, []);
   useEffect(() => {
@@ -344,24 +309,26 @@ export default function ClassManagement() {
     if (course && startDate && scheduleRequests) {
       if (hasNullValues) {
         setSchedulesError("Vui lòng điền đủ lịch học để chọn giáo viên và phòng học")
-        setlecturers([]);
+        setLecturers([]);
         setLecturersOptions([]);
       } else if (hasDuplicateValues) {
         setSchedulesError("Lịch học bị trùng")
-        setlecturers([]);
+        setLecturers([]);
         setLecturersOptions([]);
       } else {
         setSchedulesError(null)
         getListsOfLecturer(startDate, scheduleRequests, course);
-        getListsOfRooms(startDate, scheduleRequests, course);
+        getListsOfRooms(startDate, scheduleRequests, course, method);
       }
     }
-  }, [scheduleRequests, startDate, course]);
+  }, [scheduleRequests, startDate, course, method]);
   useEffect(() => {
     getListOfClasses(search, status)
   }, [search, status])
   useEffect(() => {
-    getClassCodeByCourseId(course)
+    if (course) {
+      getClassCodeByCourseId(course)
+    }
   }, [course])
 
   const handleTableChange = (pagination, filters, sorter, extra) => {
@@ -424,24 +391,70 @@ export default function ClassManagement() {
       const worksheet = workbook.Sheets[worksheetName];
       const data = XLSX.utils.sheet_to_json(worksheet);
       let newData = []
+      const indexValues = [];
       if (data.length > 0) {
         newData = data.map(row => ({
           index: row['STT'] || null,
           courseCode: row['Mã khóa học'] || null,
-          leastNumberStudent: row['Số lượng học viên tối thiểu'] || null,
-          limitNumberStudent: row['Số lượng học viên tối đa'] || null,
+          leastNumberStudent: row['Số lượng học viên tối thiểu'] >= 0 ? row['Số lượng học viên tối thiểu'] : null,
+          limitNumberStudent: row['Số lượng học viên tối đa'] >= 0 ? row['Số lượng học viên tối đa'] : null,
           startDate: row['Ngày bắt đầu'] || null,
           method: row['Hình thức'] || null,
-          scheduleRequests: row['Lịch học'] || null,
+          schedule1: row['Lịch học 1'] || null,
+          slot1: row['Giờ học 1'] || null,
+          schedule2: row['Lịch học 2'] || null,
+          slot2: row['Giờ học 2'] || null,
+          schedule3: row['Lịch học 3'] || null,
+          slot3: row['Giờ học 3'] || null,
         }))
-        newData.forEach(data => {
-          if (!data.index || !data.courseCode || !data.leastNumberStudent || !data.limitNumberStudent || !data.startDate || !data.method || !data.scheduleRequests) {
-            if (!errors.includes("Vui lòng điền đủ các thông tin lớp học")) {
-              errors.push("Vui lòng điền đủ các thông tin lớp học");
-            }
+        newData = newData.map(data => {
+          if (!data.index || !data.courseCode || !data.leastNumberStudent || !data.limitNumberStudent || !data.startDate || !data.method
+            || (!data.schedule1 && data.slot1) || (data.schedule1 && !data.slot1)
+            || (!data.schedule2 && data.slot2) || (data.schedule2 && !data.slot2)
+            || (!data.schedule3 && data.slot3) || (data.schedule3 && !data.slot3)) {
+            errors.push(`Vui lòng điền đủ các thông tin lớp học số ${data.index}`);
           } else {
-            const scheduleTimes = data.scheduleRequests.split("\r\n");
-            data.scheduleRequests = scheduleTimes.map(time => ({ "scheduleTime": time.trim() }));
+            if (indexValues.includes(data.index)) {
+              if (!errors.includes("Số thứ tự trùng lặp")) {
+                errors.push("Số thứ tự trùng lặp");
+              }
+            } else {
+              indexValues.push(data.index);
+            }
+            if (data.startDate) {
+              const dateRegex = /^\d{2}\/\d{2}\/\d{4}$/;
+              if (!dateRegex.test(data.startDate)) {
+                if (!errors.includes("Vui lòng để ngày bắt đầu dạng văn bản (dd/mm/yyyy)")) {
+                  errors.push("Vui lòng để ngày bắt đầu dạng văn bản (dd/mm/yyyy)");
+                }
+              }
+            }
+            const newItem = {
+              index: data.index,
+              courseCode: data.courseCode,
+              leastNumberStudent: data.leastNumberStudent,
+              limitNumberStudent: data.limitNumberStudent,
+              startDate: data.startDate,
+              method: data.method,
+              scheduleRequests: []
+            }
+            for (let i = 1; i <= 3; i++) {
+              const scheduleKey = 'schedule' + i;
+              const slotKey = 'slot' + i;
+              if (data.hasOwnProperty(scheduleKey) && data.hasOwnProperty(slotKey)) {
+                if (data[scheduleKey] !== null) {
+                  newItem.scheduleRequests.push({
+                    schedule: data[scheduleKey],
+                    slot: data[slotKey]
+                  });
+                }
+              }
+            }
+            if (newItem.scheduleRequests.length > 0) {
+              return newItem
+            } else {
+              errors.push(`Vui lòng điền lịch học lớp số ${data.index}`);
+            }
           }
         });
       } else {
@@ -451,12 +464,7 @@ export default function ClassManagement() {
         try {
           setApiLoading(true)
           const data = await importClass(newData)
-          setImportRes(data)
-          if (data?.successRow > 0) {
-            getListOfClasses(search, status)
-          }
-          setExcelFile(null);
-          setFileInput(null);
+          navigate('import-classes', { state: { importClasses: data } })
         } catch (error) {
           Swal.fire({
             icon: "error",
@@ -499,9 +507,7 @@ export default function ClassManagement() {
     {
       title: 'Ngày bắt đầu',
       dataIndex: 'startDate',
-      render: (startDate) => {
-        return `${formatDate(startDate)}`
-      }
+      render: (startDate) => startDate && formatDate(startDate)
     },
     {
       title: 'Chi tiết',
@@ -517,7 +523,7 @@ export default function ClassManagement() {
     }
 
     const validDates = scheduleRequests.map(schedule => schedule.dateOfWeek);
-    if (current && !validDates.includes(dayjs(current).format('dddd'))) {
+    if (current && !validDates.includes(dayjs(current).format('dddd').toLowerCase())) {
       return true;
     }
 
@@ -554,15 +560,18 @@ export default function ClassManagement() {
               label: status.label,
               key: status.key,
               children: (
-                <Table
-                  columns={columns}
-                  rowKey={(record) => record.classId}
-                  dataSource={classes}
-                  pagination={tableParams.pagination}
-                  loading={loading}
-                  onChange={handleTableChange}
-                  scroll={{ y: 'calc(100vh - 220px)' }}
-                />
+                <>
+                  <h5 style={{ fontSize: '1rem', color: '#888888', fontWeight: 'normal', margin: '0 10px 10px' }}>Tổng số lớp <span style={{ textTransform: "lowercase" }}>{status.label}</span>: {!loading && numberOfClasses}</h5>
+                  <Table
+                    sticky={{ offsetHeader: 72 }}
+                    columns={columns}
+                    rowKey={(record) => record.classId}
+                    dataSource={classes}
+                    pagination={tableParams.pagination}
+                    loading={loading}
+                    onChange={handleTableChange}
+                  />
+                </>
               )
             }
           ))}
@@ -601,13 +610,17 @@ export default function ClassManagement() {
                   placeholder="Chọn khóa học"
                   onSelect={(data) => { setCourse(data) }}
                   notFoundContent={
-                    <Empty
-                      image={Empty.PRESENTED_IMAGE_SIMPLE}
-                      description={
-                        <span>
-                          Không tìm thấy khóa học
-                        </span>
-                      } />
+                    courseLoading
+                      ? <div style={{ width: '100%', textAlign: 'center' }}>
+                        <Spin size='small' />
+                      </div>
+                      : <Empty
+                        image={Empty.PRESENTED_IMAGE_SIMPLE}
+                        description={
+                          <span>
+                            Không tìm thấy khóa học
+                          </span>
+                        } />
                   }
                   options={
                     coursesOptions
@@ -632,6 +645,7 @@ export default function ClassManagement() {
                       setCoursesOptions(courses);
                     }
                   }}
+                  disabled={apiLoading}
                 />
                 <p style={{ color: 'black', margin: 0 }}> Mã lớp học:&ensp;<span style={{ fontWeight: "bold" }}>{formik.values.classCode ? formik.values.classCode : "Chưa có"}</span></p>
                 <div style={{ height: '24px', paddingLeft: '10px' }}>
@@ -656,6 +670,7 @@ export default function ClassManagement() {
                     error={formik.touched.leastNumberStudent && formik.errors.leastNumberStudent}
                     className={styles.input}
                     required
+                    disabled={apiLoading}
                   />
                   <Input
                     placeholder="Tối đa"
@@ -668,6 +683,7 @@ export default function ClassManagement() {
                     error={formik.touched.limitNumberStudent && formik.errors.limitNumberStudent}
                     className={styles.input}
                     required
+                    disabled={apiLoading}
                   />
                 </div>
                 <div style={{ height: '24px', paddingLeft: '10px' }}>
@@ -681,9 +697,9 @@ export default function ClassManagement() {
                 <p className={styles.addTitle}><span>*</span> Hình thức:</p>
               </Col>
               <Col span={18} style={{ display: 'flex', alignItems: 'center' }}>
-                <Radio.Group onChange={(e) => { setMethod(e.target.value) }} value={method}>
-                  <Radio value='OFFLINE'>Offline</Radio>
-                  <Radio value='ONLINE'>Online</Radio>
+                <Radio.Group disabled={apiLoading} onChange={(e) => { setMethod(e.target.value) }} value={method}>
+                  <Radio value='offline'>Offline</Radio>
+                  <Radio value='online'>Online</Radio>
                 </Radio.Group>
               </Col>
             </Row>
@@ -692,7 +708,7 @@ export default function ClassManagement() {
                 <p style={{ color: '#999999', fontSize: '16px' }}>Lịch học hàng tuần:</p>
               </Col>
               <Col span={16} style={{ display: 'flex', alignItems: 'center', justifyContent: 'right' }}>
-                <Button style={{ marginRight: '24px' }} onClick={() => {
+                <Button disabled={apiLoading || scheduleRequests.length >= 3} style={{ marginRight: '24px' }} onClick={() => {
                   const filterSchedule = scheduleRequests.filter((schedule) => {
                     return schedule.slotId !== null
                   })
@@ -720,6 +736,7 @@ export default function ClassManagement() {
                     onSlotChange={handleSlotChange}
                     onDelete={handleDeleteSchedule}
                     slots={slotsOptions}
+                    disabled={apiLoading}
                   />
                 </Col>
               </Row>
@@ -744,7 +761,8 @@ export default function ClassManagement() {
                   disabledDate={disabledDate}
                   onChange={(date) => setStartDate(date)}
                   format={'DD/MM/YYYY'}
-                  placeholder="Ngày bắt đầu" />
+                  placeholder="Ngày bắt đầu"
+                  disabled={apiLoading} />
                 <div style={{ height: '24px', paddingLeft: '10px' }}>
                   {startDateError && (<p style={{ color: 'red', fontSize: '14px', margin: '0' }}>{startDateError}</p>)}
                 </div>
@@ -764,13 +782,17 @@ export default function ClassManagement() {
                   placeholder="Giáo viên"
                   onSelect={(data) => { setLecturer(data) }}
                   notFoundContent={
-                    <Empty
-                      image={Empty.PRESENTED_IMAGE_SIMPLE}
-                      description={
-                        <span>
-                          Không tìm thấy giáo viên
-                        </span>
-                      } />
+                    lecturerLoading
+                      ? <div style={{ width: '100%', textAlign: 'center' }}>
+                        <Spin size='small' />
+                      </div>
+                      : <Empty
+                        image={Empty.PRESENTED_IMAGE_SIMPLE}
+                        description={
+                          <span>
+                            Không tìm thấy giáo viên
+                          </span>
+                        } />
                   }
                   options={
                     lecturersOptions
@@ -793,6 +815,7 @@ export default function ClassManagement() {
                       setLecturersOptions(lecturers);
                     }
                   }}
+                  disabled={apiLoading}
                 />
                 <div style={{ height: '24px', paddingLeft: '10px' }}>
                   {lecturerError && (<p style={{ color: 'red', fontSize: '14px', margin: '0' }}>{lecturerError}</p>)}
@@ -813,13 +836,17 @@ export default function ClassManagement() {
                   placeholder="Phòng học"
                   onSelect={(data) => { setRoom(data) }}
                   notFoundContent={
-                    <Empty
-                      image={Empty.PRESENTED_IMAGE_SIMPLE}
-                      description={
-                        <span>
-                          Không tìm thấy phòng học
-                        </span>
-                      } />
+                    roomLoading
+                      ? <div style={{ width: '100%', textAlign: 'center' }}>
+                        <Spin size='small' />
+                      </div>
+                      : <Empty
+                        image={Empty.PRESENTED_IMAGE_SIMPLE}
+                        description={
+                          <span>
+                            Không tìm thấy phòng học
+                          </span>
+                        } />
                   }
                   options={roomsOptions.map((room) => ({
                     value: room.id,
@@ -833,6 +860,7 @@ export default function ClassManagement() {
                       setRoomsOptions(filteredOptions);
                     }
                   }}
+                  disabled={apiLoading}
                 />
                 <div style={{ height: '24px', paddingLeft: '10px' }}>
                   {roomError && (<p style={{ color: 'red', fontSize: '14px', margin: '0' }}>{roomError}</p>)}
@@ -840,42 +868,31 @@ export default function ClassManagement() {
               </Col>
             </Row>
             <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
-              {apiLoading ? (
-                <>
-                  <Button loading className={styles.saveButton}>
-                    Lưu
-                  </Button>
-                  <Button disabled className={styles.cancelButton}>
-                    Hủy
-                  </Button>
-                </>
-              ) : (
-                <>
-                  <Button className={styles.saveButton} htmlType='submit'>
-                    Lưu
-                  </Button>
-                  <Button className={styles.cancelButton} onClick={() => {
-                    setAddModalOpen(false)
-                    setCourse(null)
-                    setCoursesOptions(courses)
-                    setCourseError(null)
+              <Button loading={apiLoading} className={styles.saveButton} htmlType='submit'>
+                Lưu
+              </Button>
+              <Button disabled={apiLoading} className={styles.cancelButton} onClick={() => {
+                setAddModalOpen(false)
+                setCourse(null)
+                setCoursesOptions(courses)
+                setCourseError(null)
 
-                    setLecturer(null)
-                    setLecturerError(null)
+                setLecturer(null)
+                setLecturersOptions(lecturers)
+                setLecturerError(null)
 
-                    setStartDate(null)
+                setMethod("offline")
+                setStartDate(null)
 
-                    setRoom(null)
-                    setRoomError(null)
+                setRoom(null)
+                setRoomError(null)
 
-                    setSchedulesRequests([{ dateOfWeek: null, slotId: null }])
-                    setSchedulesError(null)
-                    formik.resetForm()
-                  }}>
-                    Hủy
-                  </Button>
-                </>
-              )}
+                setSchedulesRequests([{ dateOfWeek: null, slotId: null }])
+                setSchedulesError(null)
+                formik.resetForm()
+              }}>
+                Hủy
+              </Button>
             </div>
           </form>
         </Modal>
@@ -904,56 +921,18 @@ export default function ClassManagement() {
             <p>{fileInput ? fileInput.name : 'Chưa có tệp nào được chọn'}</p>
           </div>
           <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
-            {apiLoading ? (
-              <>
-                <Button loading className={styles.saveButton}>
-                  Nạp tập tin
-                </Button>
-                <Button disabled className={styles.cancelButton}>
-                  Hủy
-                </Button>
-              </>
-            ) : (
-              <>
-                <Button onClick={handleImport} className={styles.saveButton}>
-                  Nạp tập tin
-                </Button>
-                <Button className={styles.cancelButton}
-                  onClick={() => {
-                    setFileInput(null)
-                    setExcelFile(null)
-                    setImportModalOpen(false)
-                  }}>
-                  Hủy
-                </Button>
-              </>
-            )}
+            <Button loading={apiLoading} onClick={handleImport} className={styles.saveButton}>
+              Nạp tập tin
+            </Button>
+            <Button disabled={apiLoading} className={styles.cancelButton}
+              onClick={() => {
+                setFileInput(null)
+                setExcelFile(null)
+                setImportModalOpen(false)
+              }}>
+              Hủy
+            </Button>
           </div>
-          {importRes && (
-            <>
-              <p style={{ color: 'green', marginBottom: 0 }}>Số lớp tạo thành công: <span>{importRes.successRow}</span></p>
-              <p style={{ color: 'red', marginTop: 0 }}>Số lớp tạo thất bại: <span>{importRes.failureRow}</span></p>
-              {importRes.rowInsertResponse.map(row => (
-                <>
-                  {row.isSucess
-                    ? <Alert style={{ marginBottom: 5 }} message={`${row.index} - Tạo lớp thành công`}
-                      description={
-                        <>
-                          <p style={{ margin: 0 }}><span style={{ fontWeight: 'bold' }}>Mã lớp học: </span>{row.successfulInformation.classCode}</p>
-                          <p style={{ margin: 0 }}><span style={{ fontWeight: 'bold' }}>Giáo viên: </span>{row.successfulInformation.lecturerName}</p>
-                          <p style={{ margin: 0 }}><span style={{ fontWeight: 'bold' }}>Phòng học: </span>{row.successfulInformation.roomName}</p>
-                        </>
-                      } type="success" showIcon />
-                    : <Alert style={{ marginBottom: 5 }} message={`${row.index} - Tạo lớp thất bại`}
-                      description={
-                        <>
-                          <p style={{ margin: 0 }}>{row.message}</p>
-                        </>
-                      } type="error" showIcon />}
-                </>
-              ))}
-            </>
-          )}
         </Modal>
       </ConfigProvider>
     </div >

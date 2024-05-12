@@ -28,9 +28,6 @@
   background: #ffeebc !important;
   color: black !important;
 }
-.searchBar {
-  min-width: 500px;
-}
 .searchBar input:hover {
   border-color: #ffd766 !important;
 }
@@ -69,4 +66,10 @@
   padding-bottom: 5px;
   margin-bottom: 12px !important;
   border-bottom: 1px solid #f2c955 !important;
+}
+.picker {
+  min-width: 300px;
+}
+.picker:hover {
+  border-color: #ffd766 !important;
 }

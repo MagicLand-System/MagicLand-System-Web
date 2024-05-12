@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from 'react'
-import { HomeOutlined, ShoppingCartOutlined } from '@ant-design/icons';
 import { Button, ConfigProvider, Menu } from 'antd';
 import styles from './Header.module.css'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
@@ -33,11 +32,19 @@ export default function Header() {
       setItems([
         {
           label: (
-            <Link className={styles.label} to={'#'}>
+            <Link className={styles.label} to={'/dashboard'}>
               Thống kê
             </Link>
           ),
           key: '/dashboard',
+        },
+        {
+          label: (
+            <Link className={styles.label} to={'/course-register'}>
+              Đăng kí khóa học
+            </Link>
+          ),
+          key: '/course-register',
         },
         {
           label: (
@@ -46,6 +53,14 @@ export default function Header() {
             </Link>
           ),
           key: '/transaction-management',
+        },
+        {
+          label: (
+            <Link className={styles.label} to={'/student-management'}>
+              Học viên
+            </Link>
+          ),
+          key: '/student-management',
         },
         {
           label: (
@@ -65,19 +80,11 @@ export default function Header() {
         },
         {
           label: (
-            <Link className={styles.label} to={'#'}>
-              Sự kiện
-            </Link>
-          ),
-          key: '/event-management',
-        },
-        {
-          label: (
-            <Link className={styles.label} to={'#'}>
+            <Link className={styles.label} to={'/staff-management'}>
               Nhân sự
             </Link>
           ),
-          key: '/account-management',
+          key: '/staff-management',
         },
         {
           label: (
@@ -86,14 +93,14 @@ export default function Header() {
             </Button>
           ),
           children: [
-            {
-              label: (
-                <Link className={styles.label} to={'#'}>
-                  Thông tin tài khoản
-                </Link>
-              ),
-              key: '/account',
-            },
+            // {
+            //   label: (
+            //     <Link className={styles.label} to={'#'}>
+            //       Thông tin tài khoản
+            //     </Link>
+            //   ),
+            //   key: '/account',
+            // },
             {
               label: (
                 <Button style={{ border: 'none', width: '100%' }} onClick={async () => {
@@ -114,7 +121,7 @@ export default function Header() {
       setItems([
         {
           label: (
-            <Link className={styles.label} to={'#'}>
+            <Link className={styles.label} to={'/dashboard'}>
               Thống kê
             </Link>
           ),
@@ -123,7 +130,7 @@ export default function Header() {
         {
           label: (
             <Link className={styles.label} to={'/syllabus-management'}>
-              Giáo trình
+              Chương trình học
             </Link>
           ),
           key: '/syllabus-management',
@@ -135,14 +142,6 @@ export default function Header() {
             </Link>
           ),
           key: '/course-management',
-        },
-        {
-          label: (
-            <Link className={styles.label} to={'#'}>
-              Sự kiện
-            </Link>
-          ),
-          key: '/event-management',
         },
         {
           label: (
@@ -162,11 +161,11 @@ export default function Header() {
         },
         {
           label: (
-            <Link className={styles.label} to={'#'}>
+            <Link className={styles.label} to={'/staff-management'}>
               Nhân sự
             </Link>
           ),
-          key: '/account-management',
+          key: '/staff-management',
         },
         {
           label: (
@@ -175,14 +174,14 @@ export default function Header() {
             </Button>
           ),
           children: [
-            {
-              label: (
-                <Link className={styles.label} to={'#'}>
-                  Thông tin tài khoản
-                </Link>
-              ),
-              key: '/account',
-            },
+            // {
+            //   label: (
+            //     <Link className={styles.label} to={'#'}>
+            //       Thông tin tài khoản
+            //     </Link>
+            //   ),
+            //   key: '/account',
+            // },
             {
               label: (
                 <Button style={{ border: 'none', width: '100%' }} onClick={async () => {

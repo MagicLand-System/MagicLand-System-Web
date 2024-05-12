@@ -67,7 +67,8 @@
   border: 1px solid #f2c955;
   background-color: #fffcf4;
   height: 100%;
-  width: 90%;
+  width: 100%;
+  box-sizing: border-box;
   border-radius: 10px;
 }
 .classPartTitle {
@@ -85,14 +86,14 @@
   border: 1px solid #ffd766 !important;
 }
 .cancelButton {
-  background-color: #FF6868;
+  background-color: #ff6868;
   margin-right: 8px;
   color: white !important;
 }
 .cancelButton:hover {
   background: #fb5959 !important;
   color: white !important;
-  border: 1px solid #FF6868 !important;
+  border: 1px solid #ff6868 !important;
 }
 .modalHeader {
   padding-bottom: 5px;
@@ -122,4 +123,17 @@
   margin: 0;
   line-height: 40px;
   margin-right: 16px;
+}
+.currencyInput {
+  border: 1px solid #d9d9d9;
+  box-sizing: border-box;
+  border-radius: 6px;
+  padding: 4px 11px 4px;
+}
+.currencyInput::placeholder {
+  color: #bfbfbf;
+}
+.currencyInput:focus-visible {
+  box-shadow: 0 0 0 2px rgba(5, 145, 255, 0.1);
+  outline: 0;
 }
