@@ -275,8 +275,8 @@ export default function Register() {
                 disabled={loading}
               /> */}
               <Input
-                placeholder="Email"
-                name='email'
+                placeholder="Address"
+                name='address'
                 value={address}
                 onChange={(e) => { setAddress(e.target.value) }}
                 className={styles.input}

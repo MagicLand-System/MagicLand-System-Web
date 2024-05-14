@@ -37,6 +37,7 @@ export default function RegisterCourse() {
     const [childrensError, setChildrensError] = useState(null)
 
     const [method, setMethod] = useState('cash')
+    const [price, setPrice] = useState(0)
     const [paymentResponse, setPaymentResponse] = useState(null);
     const [apiLoading, setApiLoading] = useState(false)
 
@@ -70,6 +71,7 @@ export default function RegisterCourse() {
     async function getCourseData(id) {
         const data = await getCourse(id);
         setCourse(data);
+        setPrice(data.price)
     }
     async function getClassData(id) {
         const data = await getClass(id);
@@ -188,7 +190,7 @@ export default function RegisterCourse() {
                 classId,
                 studentIdList
             }]
-            const data = await cashCheckout({ staffUserCheckout, requests, createStudentRequest: newChildrensList })
+            const data = await cashCheckout({ staffUserCheckout, requests, createStudentRequest: newChildrensList})
             setPaymentResponse(data)
             setCurrentStep(currentStep + 1)
         } catch (error) {
@@ -199,7 +201,7 @@ export default function RegisterCourse() {
                 title: "Đăng kí thất bại",
                 text: error.response.data.Error,
                 showConfirmButton: false
-            })
+            }).then(() => { getCourseData(courseId) })
         } finally {
             setApiLoading(false)
         }
@@ -226,7 +228,7 @@ export default function RegisterCourse() {
                 age--;
             }
             if (age < course?.minYearOldsStudent || age > course?.maxYearOldsStudent) {
-                errors.dateOfBirthError = `Tuổi của trẻ phải từ ${course?.minYearOldsStudent} đến ${course?.maxYearOldsStudent}`;
+                errors.dateOfBirthError = `Tuổi của bé phải từ ${course?.minYearOldsStudent} đến ${course?.maxYearOldsStudent}`;
             }
         }
 
@@ -646,7 +648,7 @@ export default function RegisterCourse() {
                                         <p className={styles.syllabusTitle}>Chi phí khóa học:</p>
                                     </Col>
                                     <Col span={16}>
-                                        <p className={styles.syllabusInfo}>{course?.price?.toLocaleString()} đ</p>
+                                        <p className={styles.syllabusInfo}>{price.toLocaleString()} đ</p>
                                     </Col>
                                 </Row>
                                 <Row style={{ marginTop: 10 }}>
@@ -654,7 +656,7 @@ export default function RegisterCourse() {
                                         <p className={styles.syllabusTitle}>Tổng chi phí:</p>
                                     </Col>
                                     <Col span={16}>
-                                        <p className={styles.syllabusInfo}>{(course?.price * childrensList.length + course?.price * newChildrensList.length).toLocaleString()} đ</p>
+                                        <p className={styles.syllabusInfo}>{(price * childrensList.length + price * newChildrensList.length).toLocaleString()} đ</p>
                                     </Col>
                                 </Row>
                                 {/* <Row style={{ marginTop: 20 }}>

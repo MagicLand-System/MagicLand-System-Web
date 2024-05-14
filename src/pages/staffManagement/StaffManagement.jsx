@@ -120,10 +120,32 @@ export default function StaffManagement() {
             dataIndex: 'phone',
             render: (phone) => phone && formatPhone(phone)
         },
+    ];
+    const columnsLecturer = [
         {
-            title: 'Ngày sinh',
-            dataIndex: 'dateOfBirth',
-            render: (_, record) => (record.dateOfBirth && formatDate(record.dateOfBirth)),
+            title: 'Họ và tên',
+            dataIndex: 'fullName',
+            sorter: (a, b) => a.fullName.toLowerCase().localeCompare(b.fullName.toLowerCase()),
+            render: (_, record) => (
+                <div style={{ display: 'flex', flexDirection: 'row', alignItems: 'center' }}>
+                    <Avatar size={64} src={record.imgAvatar} style={{ marginRight: '10px' }} />
+                    <p>{record.fullName}</p>
+                </div>
+            ),
+        },
+        {
+            title: 'Email',
+            dataIndex: 'email',
+            render: (email) => email ? email : 'Chưa có'
+        },
+        {
+            title: 'Số điện thoại',
+            dataIndex: 'phone',
+            render: (phone) => phone && formatPhone(phone)
+        },
+        {
+            title: 'Chuyên ngành',
+            render: (record) => record.lecturerField && record.lecturerField.name
         },
     ];
     const formik = useFormik({
@@ -224,7 +246,7 @@ export default function StaffManagement() {
                             children: (
                                 <>
                                     <Table
-                                        columns={columns}
+                                        columns={searchRole === 'LECTURER' ? columnsLecturer : columns}
                                         rowKey={(record) => record.id}
                                         dataSource={users}
                                         pagination={tableParams.pagination}

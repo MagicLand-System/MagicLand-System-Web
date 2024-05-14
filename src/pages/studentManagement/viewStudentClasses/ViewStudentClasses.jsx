@@ -155,7 +155,7 @@ export default function ViewStudentClasses() {
             title: 'Bảo lưu',
             render: (_, record) => {
                 if (status && status !== 'completed' && record.canChangeClass === true) {
-                    return <Button loading={apiLoading} onClick={() => handleReserve(record.classId)} className={styles.cancelButton}>
+                    return <Button disabled={apiLoading} onClick={() => handleReserve(record.classId)} className={styles.cancelButton}>
                         Bảo lưu
                     </Button>
                 }
@@ -266,13 +266,13 @@ export default function ViewStudentClasses() {
             dataIndex: 'status',
             render: (status) => {
                 if (status) {
-                    if (status.toLowerCase().includes('upcomming')) {
+                    if (status.toLowerCase().includes('upcoming')) {
                         return <div style={{ backgroundColor: '#E5F2FF', color: '#0066FF', whiteSpace: 'nowrap' }} className={styles.status}>Chưa diễn ra</div>
                     } else if (status.toLowerCase().includes('present')) {
                         return <div style={{ backgroundColor: '#d4edda', color: '#155724', whiteSpace: 'nowrap' }} className={styles.status}>Có mặt</div>
                     } else if (status.toLowerCase().includes('absent')) {
                         return <div style={{ backgroundColor: '#FFE5E5', color: '#FF0000', whiteSpace: 'nowrap' }} className={styles.status}>Vắng mặt</div>
-                    } else if (status.toLowerCase().includes('canceled')) {
+                    } else if (status.toLowerCase().includes('cancel')) {
                         return <div style={{ backgroundColor: '#e7e9ea', color: '#495057', whiteSpace: 'nowrap' }} className={styles.status}>Đã hủy</div>
                     }
                 }
@@ -308,13 +308,13 @@ export default function ViewStudentClasses() {
             dataIndex: 'status',
             render: (status) => {
                 if (status) {
-                    if (status.toLowerCase().includes('upcomming')) {
+                    if (status.toLowerCase().includes('upcoming')) {
                         return <div style={{ backgroundColor: '#87ceeb', color: '#000080', whiteSpace: 'nowrap' }} className={styles.status}>Chưa diễn ra</div>
                     } else if (status.toLowerCase().includes('present')) {
                         return <div style={{ backgroundColor: '#d4edda', color: '#155724', whiteSpace: 'nowrap' }} className={styles.status}>Có mặt</div>
                     } else if (status.toLowerCase().includes('absent')) {
                         return <div style={{ backgroundColor: '#FFE5E5', color: '#FF0000', whiteSpace: 'nowrap' }} className={styles.status}>Vắng mặt</div>
-                    } else if (status.toLowerCase().includes('canceled')) {
+                    } else if (status.toLowerCase().includes('cancel')) {
                         return <div style={{ backgroundColor: '#e7e9ea', color: '#495057', whiteSpace: 'nowrap' }} className={styles.status}>Đã hủy</div>
                     }
                 }

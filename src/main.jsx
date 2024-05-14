@@ -40,6 +40,8 @@ import ViewStudentClasses from './pages/studentManagement/viewStudentClasses/Vie
 import StaffManagement from './pages/staffManagement/StaffManagement.jsx'
 import ViewStudentMakeUp from './pages/studentManagement/viewStudentMakeUp/ViewStudentMakeUp.jsx'
 import ViewStudentReserve from './pages/studentManagement/viewStudentReserve/ViewStudentReserve.jsx'
+import ViewProfile from './pages/profile/ViewProfile.jsx'
+import UpdateProfile from './pages/profile/updateProfile/UpdateProfile.jsx'
 
 const router = createBrowserRouter([
   //Route đã đăng nhập thì k vào được, k có header, footer
@@ -192,6 +194,14 @@ const router = createBrowserRouter([
           {
             path: '/staff-management',
             element: <StaffManagement />
+          },
+          {
+            path: '/view-profile',
+            element: <ViewProfile />
+          },
+          {
+            path: '/update-profile',
+            element: <UpdateProfile />
           },
         ]
       },

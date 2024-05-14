@@ -348,7 +348,7 @@ export default function ClassDetail() {
         },
         {
             title: 'Giờ học',
-            render: (_, record) => `${record.slot.startTime} - ${record.slot.endTime}`
+            render: (_, record) => `${record.slot.startTimeString} - ${record.slot.endTimeString}`
         },
         {
             title: 'Phòng học',
@@ -577,26 +577,26 @@ export default function ClassDetail() {
                                 </>
                             )
                         },
-                        (classData?.status?.toLowerCase().includes('completed') || classData?.status?.toLowerCase().includes('progressing')) && {
-                            label: 'Bảng điểm',
-                            key: 'studentsTranscript',
-                            children: (
-                                <>
-                                    {/* <div style={{ display: 'flex', marginBottom: '16px' }}>
-                                        <Search className={styles.searchBar} placeholder="Tìm kiếm học viên..." onSearch={(value, e) => { console.log(value) }} enterButton />
-                                    </div> */}
-                                    <Table
-                                        columns={transcriptColumns}
-                                        rowKey={(record) => record.studentId}
-                                        dataSource={studentsTranscript}
-                                        pagination={tableParams.pagination}
-                                        loading={loading}
-                                        onChange={handleTableChange}
-                                        sticky={{ offsetHeader: 72 }}
-                                    />
-                                </>
-                            )
-                        },
+                        // (classData?.status?.toLowerCase().includes('completed') || classData?.status?.toLowerCase().includes('progressing')) && {
+                        //     label: 'Bảng điểm',
+                        //     key: 'studentsTranscript',
+                        //     children: (
+                        //         <>
+                        //             {/* <div style={{ display: 'flex', marginBottom: '16px' }}>
+                        //                 <Search className={styles.searchBar} placeholder="Tìm kiếm học viên..." onSearch={(value, e) => { console.log(value) }} enterButton />
+                        //             </div> */}
+                        //             <Table
+                        //                 columns={transcriptColumns}
+                        //                 rowKey={(record) => record.studentId}
+                        //                 dataSource={studentsTranscript}
+                        //                 pagination={tableParams.pagination}
+                        //                 loading={loading}
+                        //                 onChange={handleTableChange}
+                        //                 sticky={{ offsetHeader: 72 }}
+                        //             />
+                        //         </>
+                        //     )
+                        // },
                         {
                             label: 'Lịch học',
                             key: 'sessions',

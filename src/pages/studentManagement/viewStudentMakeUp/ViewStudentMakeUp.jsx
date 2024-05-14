@@ -3,7 +3,7 @@ import styles from './ViewStudentMakeUp.module.css'
 import { Button, Input, Table, Tabs, ConfigProvider, DatePicker, Avatar, } from 'antd';
 import { SwapOutlined } from '@ant-design/icons';
 import { useNavigate, useParams } from 'react-router-dom';
-import { formatDate, formatDayOfWeek } from '../../../utils/utils';
+import { formatDate, formatDateTime, formatDayOfWeek } from '../../../utils/utils';
 import dayjs from 'dayjs';
 import { getListMakeUpStudent } from '../../../api/student';
 
@@ -66,10 +66,10 @@ export default function ViewStudentMakeUp() {
                 </div>
             ),
         },
-        {
-            title: 'Ngày sinh',
-            render: (_, record) => (record.studentResponse?.dateOfBirth && formatDate(record.studentResponse?.dateOfBirth)),
-        },
+        // {
+        //     title: 'Ngày sinh',
+        //     render: (_, record) => (record.studentResponse?.dateOfBirth && formatDate(record.studentResponse?.dateOfBirth)),
+        // },
         {
             title: 'Tên phụ huynh',
             render: (_, record) => record.parentResponse.fullName,
@@ -82,25 +82,30 @@ export default function ViewStudentMakeUp() {
         {
             title: 'Buổi học',
             dataIndex: 'noOfSession',
-            width: 120
+            width: 90
         },
         {
             title: 'Trạng thái',
             dataIndex: 'status',
             render: (status) => {
                 if (status) {
-                    if (status.toLowerCase().includes('makeup')) {
-                        return <div style={{ backgroundColor: '#d4edda', color: '#155724', whiteSpace: 'nowrap' }} className={styles.status}>Chưa xếp lịch</div>
-                    } else if (status.toLowerCase().includes('expired')) {
+                    if (status.toLowerCase().includes('đang chờ xếp')) {
+                        return <div style={{ backgroundColor: '#E5F2FF', color: '#0066FF', whiteSpace: 'nowrap' }} className={styles.status}>Đang chờ xếp</div>
+                    } else if (status.toLowerCase().includes('hết hạn')) {
                         return <div style={{ backgroundColor: '#FFE5E5', color: '#FF0000', whiteSpace: 'nowrap' }} className={styles.status}>Hết hạn</div>
                     }
                 }
             }
         },
         {
+            title: 'Ngày hiệu lực',
+            dataIndex: 'validDate',
+            render: (validDate) => validDate && formatDateTime(validDate)
+        },
+        {
             title: 'Xếp lịch',
             render: (_, record) => (
-                <Button type='link' onClick={() => navigate(`/student-management/view-classes/${record.studentResponse.studentId}/make-up-class/${record.scheduleId}`, { state: { action: 'afterMakeUp' } })} icon={<SwapOutlined />} size='large' />
+                <Button type='link' onClick={() => navigate(`/student-management/view-classes/${record.studentResponse.studentId}/make-up-class/${record.sessionDescription[0].scheduleId}`, { state: { action: 'afterMakeUp' } })} icon={<SwapOutlined />} size='large' />
             ),
             width: 120,
         },
