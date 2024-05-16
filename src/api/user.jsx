@@ -4,6 +4,10 @@ export const getCurrentUser = async () => {
     const response = await api.get("/api/v1/users/getcurrentuser");
     return response.data;
 };
+export const updateCurrentUser = async (credential) => {
+    const response = await api.put("/api/v1/users/update", credential);
+    return response.data;
+};
 export const getLecturerSchedule = async (credential) => {
     const response = await api.get("/api/v1/users/getByAdmin", {
         params: credential

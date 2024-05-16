@@ -113,3 +113,7 @@ export const getLecturerSession = async (classId, slotId, date) => {
   const response = await api.get(`/api/v1/classes/getLecturerForUpdateSession`, { params: { classId, slotId, date } });
   return response.data;
 };
+export const getClassScores = async (classId) => {
+  const response = await api.get(`/api/v1/exams/class/students/score`, { params: { classId } });
+  return response.data;
+}

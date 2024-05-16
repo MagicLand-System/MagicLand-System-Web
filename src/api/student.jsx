@@ -77,3 +77,19 @@ export const addStudentToClass = async (courseId, classId, studentId) => {
     });
     return response.data;
 };
+export const getListStudentScore = async (examId) => {
+    const response = await api.get(`/api/v1/classes/getExamScore`, {
+        params: { examId }
+    });
+    return response.data;
+};
+export const saveStudentScore = async (examId, scoreList) => {
+    const response = await api.put(`/api/v1/classes/setExamScore`, {
+        params: { examId, scoreList }
+    });
+    return response.data;
+};
+export const getStudentClassScore = async (classId, studentId) => {
+    const response = await api.get(`/api/v1/exams/class/students/score`, { params: { classId, studentId } });
+    return response.data;
+  }

@@ -22,7 +22,7 @@ export default function Register() {
   const [phone, setPhone] = useState('')
   const [loading, setLoading] = useState(false)
   const [showOtp, setShowOtp] = useState(false)
-  const [showFillInfo, setShowFillInfo] = useState(true)
+  const [showFillInfo, setShowFillInfo] = useState(false)
 
   const [dateOfBirth, setDateOfBirth] = useState(dayjs().subtract(3, 'year'))
   const [gender, setGender] = useState('Khác')
@@ -120,19 +120,26 @@ export default function Register() {
           setAddressError(null)
         }
       } else {
-        const stringDateOfBirth = dateOfBirth.toISOString()
-        const data = await register({ ...values, phone: `+${phone}`, gender, dateOfBirth: stringDateOfBirth, address })
-        if (data) {
-          await signOut(auth)
-          Swal.fire({
-            position: "center",
-            icon: "success",
-            title: "Đăng kí thành công",
-            showConfirmButton: false,
-            timer: 2000
-          }).then(() => {
-            navigate('/login')
-          })
+        try {
+          setLoading(true)
+          const stringDateOfBirth = dateOfBirth.toISOString()
+          const data = await register({ ...values, phone: `+${phone}`, gender, dateOfBirth: stringDateOfBirth, address })
+          if (data) {
+            await signOut(auth)
+            Swal.fire({
+              position: "center",
+              icon: "success",
+              title: "Đăng kí thành công",
+              showConfirmButton: false,
+              timer: 2000
+            }).then(() => {
+              navigate('/login')
+            })
+          }
+        } catch (error) {
+          console.log(error)
+        } finally {
+          setLoading(false)
         }
       }
     },
@@ -275,8 +282,8 @@ export default function Register() {
                 disabled={loading}
               /> */}
               <Input
-                placeholder="Email"
-                name='email'
+                placeholder="Address"
+                name='address'
                 value={address}
                 onChange={(e) => { setAddress(e.target.value) }}
                 className={styles.input}

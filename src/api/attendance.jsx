@@ -5,9 +5,9 @@ export const getAttendanceClasses = async (credential) => {
     });
     return response.data;
 };
-export const getListAttendance = async (credential) => {
+export const getListAttendance = async (scheduleId, searchString) => {
     const response = await api.get("api/v1/attendance/staff/load", {
-        params: credential
+        params: { scheduleId, searchString }
     });
     return response.data;
 };

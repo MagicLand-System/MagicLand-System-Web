@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react'
 import styles from './ViewStudentClasses.module.css'
-import { Button, Input, Table, Tabs, ConfigProvider, DatePicker, Row, Col, Avatar, } from 'antd';
+import { Button, Input, Table, Tabs, ConfigProvider, DatePicker, Row, Col, Avatar, Modal, } from 'antd';
 import { SwapOutlined } from '@ant-design/icons';
 import { useNavigate, useParams } from 'react-router-dom';
 import { getClasses } from '../../../api/classesApi';
 import { formatDate, formatDayOfWeek, formatPhone } from '../../../utils/utils';
-import { getClassOfStudent, getStudent, setReserve } from '../../../api/student';
+import { getClassOfStudent, getStudent, getStudentClassScore, setReserve } from '../../../api/student';
 import Swal from 'sweetalert2';
 
 const { Search } = Input;
@@ -46,6 +46,8 @@ export default function ViewStudentClasses() {
         },
     });
     const [apiLoading, setApiLoading] = useState(false)
+    const [scores, setScores] = useState(null)
+    const [viewScoresModalOpen, setViewScoresModalOpen] = useState(false)
     const handleReserve = (classId) => {
         Swal.fire({
             title: "Bạn chắc chắn muốn bảo lưu bé?",
@@ -102,6 +104,11 @@ export default function ViewStudentClasses() {
         const data = await getStudent(studentId);
         setStudent(data[0]);
     };
+    async function handleViewScore(classId, studentId) {
+        const data = await getStudentClassScore(classId, studentId);
+        setScores(data[0])
+        setViewScoresModalOpen(true)
+    }
     useEffect(() => {
         getStudentData(studentId);
     }, [studentId]);
@@ -155,7 +162,7 @@ export default function ViewStudentClasses() {
             title: 'Bảo lưu',
             render: (_, record) => {
                 if (status && status !== 'completed' && record.canChangeClass === true) {
-                    return <Button loading={apiLoading} onClick={() => handleReserve(record.classId)} className={styles.cancelButton}>
+                    return <Button disabled={apiLoading} onClick={() => handleReserve(record.classId)} className={styles.cancelButton}>
                         Bảo lưu
                     </Button>
                 }
@@ -213,6 +220,54 @@ export default function ViewStudentClasses() {
             width: 120,
         },
     ];
+    const columnsProgressing = [
+        {
+            title: 'Mã lớp học',
+            dataIndex: 'classCode',
+            sorter: (a, b) => a.classCode.toLowerCase().localeCompare(b.classCode.toLowerCase()),
+        },
+        {
+            title: 'Tên khóa học',
+            dataIndex: 'courseName',
+            sorter: (a, b) => a.courseName.toLowerCase().localeCompare(b.courseName.toLowerCase()),
+        },
+        {
+            title: 'Giáo viên',
+            dataIndex: 'lecturerName',
+        },
+        {
+            title: 'Ngày bắt đầu',
+            dataIndex: 'startDate',
+            render: (startDate) => startDate && formatDate(startDate)
+        },
+        {
+            title: 'Lịch học',
+            dataIndex: 'schedules',
+            render: (schedules) =>
+                schedules.map((session, index) => (
+                    <p style={{ margin: 0 }} key={index}>
+                        {formatDayOfWeek(session.dayOfWeek)}: {session.startTime} - {session.endTime}
+                    </p>
+                ))
+            ,
+        },
+        {
+            title: 'Xem các bài kiểm tra',
+            render: (_, record) => {
+                return <Button type='link' onClick={() => handleViewScore(record.classId, studentId)} icon={<SwapOutlined />} size='large' />
+            },
+            width: 120,
+        },
+        {
+            title: 'Chuyển lớp',
+            render: (_, record) => {
+                if (status && status !== 'completed' && record.canChangeClass === true) {
+                    return <Button type='link' onClick={() => navigate(`change-class/${record.classId}`)} icon={<SwapOutlined />} size='large' />
+                }
+            },
+            width: 120,
+        },
+    ];
     const columnsComplete = [
         {
             title: 'Mã lớp học',
@@ -244,6 +299,13 @@ export default function ViewStudentClasses() {
                 ))
             ,
         },
+        {
+            title: 'Xem các bài kiểm tra',
+            render: (_, record) => {
+                return <Button type='link' onClick={() => handleViewScore(record.classId, studentId)} icon={<SwapOutlined />} size='large' />
+            },
+            width: 120,
+        },
     ];
     const scheduleColumns = [
         {
@@ -266,13 +328,13 @@ export default function ViewStudentClasses() {
             dataIndex: 'status',
             render: (status) => {
                 if (status) {
-                    if (status.toLowerCase().includes('upcomming')) {
+                    if (status.toLowerCase().includes('upcoming')) {
                         return <div style={{ backgroundColor: '#E5F2FF', color: '#0066FF', whiteSpace: 'nowrap' }} className={styles.status}>Chưa diễn ra</div>
                     } else if (status.toLowerCase().includes('present')) {
                         return <div style={{ backgroundColor: '#d4edda', color: '#155724', whiteSpace: 'nowrap' }} className={styles.status}>Có mặt</div>
                     } else if (status.toLowerCase().includes('absent')) {
                         return <div style={{ backgroundColor: '#FFE5E5', color: '#FF0000', whiteSpace: 'nowrap' }} className={styles.status}>Vắng mặt</div>
-                    } else if (status.toLowerCase().includes('canceled')) {
+                    } else if (status.toLowerCase().includes('cancel')) {
                         return <div style={{ backgroundColor: '#e7e9ea', color: '#495057', whiteSpace: 'nowrap' }} className={styles.status}>Đã hủy</div>
                     }
                 }
@@ -308,17 +370,46 @@ export default function ViewStudentClasses() {
             dataIndex: 'status',
             render: (status) => {
                 if (status) {
-                    if (status.toLowerCase().includes('upcomming')) {
+                    if (status.toLowerCase().includes('upcoming')) {
                         return <div style={{ backgroundColor: '#87ceeb', color: '#000080', whiteSpace: 'nowrap' }} className={styles.status}>Chưa diễn ra</div>
                     } else if (status.toLowerCase().includes('present')) {
                         return <div style={{ backgroundColor: '#d4edda', color: '#155724', whiteSpace: 'nowrap' }} className={styles.status}>Có mặt</div>
                     } else if (status.toLowerCase().includes('absent')) {
                         return <div style={{ backgroundColor: '#FFE5E5', color: '#FF0000', whiteSpace: 'nowrap' }} className={styles.status}>Vắng mặt</div>
-                    } else if (status.toLowerCase().includes('canceled')) {
+                    } else if (status.toLowerCase().includes('cancel')) {
                         return <div style={{ backgroundColor: '#e7e9ea', color: '#495057', whiteSpace: 'nowrap' }} className={styles.status}>Đã hủy</div>
                     }
                 }
             }
+        },
+    ];
+    const transcriptColumns = [
+        {
+            title: 'Loại',
+            dataIndex: 'quizCategory',
+        },
+        {
+            title: 'Tiêu đề',
+            dataIndex: 'examName',
+        },
+        {
+            title: 'Nội dung',
+            dataIndex: 'quizName',
+        },
+        // {
+        //     title: 'Trọng số',
+        //     dataIndex: 'weight',
+        //     render: (weight) => `${weight}%`
+        // },
+        {
+            title: 'Ngày làm bài',
+            dataIndex: 'doingDate',
+            render: (doingDate) => doingDate ? formatDate(doingDate) : 'Chưa có'
+        },
+        {
+            title: 'Số điểm',
+            dataIndex: 'scoreEarned',
+            render: (scoreEarned) => scoreEarned ? scoreEarned : 'Chưa có'
         },
     ];
     return (
@@ -423,7 +514,7 @@ export default function ViewStudentClasses() {
                                 <>
                                     <h5 style={{ fontSize: '1rem', color: '#888888', fontWeight: 'normal', margin: '0 10px 10px' }}>Số lượng lớp <span style={{ textTransform: "lowercase" }}>{statusL.label}</span>: {!loading && numberOfClasses}</h5>
                                     <Table
-                                        columns={status === 'completed' ? columnsComplete : status === 'upcoming' ? columns : columnsCancel}
+                                        columns={status === 'completed' ? columnsComplete : status === 'upcoming' ? columns : status === 'progressing' ? columnsProgressing : columnsCancel}
                                         expandable={{
                                             expandedRowRender: (record) =>
                                                 <ConfigProvider
@@ -437,15 +528,38 @@ export default function ViewStudentClasses() {
                                                     }}
                                                 >
                                                     <Table
-                                                        columns={(record.status === 'COMPLETED' || record.status === 'CANCELED') ? scheduleColumnsNotMakeUp : scheduleColumns}
+                                                        columns={record.status === 'PROGRESSING' ? scheduleColumns : scheduleColumnsNotMakeUp}
                                                         rowKey={(record) => record.id}
                                                         dataSource={record.classScheduleResponses}
                                                         sticky={{ offsetHeader: 128 }}
-                                                        pagination={false}
+                                                        pagination={false} expandable={{
+                                                            expandedRowRender: (record) =>
+                                                                <>
+                                                                    <Row>
+                                                                        <Col span={3}>
+                                                                            <p className={styles.classTitle}>Chủ đề:</p>
+                                                                        </Col>
+                                                                        <Col span={19}>
+                                                                            <p className={styles.classDetail} style={{ textAlign: 'left', marginLeft: 10 }}>{record?.topicContent?.topicName}</p>
+                                                                        </Col>
+                                                                    </Row>
+                                                                    <Row>
+                                                                        <Col span={3}>
+                                                                            <p className={styles.classTitle}>Nội dung buổi học:</p>
+                                                                        </Col>
+                                                                        <Col span={19}>
+                                                                            {record?.topicContent?.contents && record.topicContent.contents.map((content, index) => (
+                                                                                <div key={index}>
+                                                                                    <p className={styles.classDetail} style={{ textAlign: 'left', marginLeft: 10 }}> {content.content}:</p>
+                                                                                    {content.details.map((detail) => <p className={styles.classDetail} style={{ textAlign: 'left', marginLeft: 10 }}>&emsp;-&nbsp;{detail}</p>)}
+                                                                                </div>
+                                                                            ))}
+                                                                        </Col>
+                                                                    </Row>
+                                                                </>
+                                                        }}
                                                     />
                                                 </ConfigProvider>,
-                                            onExpand: (expanded, record) =>
-                                                console.log("onExpand: ", record, expanded),
                                         }}
                                         rowKey={(record) => record.classId}
                                         dataSource={classes}
@@ -459,6 +573,38 @@ export default function ViewStudentClasses() {
                         }
                     ))}
                 />
+            </ConfigProvider>
+            <ConfigProvider
+                theme={{
+                    components: {
+                        Modal: {
+                            titleFontSize: '1.2rem',
+                        },
+                    },
+                }}
+            >
+                <Modal
+                    title="Các bài kiểm tra"
+                    centered
+                    open={viewScoresModalOpen}
+                    footer={null}
+                    onCancel={() => setViewScoresModalOpen(false)}
+                    classNames={{ header: styles.modalHeader }}
+                    width="80%"
+                >
+                    <Table
+                        columns={transcriptColumns}
+                        rowKey={(record) => record.examId}
+                        dataSource={scores?.examInfors}
+                        scroll={{ y: '480px' }}
+                    />
+                    <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+                        <Button className={styles.cancelButton}
+                            onClick={() => { setViewScoresModalOpen(false) }}>
+                            Đóng
+                        </Button>
+                    </div>
+                </Modal>
             </ConfigProvider>
         </div >
     )

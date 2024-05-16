@@ -333,10 +333,8 @@ export default function ImportClasses() {
                     icon: "error",
                     title: "Thêm lớp học thất bại",
                     text: `Vui lòng điền đủ thông tin lớp học có số thứ tự ${errors.map((error, index) => {
-                        if (index !== errors.length - 1) {
-                            return error + ", "
-                        } else {
-                            return error
+                        if (index !== errors.length) {
+                            return " " + error
                         }
                     })}`,
                     showConfirmButton: false,

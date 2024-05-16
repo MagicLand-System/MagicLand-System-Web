@@ -57,25 +57,3 @@
   font-size: 1.2rem;
   font-weight: bold;
 }
-.classTitle {
-  color: #888888;
-  margin: 0;
-  font-size: 1rem;
-}
-.classDetail {
-  margin: 0;
-  text-align: right;
-  font-size: 1rem;
-}
-.classPart {
-  padding: 12px 12px 6px;
-  border: 1px solid #f2c955;
-  background-color: #fffcf4;
-  height: 100%;
-  width: 90%;
-  border-radius: 10px;
-}
-.classPartTitle {
-  font-size: 1.2rem;
-  margin: 8px 0;
-}

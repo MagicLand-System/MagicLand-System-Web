@@ -3,7 +3,7 @@ import styles from './ViewStudentReserve.module.css'
 import { Button, Input, Table, Tabs, ConfigProvider, DatePicker, Avatar, } from 'antd';
 import { SwapOutlined } from '@ant-design/icons';
 import { useNavigate, useParams } from 'react-router-dom';
-import { formatDate, formatDayOfWeek } from '../../../utils/utils';
+import { formatDate, formatDateTime, formatDayOfWeek } from '../../../utils/utils';
 import dayjs from 'dayjs';
 import { getListReserve } from '../../../api/student';
 
@@ -66,10 +66,10 @@ export default function ViewStudentReserve() {
                 </div>
             ),
         },
-        {
-            title: 'Ngày sinh',
-            render: (_, record) => (record.studentResponse?.dateOfBirth && formatDate(record.studentResponse?.dateOfBirth)),
-        },
+        // {
+        //     title: 'Ngày sinh',
+        //     render: (_, record) => (record.studentResponse?.dateOfBirth && formatDate(record.studentResponse?.dateOfBirth)),
+        // },
         {
             title: 'Tên phụ huynh',
             render: (_, record) => record.parentResponse.fullName,
@@ -84,8 +84,8 @@ export default function ViewStudentReserve() {
             dataIndex: 'status',
             render: (status) => {
                 if (status) {
-                    if (status.toLowerCase().includes('reserved')) {
-                        return <div style={{ backgroundColor: '#d4edda', color: '#155724', whiteSpace: 'nowrap' }} className={styles.status}>Bảo lưu</div>
+                    if (status.toLowerCase().includes('saved')) {
+                        return <div style={{ backgroundColor: '#E5F2FF', color: '#0066FF', whiteSpace: 'nowrap' }} className={styles.status}>Bảo lưu</div>
                     } else if (status.toLowerCase().includes('expired')) {
                         return <div style={{ backgroundColor: '#FFE5E5', color: '#FF0000', whiteSpace: 'nowrap' }} className={styles.status}>Đã hết hạn</div>
                     }
@@ -93,10 +93,14 @@ export default function ViewStudentReserve() {
             }
         },
         {
+            title: 'Ngày hiệu lực',
+            dataIndex: 'validDate',
+            render: (validDate) => validDate && formatDateTime(validDate)
+        },
+        {
             title: 'Xếp lớp',
             render: (_, record) => (
-                // <Button type='link' onClick={() => navigate(`/student-management/view-reserve/${record.studentResponse.studentId}/register/${record.courseId}`)} icon={<SwapOutlined />} size='large' />
-                <Button type='link' onClick={() => navigate(`/student-management/view-reserve/${record.studentResponse.studentId}/register/f58b4085-bc3a-42ba-9ea9-48f5dca91496`)} icon={<SwapOutlined />} size='large' />
+                <Button type='link' onClick={() => navigate(`/student-management/view-reserve/${record.studentResponse.studentId}/register/${record.courseId}`)} icon={<SwapOutlined />} size='large' />
             ),
             width: 120,
         },

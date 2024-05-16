@@ -17,8 +17,7 @@ const AuthRoutes = ({ role }) => {
                 return <Outlet />;
             } else if (user?.role?.name?.toLowerCase().includes("staff") || user?.role?.name?.toLowerCase().includes("admin")) {
                 return <Navigate to="/dashboard" state={{ from: location }} replace />
-            }
-            else {
+            } else {
                 return <Navigate to="/error404" state={{ from: location }} replace />
             }
         }

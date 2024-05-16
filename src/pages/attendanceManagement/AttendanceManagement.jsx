@@ -111,7 +111,7 @@ export default function AttendanceManagement() {
                     onChange={activeKey => setAttendanceStatus(activeKey)}
                     tabBarExtraContent={
                         <div style={{ display: 'flex', marginBottom: '16px', gap: '8px' }}>
-                            <Search className={styles.searchBar} placeholder="Tìm kiếm mã lớp, tên khóa học" onSearch={(value, e) => { setSearch(value) }} enterButton />
+                            <Search className={styles.searchBar} placeholder="Tìm kiếm khóa học, giáo viên" onSearch={(value, e) => { setSearch(value) }} enterButton />
                             <ConfigProvider
                                 theme={{
                                     components: {

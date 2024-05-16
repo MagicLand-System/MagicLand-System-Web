@@ -93,14 +93,14 @@ export default function Header() {
             </Button>
           ),
           children: [
-            // {
-            //   label: (
-            //     <Link className={styles.label} to={'#'}>
-            //       Thông tin tài khoản
-            //     </Link>
-            //   ),
-            //   key: '/account',
-            // },
+            {
+              label: (
+                <Link className={styles.label} to={'/view-profile'}>
+                  Thông tin tài khoản
+                </Link>
+              ),
+              key: '/view-profile',
+            },
             {
               label: (
                 <Button style={{ border: 'none', width: '100%' }} onClick={async () => {
@@ -174,14 +174,14 @@ export default function Header() {
             </Button>
           ),
           children: [
-            // {
-            //   label: (
-            //     <Link className={styles.label} to={'#'}>
-            //       Thông tin tài khoản
-            //     </Link>
-            //   ),
-            //   key: '/account',
-            // },
+            {
+              label: (
+                <Link className={styles.label} to={'/view-profile'}>
+                  Thông tin tài khoản
+                </Link>
+              ),
+              key: '/view-profile',
+            },
             {
               label: (
                 <Button style={{ border: 'none', width: '100%' }} onClick={async () => {

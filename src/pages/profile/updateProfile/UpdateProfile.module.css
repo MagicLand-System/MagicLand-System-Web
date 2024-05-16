@@ -1,0 +1,115 @@
+@import url("https://fonts.googleapis.com/css2?family=Baloo+2:wght@700&family=Shojumaru&display=swap");
+.container {
+  width: calc(100% - 32px);
+  padding: 16px;
+}
+.title {
+  font-family: "Baloo 2", sans-serif;
+  font-size: 2rem;
+  color: #3a0ca3;
+  text-align: center;
+  margin-top: 40px;
+}
+.left {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.avatar {
+  width: 150px;
+  height: 150px;
+  margin-bottom: 50px;
+  margin-top: 50px;
+}
+.right {
+  display: flex;
+  justify-content: center;
+}
+.form {
+  margin-top: 20px;
+  border-radius: 20px;
+  padding: 40px 30px 20px;
+  width: 100%;
+  background-color: rgba(255, 255, 255, 0.6);
+}
+.input {
+  height: 40px;
+  width: 100%;
+  color: black;
+}
+.input:focus {
+  border-color: #f2c955;
+}
+.input:hover {
+  border-color: #f2c955 !important;
+}
+.input div:focus {
+  border-color: #f2c955;
+}
+.input div:hover {
+  border-color: #f2c955 !important;
+}
+
+.saveButton {
+  background-color: #f2c955;
+  color: black !important;
+  margin-right: 8px;
+}
+.saveButton:hover {
+  background: #ffd766 !important;
+  color: black !important;
+  border: 1px solid #ffd766 !important;
+}
+.cancelButton {
+  background-color: #ff6868;
+  margin-right: 8px;
+  color: white !important;
+}
+.cancelButton:hover {
+  background: #fb5959 !important;
+  color: white !important;
+  border: 1px solid #ff6868 !important;
+}
+.button {
+  margin-bottom: 20px;
+  width: 100%;
+  height: 40px;
+  background-color: #f2c955;
+  color: black;
+  border-radius: 20px;
+  font-size: 1.2rem;
+}
+.button:hover {
+  background: #ffd766 !important;
+  color: black !important;
+  border: 1px solid #f2c955 !important;
+}
+.button:focus,
+.button:focus-visible {
+  outline: none !important;
+}
+.button:disabled {
+  background-color: #f9e4aa !important;
+  color: #808080 !important;
+}
+.addTitle {
+  text-align: right;
+  height: 40px;
+  margin: 0;
+  line-height: 40px;
+  margin-right: 16px;
+}
+.addTitle span {
+  color: red;
+}
+@media only screen and (max-width: 1100px) {
+  .left {
+    width: 100%;
+  }
+  .logo {
+    margin-top: 20px;
+  }
+  .title {
+    margin: 20px 0;
+  }
+}
