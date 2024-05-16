@@ -3,7 +3,7 @@ import styles from './ViewStudentReserve.module.css'
 import { Button, Input, Table, Tabs, ConfigProvider, DatePicker, Avatar, } from 'antd';
 import { SwapOutlined } from '@ant-design/icons';
 import { useNavigate, useParams } from 'react-router-dom';
-import { formatDate, formatDayOfWeek } from '../../../utils/utils';
+import { formatDate, formatDateTime, formatDayOfWeek } from '../../../utils/utils';
 import dayjs from 'dayjs';
 import { getListReserve } from '../../../api/student';
 
@@ -66,10 +66,10 @@ export default function ViewStudentReserve() {
                 </div>
             ),
         },
-        {
-            title: 'Ngày sinh',
-            render: (_, record) => (record.studentResponse?.dateOfBirth && formatDate(record.studentResponse?.dateOfBirth)),
-        },
+        // {
+        //     title: 'Ngày sinh',
+        //     render: (_, record) => (record.studentResponse?.dateOfBirth && formatDate(record.studentResponse?.dateOfBirth)),
+        // },
         {
             title: 'Tên phụ huynh',
             render: (_, record) => record.parentResponse.fullName,
@@ -91,6 +91,11 @@ export default function ViewStudentReserve() {
                     }
                 }
             }
+        },
+        {
+            title: 'Ngày hiệu lực',
+            dataIndex: 'validDate',
+            render: (validDate) => validDate && formatDateTime(validDate)
         },
         {
             title: 'Xếp lớp',

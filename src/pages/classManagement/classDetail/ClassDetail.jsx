@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react'
 import styles from './ClassDetail.module.css'
 import { Button, DatePicker, Input, Table, Row, Col, Avatar, ConfigProvider, Tabs, Modal, Select, Empty } from 'antd';
-import { SwapOutlined, EditOutlined } from '@ant-design/icons';
+import { SwapOutlined, EditOutlined, EyeOutlined } from '@ant-design/icons';
 import { useNavigate, useParams } from 'react-router-dom';
-import { cancelClass, getClass, getLecturerChangeClass, getRoomChangeClass, getSessionOfClass, getSlots, getStudentsOfClass, updateClass, updateSession } from '../../../api/classesApi';
+import { cancelClass, getClass, getClassScores, getLecturerChangeClass, getRoomChangeClass, getSessionOfClass, getSlots, getStudentsOfClass, updateClass, updateSession } from '../../../api/classesApi';
 import { formatDate, formatDayOfWeek, formatPhone, formatSlot } from '../../../utils/utils';
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
@@ -56,50 +56,7 @@ export default function ClassDetail() {
     };
     async function getStudentsTranscript(id) {
         try {
-            // const data = await getStudentsOfClass(id);
-            const data = [
-                {
-                    studentId: "ee8f374c-94e4-4dbd-a6d1-08dc3903477d",
-                    fullName: "Tom My",
-                    dateOfBirth: "2020-02-29T17:00:00",
-                    gender: "Nam",
-                    parentName: "Bich Ngọc",
-                    parentPhoneNumber: "+84907625914",
-                    imgAvatar: "https://firebasestorage.googleapis.com/v0/b/magic-2e5fc.appspot.com/o/childrens%2F21a7d6aa-22be-4908-b2f6-2bc99ebfe3ce.jpeg?alt=media&token=65601bfa-698e-4bd7-9b4c-596368db099b",
-                    transcripts: [
-                        {
-                            id: 1,
-                            name: "Điểm danh",
-                            score: 8,
-                            weight: '10%',
-                        },
-                        {
-                            id: 2,
-                            name: "Kiểm tra 1",
-                            score: 6,
-                            weight: '20%',
-                        },
-                        {
-                            id: 3,
-                            name: "Kiểm tra 2",
-                            score: 5,
-                            weight: '30%',
-                        },
-                        {
-                            id: 3,
-                            name: "Kiểm tra 3",
-                            score: null,
-                            weight: '40%',
-                        },
-                        {
-                            id: 4,
-                            name: "Điểm trung bình",
-                            score: null,
-                            weight: null,
-                        }
-                    ]
-                }
-            ]
+            const data = await getClassScores(id);
             setStudentsTranscript(data);
             setTableParams({
                 ...tableParams,
@@ -197,6 +154,7 @@ export default function ClassDetail() {
                     <p>{record.fullName}</p>
                 </div>
             ),
+            width: 250
         },
         {
             title: 'Tuổi',
@@ -264,6 +222,7 @@ export default function ClassDetail() {
                     <p>{record.fullName}</p>
                 </div>
             ),
+            width: 250
         },
         {
             title: 'Tuổi',
@@ -305,25 +264,68 @@ export default function ClassDetail() {
             render: (parentPhoneNumber) => parentPhoneNumber && formatPhone(parentPhoneNumber)
         },
     ];
+    const examColumns = [
+        {
+            title: 'Loại',
+            dataIndex: 'type',
+        },
+        {
+            title: 'Nội dung',
+            dataIndex: 'content',
+        },
+        {
+            title: 'Trọng số',
+            dataIndex: 'weight',
+            render: (weight) => `${weight}%`
+        },
+        {
+            title: 'Phương thức',
+            dataIndex: 'mehod',
+        },
+        {
+            title: 'Thời gian mở',
+            dataIndex: 'date',
+        },
+        {
+            title: 'Trạng thái',
+            dataIndex: 'status',
+            render: (status) => {
+                if (status) {
+                    if (status.toLowerCase().includes('upcoming')) {
+                        return <div style={{ backgroundColor: '#E5F2FF', color: '#0066FF', whiteSpace: 'nowrap' }} className={styles.status}>Chưa diễn ra</div>
+                    } else if (status.toLowerCase().includes('scrored')) {
+                        return <div style={{ backgroundColor: '#d4edda', color: '#155724', whiteSpace: 'nowrap' }} className={styles.status}>Đã nhập điểm</div>
+                    } else if (status.toLowerCase().includes('noscored')) {
+                        return <div style={{ backgroundColor: '#FFE5E5', color: '#FF0000', whiteSpace: 'nowrap' }} className={styles.status}>Chưa có điểm</div>
+                    }
+                }
+            }
+        },
+        {
+            title: 'Xem điểm',
+            render: (_, record) => (record.status !== 'upcoming' && (
+                <Button type='link' onClick={() => navigate(`score/${record.id}`)} icon={<EyeOutlined />} size='large' />
+            )),
+        },
+    ];
     const transcriptColumns = [
         {
             title: 'Tên học viên',
-            dataIndex: 'fullName',
-            sorter: (a, b) => a.fullName.toLowerCase().localeCompare(b.fullName.toLowerCase()),
+            sorter: (a, b) => a.studentInfor?.fullName?.toLowerCase().localeCompare(b.studentInfor?.fullName?.toLowerCase()),
             render: (_, record) => (
                 <div style={{ display: 'flex', flexDirection: 'row', alignItems: 'center' }}>
-                    <Avatar size={64} src={record.imgAvatar} style={{ marginRight: '10px' }} />
-                    <p>{record.fullName}</p>
+                    <Avatar size={64} src={record?.studentInfor?.avatarImage} style={{ marginRight: '10px' }} />
+                    <p>{record?.studentInfor?.fullName}</p>
                 </div>
             ),
         },
         {
             title: 'Bảng điểm',
-            children: studentsTranscript[0]?.transcripts?.map((transcript, index) => (
+            children: studentsTranscript[0]?.examInfors?.map((transcript, index) => (
                 {
-                    title: `${transcript.name}${transcript?.weight ? ` - ${transcript.weight}` : ""}`,
-                    render: (_) => transcript.score ? transcript.score : "Chưa có",
-                    sorter: (a, b) => a.score - b.score,
+                    title: `${transcript.examName}${transcript?.weight ? ` - ${transcript.weight}` : ""}`,
+                    render: (_) => transcript.scoreEarned ? transcript.scoreEarned : "Chưa có",
+                    sorter: (a, b) => a.scoreEarned - b.scoreEarned,
                 }
             ))
         },
@@ -453,10 +455,10 @@ export default function ClassDetail() {
                                     </Col>
                                 </Row>
                                 <Row>
-                                    <Col span={8}>
+                                    <Col span={10}>
                                         <p className={styles.classTitle}>Phòng học:</p>
                                     </Col>
-                                    <Col span={16}>
+                                    <Col span={14}>
                                         <p className={styles.classDetail}>{classData.roomResponse.name}</p>
                                     </Col>
                                 </Row>
@@ -577,26 +579,23 @@ export default function ClassDetail() {
                                 </>
                             )
                         },
-                        // (classData?.status?.toLowerCase().includes('completed') || classData?.status?.toLowerCase().includes('progressing')) && {
-                        //     label: 'Bảng điểm',
-                        //     key: 'studentsTranscript',
-                        //     children: (
-                        //         <>
-                        //             {/* <div style={{ display: 'flex', marginBottom: '16px' }}>
-                        //                 <Search className={styles.searchBar} placeholder="Tìm kiếm học viên..." onSearch={(value, e) => { console.log(value) }} enterButton />
-                        //             </div> */}
-                        //             <Table
-                        //                 columns={transcriptColumns}
-                        //                 rowKey={(record) => record.studentId}
-                        //                 dataSource={studentsTranscript}
-                        //                 pagination={tableParams.pagination}
-                        //                 loading={loading}
-                        //                 onChange={handleTableChange}
-                        //                 sticky={{ offsetHeader: 72 }}
-                        //             />
-                        //         </>
-                        //     )
-                        // },
+                        (classData?.status?.toLowerCase().includes('completed') || classData?.status?.toLowerCase().includes('progressing')) && {
+                            label: 'Các bài kiếm tra',
+                            key: 'studentsTranscript',
+                            children: (
+                                <>
+                                    <Table
+                                        columns={transcriptColumns}
+                                        rowKey={(record) => record.studentId}
+                                        dataSource={studentsTranscript}
+                                        pagination={tableParams.pagination}
+                                        loading={loading}
+                                        onChange={handleTableChange}
+                                        sticky={{ offsetHeader: 72 }}
+                                    />
+                                </>
+                            )
+                        },
                         {
                             label: 'Lịch học',
                             key: 'sessions',

@@ -43,33 +43,17 @@ export default function Login() {
       const data = await checkExist({ phone: formatPhone })
       if (data) {
         if (data.role === "STAFF" || data.role === "ADMIN") {
-          // onCaptchVerify()
-          // const appVerifier = window.recaptchaVerifier;
-          // signInWithPhoneNumber(auth, formatPhone, appVerifier)
-          //   .then((confirmationResult) => {
-          //     window.confirmationResult = confirmationResult;
-          //     setLoading(false)
-          //     setErrorMessage('')
-          //     setShowOtp(true)
-          //   }).catch((error) => {
-          //     console.log(error)
-          //   })
-          const data = await authUser({ phone: formatPhone })
-          const accessToken = data.accessToken;
-          localStorage.setItem('accessToken', accessToken)
-          dispatch(fetchUser())
-            .then(Swal.fire({
-              position: "center",
-              icon: "success",
-              title: "Đăng nhập thành công",
-              showConfirmButton: false,
-              timer: 2000
-            }))
-            .then(() => {
+          onCaptchVerify()
+          const appVerifier = window.recaptchaVerifier;
+          signInWithPhoneNumber(auth, formatPhone, appVerifier)
+            .then((confirmationResult) => {
+              window.confirmationResult = confirmationResult;
+              setLoading(false)
               setErrorMessage('')
-              navigate('/')
+              setShowOtp(true)
+            }).catch((error) => {
+              console.log(error)
             })
-          setLoading(false)
         } else {
           setLoading(false)
           setErrorMessage('Tài khoản của bạn không được hỗ trợ trên nền tảng này')

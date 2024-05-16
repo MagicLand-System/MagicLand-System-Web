@@ -279,7 +279,6 @@ export default function RegisterCourse() {
                                 ),
                             }))}
                             onSelect={(value, option) => {
-                                console.log(value, option)
                                 setIsExist(true)
                                 setFullName(option.user.fullName)
                                 setPhoneNumber(option.user.phone)

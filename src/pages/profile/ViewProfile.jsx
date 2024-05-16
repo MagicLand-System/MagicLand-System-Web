@@ -1,17 +1,32 @@
 import React, { useEffect, useState } from 'react'
 import styles from './ViewProfile.module.css'
-import { Button, Input, Table, Checkbox, Select, DatePicker, ConfigProvider, Row, Col, Descriptions } from 'antd';
-import Swal from 'sweetalert2';
-import { useNavigate } from 'react-router-dom';
+import { Button, Input, Table, Checkbox, Select, DatePicker, ConfigProvider, Row, Col, Descriptions, Modal } from 'antd';
+import { Link, useNavigate } from 'react-router-dom';
 import dayjs from 'dayjs';
+import Alert from 'antd/es/alert/Alert';
+import OtpInput from 'otp-input-react';
+import PhoneInput from 'react-phone-input-2';
+import "react-phone-input-2/lib/style.css";
+import { auth } from '../../../firebase.config';
+import { RecaptchaVerifier, signInWithPhoneNumber } from 'firebase/auth';
+import Swal from 'sweetalert2';
 
-import { useSelector } from 'react-redux';
+import { useSelector, useDispatch } from 'react-redux';
 import { userSelector } from '../../store/selectors';
 import { formatDate, formatPhone } from '../../utils/utils';
+import { fetchUser } from "../../store/features/authSlice";
+import { checkExist } from '../../api/auth';
 
 export default function ViewProfile() {
+    const dispatch = useDispatch();
     const navigate = useNavigate()
     let user = useSelector(userSelector);
+    const [changePhoneModalOpen, setChangePhoneModalOpen] = useState(false);
+    const [apiLoading, setApiLoading] = useState(false);
+    const [errorMessage, setErrorMessage] = useState('')
+    const [otp, setOtp] = useState('')
+    const [phone, setPhone] = useState('')
+    const [showOtp, setShowOtp] = useState(false)
     const items = [
         {
             key: 'fullName',
@@ -59,6 +74,73 @@ export default function ViewProfile() {
             span: 3,
         },
     ];
+    function onCaptchVerify() {
+        if (!window.recaptchaVerifier) {
+            window.recaptchaVerifier = new RecaptchaVerifier('recaptcha-container', {
+                'size': 'invisible',
+                'callback': (response) => {
+                    onChangePassword()
+                },
+                'expired-callback': () => {
+                    // window.recaptchaVerifier.reset()
+                }
+            }, auth);
+        }
+    }
+    async function onChangePassword() {
+        try {
+            setErrorMessage('')
+            setApiLoading(true)
+            const formatPhone = '+' + phone;
+            const data = await checkExist({ phone: formatPhone })
+            if (data) {
+                setApiLoading(false)
+                setErrorMessage("Số điện thoại đã tồn tại")
+            } else {
+                onCaptchVerify()
+                const appVerifier = window.recaptchaVerifier;
+                signInWithPhoneNumber(auth, formatPhone, appVerifier)
+                    .then((confirmationResult) => {
+                        window.confirmationResult = confirmationResult;
+                        setApiLoading(false)
+                        setErrorMessage('')
+                        setShowOtp(true)
+                    }).catch((error) => {
+                        console.log(error)
+                    })
+            }
+        } catch (error) {
+            console.log(error)
+        }
+    }
+    function onOtpVerify() {
+        setErrorMessage('')
+        setApiLoading(true)
+        const formatPhone = '+' + phone;
+        window.confirmationResult.confirm(otp).then(async (result) => {
+            await updateCurrentUser({ phone: formatPhone })
+                .then(() => {
+                    setApiLoading(false)
+                    Swal.fire({
+                        position: "center",
+                        icon: "success",
+                        title: "thay đổi số điện thoại thành công",
+                        showConfirmButton: false,
+                        timer: 2000
+                    })
+                })
+                .then(() => {
+                    dispatch(fetchUser())
+                })
+                .then(() => {
+                    setErrorMessage('')
+                    navigate('/')
+                })
+        }).catch(err => {
+            setErrorMessage("Xác thực OTP không thành công")
+            setApiLoading(false)
+        })
+    }
     return (
         <div className={styles.container}>
             <h2 className={styles.title}>Thông tin tài khoản</h2>
@@ -68,7 +150,7 @@ export default function ViewProfile() {
                     <Button style={{ width: '220px' }} onClick={() => navigate('/update-profile')} className={styles.button}>
                         Chỉnh sửa thông tin
                     </Button>
-                    <Button style={{ width: '220px' }} onClick={() => console.log('phone')} className={styles.button}>
+                    <Button style={{ width: '220px' }} onClick={() => setChangePhoneModalOpen(true)} className={styles.button}>
                         Thay đổi số điện thoại
                     </Button>
                 </Col>
@@ -86,6 +168,78 @@ export default function ViewProfile() {
                     </ConfigProvider>
                 </Col>
             </Row>
+            <ConfigProvider
+                theme={{
+                    components: {
+                        Modal: {
+                            titleFontSize: '1.2rem',
+                        },
+                    },
+                }}
+            >
+                <Modal
+                    title="Thay đổi số điện thoại"
+                    centered
+                    open={changePhoneModalOpen}
+                    footer={null}
+                    onCancel={() => setChangePhoneModalOpen(false)}
+                    classNames={{ header: styles.modalHeader }}
+                >
+                    <div>
+                        <div id='recaptcha-container'></div>
+                        {!showOtp ? (
+                            <Row>
+                                <Col span={8}>
+                                    <p className={styles.addTitle} ><span>*</span> Số điện thoại:</p>
+                                </Col>
+                                <Col span={16}>
+                                    <PhoneInput country={'vn'} className={styles.input} value={phone} onChange={setPhone} disabled={apiLoading} />
+                                </Col>
+                                <div style={{ width: '100%', textAlign: 'center' }}>
+                                    {apiLoading ? (
+                                        <Button style={{ width: 220 }} loading className={styles.button}>Gửi OTP</Button>
+                                    ) : phone === '' ? (
+                                        <Button style={{ width: 220 }} disabled className={styles.button}>Gửi OTP</Button>
+                                    ) : (
+                                        <Button style={{ width: 220 }} onClick={onChangePassword} className={styles.button}>Gửi OTP</Button>
+                                    )}
+                                </div>
+                            </Row>
+                        ) : (
+                            <div>
+                                <p>Chúng tôi đã gửi một mã xác thực đến số điện thoại +{phone.substring(0, 6)}*****:</p>
+                                <div style={{ textAlign: 'center', marginLeft: 20 }}>
+                                    <OtpInput
+                                        value={otp}
+                                        onChange={setOtp}
+                                        OTPLength={6}
+                                        otpType="number"
+                                        disabled={apiLoading}
+                                        autoFocus
+                                        className={styles.otpInput}
+                                    >
+                                    </OtpInput>
+                                </div>
+                                <p style={{ textAlign: 'center', color: 'black', marginTop: '0px' }}>Chưa nhận được mã? <Link onClick={onChangePassword} style={{ color: '#f2c955', textDecoration: 'underline' }}>Gửi lại</Link></p>
+                                <div style={{ width: '100%', textAlign: 'center' }}>
+                                    {apiLoading ? (
+                                        <Button style={{ width: 220 }} loading className={styles.button}>Xác thực</Button>
+                                    ) : otp.length < 6 ? (
+                                        <Button style={{ width: 220 }} disabled className={styles.button}>Xác thực</Button>
+                                    ) : (
+                                        <Button style={{ width: 220 }} onClick={onOtpVerify} className={styles.button}>Xác thực</Button>
+                                    )}
+                                </div>
+                            </div>
+                        )}
+                        <div style={{ display: 'flex', justifyContent: 'center' }}>
+                            {errorMessage !== '' && (
+                                <Alert style={{ width: '55%', marginTop: '10px' }} message={errorMessage} type="error" showIcon />
+                            )}
+                        </div>
+                    </div>
+                </Modal>
+            </ConfigProvider>
         </div>
     )
 }
