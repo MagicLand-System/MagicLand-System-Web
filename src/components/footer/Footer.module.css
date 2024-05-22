@@ -2,13 +2,13 @@
 .container {
     background-color: #3A0CA3;
     width: 100%;
-    min-height: 240px;
+    min-height: 200px;
 }
 .logo {
     margin-top: 60px;
     display: flex;
     justify-content: center;
-    height: 100px;
+    height: 150px;
 }
 .logo img{
     width: 100px;

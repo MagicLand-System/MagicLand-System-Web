@@ -3,5 +3,5 @@
   margin: 0 auto;
 }
 .body {
-  min-height: calc(100vh - 70px - 240px);
+  min-height: calc(100vh - 70px - 200px);
 }
