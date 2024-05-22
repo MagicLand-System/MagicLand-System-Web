@@ -51,7 +51,6 @@ export const getListMakeUpStudent = async (search, dateOfBirth) => {
     return response.data;
 };
 export const setReserve = async (classId, studentId) => {
-    console.log(classId, studentId)
     const response = await api.put(`/api/v1/classes/${classId}/${studentId}/SaveCouse`);
     return response.data;
 };
@@ -77,19 +76,19 @@ export const addStudentToClass = async (courseId, classId, studentId) => {
     });
     return response.data;
 };
-export const getListStudentScore = async (examId) => {
-    const response = await api.get(`/api/v1/classes/getExamScore`, {
-        params: { examId }
+export const getListStudentScore = async (classId, examId) => {
+    const response = await api.get(`/api/v1/exams/class/students/score`, {
+        params: { classId, examId }
     });
     return response.data;
 };
-export const saveStudentScore = async (examId, scoreList) => {
-    const response = await api.put(`/api/v1/classes/setExamScore`, {
-        params: { examId, scoreList }
+export const saveStudentScore = async (classId, examId, scoreList) => {
+    const response = await api.post(`/api/v1/exam/quiz/offLine/grade`, scoreList, {
+        params: { classId, examId, isCheckingTime: false }
     });
     return response.data;
 };
 export const getStudentClassScore = async (classId, studentId) => {
     const response = await api.get(`/api/v1/exams/class/students/score`, { params: { classId, studentId } });
     return response.data;
-  }
+}

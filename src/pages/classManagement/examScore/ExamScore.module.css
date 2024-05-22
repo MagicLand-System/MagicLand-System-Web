@@ -50,10 +50,44 @@
   color: white !important;
   border: 1px solid #ff6868 !important;
 }
-.classDetailTitle {
-  font-size: 1.2rem;
+.input {
+  width: 100%;
+  color: black;
+  height: 40px;
+}
+.input:focus {
+  border-color: #f2c955;
+}
+.input:hover {
+  border-color: #f2c955 !important;
+}
+.input div:focus {
+  border-color: #f2c955;
+}
+.input div:hover {
+  border-color: #f2c955 !important;
+}
+.classTitle {
+  color: #888888;
+  margin: 0;
+  font-size: 1rem;
 }
 .classDetail {
-  font-size: 1.2rem;
+  margin: 0;
+  text-align: right;
+  font-size: 1rem;
   font-weight: bold;
+}
+.classPart {
+  padding: 12px 12px 6px;
+  border: 1px solid #f2c955;
+  background-color: #fffcf4;
+  height: 100%;
+  width: 95%;
+  border-radius: 10px;
+  margin: 0 auto;
+}
+.classPartTitle {
+  font-size: 1.2rem;
+  margin: 8px 0;
 }

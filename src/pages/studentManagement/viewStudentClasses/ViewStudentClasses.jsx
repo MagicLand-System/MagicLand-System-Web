@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import styles from './ViewStudentClasses.module.css'
 import { Button, Input, Table, Tabs, ConfigProvider, DatePicker, Row, Col, Avatar, Modal, } from 'antd';
-import { SwapOutlined } from '@ant-design/icons';
+import { SwapOutlined, EyeOutlined } from '@ant-design/icons';
 import { useNavigate, useParams } from 'react-router-dom';
 import { getClasses } from '../../../api/classesApi';
 import { formatDate, formatDayOfWeek, formatPhone } from '../../../utils/utils';
@@ -105,9 +105,41 @@ export default function ViewStudentClasses() {
         setStudent(data[0]);
     };
     async function handleViewScore(classId, studentId) {
-        const data = await getStudentClassScore(classId, studentId);
-        setScores(data[0])
-        setViewScoresModalOpen(true)
+        try {
+            const data = await getStudentClassScore(classId, studentId);
+            if (data.length > 0) {
+                const participation = data[0].participationInfor;
+                participation.quizCategory = "Participation"
+                participation.examName = "Điểm danh"
+                participation.scoreEarned = participation.score
+                if (status === "completed") {
+                    let total = (participation.scoreEarned * participation.weight) / 100;
+                    let hasMissingScore = data[0]?.examInfors.some(currentExam => currentExam.scoreEarned === null);
+                    if (!hasMissingScore) {
+                        total = total + data[0]?.examInfors.reduce((accumulator, currentExam) => {
+                            let sumScore = accumulator;
+                            if (currentExam.scoreEarned !== null) {
+                                sumScore = sumScore + (currentExam.scoreEarned * currentExam.weight) / 100;
+                            }
+                            return sumScore;
+                        }, total);
+                    } else {
+                        total = null;
+                    }
+                    setScores([participation, ...data[0]?.examInfors, {
+                        quizCategory: "Total Score",
+                        examName: "Điểm tổng kết",
+                        scoreEarned: total
+                    }])
+                } else {
+                    setScores([participation, ...data[0]?.examInfors])
+                }
+                setViewScoresModalOpen(true)
+            }
+
+        } catch (error) {
+            console.log(error)
+        }
     }
     useEffect(() => {
         getStudentData(studentId);
@@ -252,9 +284,9 @@ export default function ViewStudentClasses() {
             ,
         },
         {
-            title: 'Xem các bài kiểm tra',
+            title: 'Xem bảng điểm',
             render: (_, record) => {
-                return <Button type='link' onClick={() => handleViewScore(record.classId, studentId)} icon={<SwapOutlined />} size='large' />
+                return <Button type='link' onClick={() => handleViewScore(record.classId, studentId)} icon={<EyeOutlined />} size='large' />
             },
             width: 120,
         },
@@ -300,9 +332,9 @@ export default function ViewStudentClasses() {
             ,
         },
         {
-            title: 'Xem các bài kiểm tra',
+            title: 'Xem bảng điểm',
             render: (_, record) => {
-                return <Button type='link' onClick={() => handleViewScore(record.classId, studentId)} icon={<SwapOutlined />} size='large' />
+                return <Button type='link' onClick={() => handleViewScore(record.classId, studentId)} icon={<EyeOutlined />} size='large' />
             },
             width: 120,
         },
@@ -393,23 +425,20 @@ export default function ViewStudentClasses() {
             dataIndex: 'examName',
         },
         {
-            title: 'Nội dung',
-            dataIndex: 'quizName',
+            title: 'Trọng số',
+            dataIndex: 'weight',
+            render: (weight) => weight && `${weight}%`
         },
-        // {
-        //     title: 'Trọng số',
-        //     dataIndex: 'weight',
-        //     render: (weight) => `${weight}%`
-        // },
         {
             title: 'Ngày làm bài',
             dataIndex: 'doingDate',
-            render: (doingDate) => doingDate ? formatDate(doingDate) : 'Chưa có'
+            render: (doingDate) => doingDate ? formatDate(doingDate) : "Không có"
         },
         {
             title: 'Số điểm',
-            dataIndex: 'scoreEarned',
-            render: (scoreEarned) => scoreEarned ? scoreEarned : 'Chưa có'
+            render: (_, record) => record?.scoreEarned !== undefined && record?.scoreEarned !== null
+                ? record.scoreEarned
+                : "Chưa có"
         },
     ];
     return (
@@ -584,7 +613,7 @@ export default function ViewStudentClasses() {
                 }}
             >
                 <Modal
-                    title="Các bài kiểm tra"
+                    title="Bảng điểm"
                     centered
                     open={viewScoresModalOpen}
                     footer={null}
@@ -595,7 +624,7 @@ export default function ViewStudentClasses() {
                     <Table
                         columns={transcriptColumns}
                         rowKey={(record) => record.examId}
-                        dataSource={scores?.examInfors}
+                        dataSource={scores}
                         scroll={{ y: '480px' }}
                     />
                     <div style={{ display: 'flex', justifyContent: 'flex-end' }}>

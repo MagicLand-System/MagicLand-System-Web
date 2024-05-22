@@ -8,7 +8,7 @@ import { formatDate, formatDayOfWeek, formatPhone, formatSlot } from '../../../u
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
 import Swal from 'sweetalert2';
-import { compareAsc } from 'date-fns';
+import { compareAsc, isPast } from 'date-fns';
 
 const { Search } = Input;
 
@@ -31,6 +31,7 @@ export default function ClassDetail() {
             pageSize: 10,
         },
     });
+    const [transcripts, setTranscripts] = useState([])
 
     async function getClassDetail(id) {
         const data = await getClass(id);
@@ -38,6 +39,7 @@ export default function ClassDetail() {
     }
     async function getStudentsList(id) {
         try {
+            setLoading(true)
             const data = await getStudentsOfClass(id);
             setStudents(data);
             setTableParams({
@@ -58,6 +60,35 @@ export default function ClassDetail() {
         try {
             const data = await getClassScores(id);
             setStudentsTranscript(data);
+            if (data.length > 0 && data[0].examInfors.length > 0) {
+                setTranscripts(data[0]?.examInfors?.map((transcript, index) => (
+                    {
+                        title: (
+                            <div style={{ display: 'flex' }}>
+                                {transcript.examName}
+                                {transcript.weight ? ` - ${transcript.weight}%` : ""}
+                                {transcript.quizType === "offline" 
+                                && classData?.status?.toLowerCase().includes('progressing') 
+                                && isPast(transcript.doingDate) &&
+                                    <Button
+                                        style={{ color: "white" }}
+                                        type="link"
+                                        onClick={() => navigate(`update-scores/${transcript.examId}`)}
+                                        icon={<EditOutlined />}
+                                        size="large"
+                                    />
+                                }
+                            </div>
+                        ),
+                        render: (_, record) => {
+                            const matchingExam = record?.examInfors?.find(exam => exam.examName === transcript.examName);
+                            return matchingExam?.scoreEarned !== undefined && matchingExam?.scoreEarned !== null
+                                ? matchingExam.scoreEarned
+                                : "Chưa có";
+                        },
+                    }
+                )))
+            }
             setTableParams({
                 ...tableParams,
                 pagination: {
@@ -202,10 +233,6 @@ export default function ClassDetail() {
                     return (
                         <Button type='link' onClick={() => navigate(`/student-management/view-classes/${record.studentId}/change-class/${id}`)} icon={< SwapOutlined />} size='large' />
                     )
-                } else {
-                    return (
-                        <p style={{ margin: 0 }}> Đã chuyển lớp</p>
-                    )
                 }
             },
             width: 120
@@ -264,50 +291,6 @@ export default function ClassDetail() {
             render: (parentPhoneNumber) => parentPhoneNumber && formatPhone(parentPhoneNumber)
         },
     ];
-    const examColumns = [
-        {
-            title: 'Loại',
-            dataIndex: 'type',
-        },
-        {
-            title: 'Nội dung',
-            dataIndex: 'content',
-        },
-        {
-            title: 'Trọng số',
-            dataIndex: 'weight',
-            render: (weight) => `${weight}%`
-        },
-        {
-            title: 'Phương thức',
-            dataIndex: 'mehod',
-        },
-        {
-            title: 'Thời gian mở',
-            dataIndex: 'date',
-        },
-        {
-            title: 'Trạng thái',
-            dataIndex: 'status',
-            render: (status) => {
-                if (status) {
-                    if (status.toLowerCase().includes('upcoming')) {
-                        return <div style={{ backgroundColor: '#E5F2FF', color: '#0066FF', whiteSpace: 'nowrap' }} className={styles.status}>Chưa diễn ra</div>
-                    } else if (status.toLowerCase().includes('scrored')) {
-                        return <div style={{ backgroundColor: '#d4edda', color: '#155724', whiteSpace: 'nowrap' }} className={styles.status}>Đã nhập điểm</div>
-                    } else if (status.toLowerCase().includes('noscored')) {
-                        return <div style={{ backgroundColor: '#FFE5E5', color: '#FF0000', whiteSpace: 'nowrap' }} className={styles.status}>Chưa có điểm</div>
-                    }
-                }
-            }
-        },
-        {
-            title: 'Xem điểm',
-            render: (_, record) => (record.status !== 'upcoming' && (
-                <Button type='link' onClick={() => navigate(`score/${record.id}`)} icon={<EyeOutlined />} size='large' />
-            )),
-        },
-    ];
     const transcriptColumns = [
         {
             title: 'Tên học viên',
@@ -320,15 +303,46 @@ export default function ClassDetail() {
             ),
         },
         {
-            title: 'Bảng điểm',
-            children: studentsTranscript[0]?.examInfors?.map((transcript, index) => (
-                {
-                    title: `${transcript.examName}${transcript?.weight ? ` - ${transcript.weight}` : ""}`,
-                    render: (_) => transcript.scoreEarned ? transcript.scoreEarned : "Chưa có",
-                    sorter: (a, b) => a.scoreEarned - b.scoreEarned,
-                }
-            ))
+            title: (_, record) => `Điểm danh${record?.participationInfor?.weight ? ` - ${record?.participationInfor?.weight}` : ""}`,
+            render: (_, record) => record.participationInfor?.score
         },
+        ...transcripts
+    ];
+    const completedTranscriptColumns = [
+        {
+            title: 'Tên học viên',
+            sorter: (a, b) => a.studentInfor?.fullName?.toLowerCase().localeCompare(b.studentInfor?.fullName?.toLowerCase()),
+            render: (_, record) => (
+                <div style={{ display: 'flex', flexDirection: 'row', alignItems: 'center' }}>
+                    <Avatar size={64} src={record?.studentInfor?.avatarImage} style={{ marginRight: '10px' }} />
+                    <p>{record?.studentInfor?.fullName}</p>
+                </div>
+            ),
+        },
+        {
+            title: (_, record) => `Điểm danh${record?.participationInfor?.weight ? ` - ${record?.participationInfor?.weight}` : ""}`,
+            render: (_, record) => record.participationInfor?.score
+        },
+        ...transcripts,
+        {
+            title: "Điểm tổng kết",
+            render: (_, record) => {
+                let total = (record.participationInfor?.score * record.participationInfor?.weight) / 100;
+                let hasMissingScore = record.examInfors.some(currentExam => currentExam.scoreEarned === null);
+                if (!hasMissingScore) {
+                    total = total + record.examInfors.reduce((accumulator, currentExam) => {
+                        let sumScore = accumulator;
+                        if (currentExam.scoreEarned !== null) {
+                            sumScore = sumScore + (currentExam.scoreEarned * currentExam.weight) / 100;
+                        }
+                        return sumScore;
+                    }, total);
+                } else {
+                    total = null;
+                }
+                return total !== null ? total : "Chưa có"
+            }
+        }
     ];
     const sessionsColumns = [
         {
@@ -419,7 +433,7 @@ export default function ClassDetail() {
                                 </Row>
                                 <Row>
                                     <Col span={16}>
-                                        <p className={styles.classTitle}>Đã đăng kí:</p>
+                                        <p className={styles.classTitle}>Số lượng học viên:</p>
                                     </Col>
                                     <Col span={8}>
                                         <p className={styles.classDetail}>{classData.numberStudentRegistered}</p>
@@ -580,12 +594,12 @@ export default function ClassDetail() {
                             )
                         },
                         (classData?.status?.toLowerCase().includes('completed') || classData?.status?.toLowerCase().includes('progressing')) && {
-                            label: 'Các bài kiếm tra',
+                            label: 'Bảng điểm',
                             key: 'studentsTranscript',
                             children: (
                                 <>
                                     <Table
-                                        columns={transcriptColumns}
+                                        columns={classData.status.toLowerCase().includes('completed') ? completedTranscriptColumns : transcriptColumns}
                                         rowKey={(record) => record.studentId}
                                         dataSource={studentsTranscript}
                                         pagination={tableParams.pagination}
