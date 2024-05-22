@@ -9,7 +9,7 @@ export default function Footer() {
     <Row className={styles.container}>
       <Col md={7} className={styles.logo}>
         <img src={logo} alt="logo" />
-        <p style={{ margin: '30px 0' }}>&ensp;
+        <p style={{ margin: '20px 0' }}>&ensp;
           <span className={`${styles.m} ${styles.logoSpan}`}>m</span>
           <span className={`${styles.a} ${styles.logoSpan}`}>a</span>
           <span className={`${styles.g} ${styles.logoSpan}`}>g</span>
@@ -21,10 +21,10 @@ export default function Footer() {
           <span className={`${styles.d} ${styles.logoSpan}`}>d</span>
         </p>
       </Col>
-      <Col md={7} className={styles.column} style={{ paddingRight: '80px' }}>
+      <Col md={7} className={styles.column} style={{ paddingRight: '80px', marginTop: 40 }}>
         <h4 style={{color: 'white'}}>MagicLand cung cấp đa dạng các khóa học và sự kiện cho trẻ</h4>
       </Col>
-      <Col md={5} className={styles.column}>
+      {/* <Col md={5} className={styles.column}>
         <h4 style={{color: 'white'}}>Magicland</h4>
         <p><Link className={styles.link}>Về chúng tôi</Link></p>
         <p><Link className={styles.link}>Khóa học</Link></p>
@@ -36,7 +36,7 @@ export default function Footer() {
         <p style={{color: 'white'}}>SĐT: +84 999999999</p>
         <p style={{color: 'white'}}>Địa chỉ: Quận 1, thành phố Hồ Chí Minh</p>
         <p style={{color: 'white'}}>Gmail: magicland@gmail.com</p>
-      </Col>
+      </Col> */}
     </Row>
   )
 }

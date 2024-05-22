@@ -167,7 +167,7 @@ export default function StaffManagement() {
                                 Swal.fire({
                                     position: "center",
                                     icon: "success",
-                                    title: "Thêm nhân viên thành công",
+                                    title: "Thêm tài khoản nhân viên thành công",
                                     showConfirmButton: false,
                                     timer: 2000
                                 })
@@ -183,7 +183,7 @@ export default function StaffManagement() {
                                 Swal.fire({
                                     position: "center",
                                     icon: "success",
-                                    title: "Thêm nhân viên thành công",
+                                    title: "Thêm tài khoản nhân viên thành công",
                                     showConfirmButton: false,
                                     timer: 2000
                                 })
@@ -221,7 +221,7 @@ export default function StaffManagement() {
         <div className={styles.container}>
             <h2 className={styles.title}>Quản lý nhân sự</h2>
             <div style={{ display: 'flex', marginBottom: '16px' }}>
-                <Button onClick={() => { setAddModalOpen(true) }} className={styles.addButton} icon={<PlusOutlined />}>Thêm nhân viên</Button>
+                <Button onClick={() => { setAddModalOpen(true) }} className={styles.addButton} icon={<PlusOutlined />}>Thêm tài khoản nhân viên</Button>
             </div>
             <ConfigProvider
                 theme={{
@@ -270,7 +270,7 @@ export default function StaffManagement() {
                 }}
             >
                 <Modal
-                    title="Thêm nhân viên"
+                    title="Thêm tài khoản nhân viên"
                     centered
                     open={addModalOpen}
                     footer={null}
