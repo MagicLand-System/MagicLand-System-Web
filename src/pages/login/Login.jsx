@@ -80,13 +80,13 @@ export default function Login() {
       const accessToken = data.accessToken;
       localStorage.setItem('accessToken', accessToken)
       dispatch(fetchUser())
-        .then(Swal.fire({
-          position: "center",
-          icon: "success",
-          title: "Đăng nhập thành công",
-          showConfirmButton: false,
-          timer: 2000
-        }))
+        // .then(Swal.fire({
+        //   position: "center",
+        //   icon: "success",
+        //   title: "Đăng nhập thành công",
+        //   showConfirmButton: false,
+        //   timer: 2000
+        // }))
         .then(() => {
           setErrorMessage('')
           navigate('/')
@@ -127,14 +127,14 @@ export default function Login() {
               ) : (
                 <Button onClick={onLogin} className={styles.button}>Gửi OTP</Button>
               )}
-              <p style={{ textAlign: 'center', color: 'black', marginTop: '0px' }}>Chưa có tài khoản? <Link to={'/register'} style={{ color: '#f2c955', textDecoration: 'underline' }}>Đăng kí ngay</Link></p>
+              {/* <p style={{ textAlign: 'center', color: 'black', marginTop: '0px' }}>Chưa có tài khoản? <Link to={'/register'} style={{ color: '#f2c955', textDecoration: 'underline' }}>Đăng kí ngay</Link></p> */}
             </div>
           </>
         ) : (
           <>
             <h2 className={styles.title}>Xác thực OTP</h2>
             <div className={styles.form}>
-              <p>Chúng tôi đã gửi một mã xác thực đến số điện thoại +{phone.substring(0, 6)}*****:</p>
+              <p>Chúng tôi đã gửi một mã xác thực đến số điện thoại +{phone.substring(0, 4)}***{phone.substring(phone.length - 3)}:</p>
               <OtpInput
                 value={otp}
                 onChange={setOtp}
@@ -161,10 +161,10 @@ export default function Login() {
         )}
       </div>
       <div className={styles.right}>
-        <div className={styles.rightLink}>
+        {/* <div className={styles.rightLink}>
           <Link className={`${styles.link} ${styles.linkActive}`}>Đăng nhập</Link>
-          <Link to={'/register'} className={styles.link}>Đăng kí</Link>
-        </div>
+          <Link to={'/register'} className={styles.link}>Đăng ký</Link>
+        </div> */}
         <img className={styles.rightImage} src="./src/assets/images/kid2.jpg" />
       </div>
     </div>

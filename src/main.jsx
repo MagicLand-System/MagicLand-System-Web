@@ -42,6 +42,7 @@ import ViewStudentMakeUp from './pages/studentManagement/viewStudentMakeUp/ViewS
 import ViewStudentReserve from './pages/studentManagement/viewStudentReserve/ViewStudentReserve.jsx'
 import ViewProfile from './pages/profile/ViewProfile.jsx'
 import UpdateProfile from './pages/profile/updateProfile/UpdateProfile.jsx'
+import ExamScore from './pages/classManagement/examScore/ExamScore.jsx'
 
 const router = createBrowserRouter([
   //Route đã đăng nhập thì k vào được, k có header, footer
@@ -84,6 +85,10 @@ const router = createBrowserRouter([
           {
             path: '/class-management/detail/:id',
             element: <ClassDetail />
+          },
+          {
+            path: '/class-management/detail/:classId/update-scores/:examId',
+            element: <ExamScore />
           },
           {
             path: '/transaction-management',
