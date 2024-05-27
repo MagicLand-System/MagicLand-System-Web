@@ -139,13 +139,13 @@ export default function AttendanceManagement() {
                             key: 'TA',
                             children: (
                                 <Table
+                                    sticky={{ offsetHeader: 72 }}
                                     columns={classesColumn}
                                     rowKey={(record) => record.id}
                                     dataSource={classes}
                                     pagination={tableParams.pagination}
                                     loading={loading}
                                     onChange={handleTableChange}
-                                    scroll={{ y: 'calc(100vh - 220px)' }}
                                 />
                             )
                         },
@@ -154,13 +154,13 @@ export default function AttendanceManagement() {
                             key: 'NTA',
                             children: (
                                 <Table
+                                    sticky={{ offsetHeader: 72 }}
                                     columns={classesColumn}
                                     rowKey={(record) => record.id}
                                     dataSource={classes}
                                     pagination={tableParams.pagination}
                                     loading={loading}
                                     onChange={handleTableChange}
-                                    scroll={{ y: 'calc(100vh - 220px)' }}
                                 />
                             )
                         },
