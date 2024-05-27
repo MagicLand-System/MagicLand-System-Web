@@ -89,16 +89,16 @@ export default function ViewStudentMakeUp() {
             dataIndex: 'status',
             render: (status) => {
                 if (status) {
-                    if (status.toLowerCase().includes('đang chờ xếp')) {
-                        return <div style={{ backgroundColor: '#E5F2FF', color: '#0066FF', whiteSpace: 'nowrap' }} className={styles.status}>Đang chờ xếp</div>
-                    } else if (status.toLowerCase().includes('hết hạn')) {
+                    if (status.toLowerCase().includes('waiting')) {
+                        return <div style={{ backgroundColor: '#E5F2FF', color: '#0066FF', whiteSpace: 'nowrap' }} className={styles.status}>Chưa học bù</div>
+                    } else if (status.toLowerCase().includes('invalid')) {
                         return <div style={{ backgroundColor: '#FFE5E5', color: '#FF0000', whiteSpace: 'nowrap' }} className={styles.status}>Hết hạn</div>
                     }
                 }
             }
         },
         {
-            title: 'Ngày hiệu lực',
+            title: 'Ngày hết hạn',
             dataIndex: 'validDate',
             render: (validDate) => validDate && formatDateTime(validDate)
         },
