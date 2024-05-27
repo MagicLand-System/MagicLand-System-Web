@@ -545,9 +545,6 @@ export default function ChangeClass() {
                     <Button loading={apiLoading} disabled={!newClassId || apiReserveLoading} onClick={handleSaveChangeClass} className={styles.saveButton}>
                         Lưu
                     </Button>
-                    <Button loading={apiReserveLoading} disabled={apiLoading} onClick={handleReserve} className={styles.saveButton}>
-                        Bảo lưu
-                    </Button>
                     <Button disabled={apiLoading} className={styles.cancelButton} onClick={() => { navigate(-1) }}>
                         Hủy
                     </Button>
