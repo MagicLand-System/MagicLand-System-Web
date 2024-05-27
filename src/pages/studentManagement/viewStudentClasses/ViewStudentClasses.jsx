@@ -193,18 +193,16 @@ export default function ViewStudentClasses() {
         {
             title: 'Bảo lưu',
             render: (_, record) => {
-                if (status && status !== 'completed' && record.canChangeClass === true) {
-                    return <Button disabled={apiLoading} onClick={() => handleReserve(record.classId)} className={styles.cancelButton}>
-                        Bảo lưu
-                    </Button>
-                }
+                return <Button disabled={apiLoading} onClick={() => handleReserve(record.classId)} className={styles.cancelButton}>
+                    Bảo lưu
+                </Button>
             },
             width: 120,
         },
         {
             title: 'Chuyển lớp',
             render: (_, record) => {
-                if (status && status !== 'completed' && record.canChangeClass === true) {
+                if (status && record.canChangeClass === true) {
                     return <Button type='link' onClick={() => navigate(`change-class/${record.classId}`)} icon={<SwapOutlined />} size='large' />
                 }
             },
@@ -245,7 +243,7 @@ export default function ViewStudentClasses() {
         {
             title: 'Chuyển lớp',
             render: (_, record) => {
-                if (status && status !== 'completed' && record.canChangeClass === true) {
+                if (status && record.canChangeClass === true) {
                     return <Button type='link' onClick={() => navigate(`change-class/${record.classId}`)} icon={<SwapOutlined />} size='large' />
                 }
             },
@@ -293,7 +291,7 @@ export default function ViewStudentClasses() {
         {
             title: 'Chuyển lớp',
             render: (_, record) => {
-                if (status && status !== 'completed' && record.canChangeClass === true) {
+                if (status && record.canChangeClass === true) {
                     return <Button type='link' onClick={() => navigate(`change-class/${record.classId}`)} icon={<SwapOutlined />} size='large' />
                 }
             },
