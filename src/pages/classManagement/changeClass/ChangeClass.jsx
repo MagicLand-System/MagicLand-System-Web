@@ -307,7 +307,7 @@ export default function ChangeClass() {
 
     return (
         <div className={styles.container}>
-            <h2 className={styles.title}>{classId ? 'Chuyển lớp' : 'Đăng kí học'}</h2>
+            <h2 className={styles.title}>{classId ? 'Chuyển lớp' : 'Xếp lớp'}</h2>
             {classData && student && (
                 <>
                     <Row>
