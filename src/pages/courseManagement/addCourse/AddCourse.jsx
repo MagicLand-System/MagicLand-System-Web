@@ -254,7 +254,7 @@ export default function AddCourse() {
 
     return (
         <div className={styles.container}>
-            <h2 className={styles.title}>Tạo khóa học</h2>
+            <h2 className={styles.title}>{id ? "Chỉnh sửa khóa học" : "Tạo khóa học"}</h2>
             <form onSubmit={formik.handleSubmit}>
                 <Row>
                     <Col xs={24} lg={16}>
