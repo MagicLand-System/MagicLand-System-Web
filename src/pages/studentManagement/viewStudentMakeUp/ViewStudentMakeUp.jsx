@@ -102,13 +102,13 @@ export default function ViewStudentMakeUp() {
             dataIndex: 'validDate',
             render: (validDate) => validDate && formatDateTime(validDate)
         },
-        {
-            title: 'Xếp lịch',
-            render: (_, record) => (
-                <Button type='link' onClick={() => navigate(`/student-management/view-classes/${record.studentResponse.studentId}/make-up-class/${record.sessionDescription[0].scheduleId}`, { state: { action: 'afterMakeUp' } })} icon={<SwapOutlined />} size='large' />
-            ),
-            width: 120,
-        },
+        // {
+        //     title: 'Xếp lịch',
+        //     render: (_, record) => (
+        //         <Button type='link' onClick={() => navigate(`/student-management/view-classes/${record.studentResponse.studentId}/make-up-class/${record.sessionDescription[0].scheduleId}`, { state: { action: 'afterMakeUp' } })} icon={<SwapOutlined />} size='large' />
+        //     ),
+        //     width: 120,
+        // },
     ];
     return (
         <div className={styles.container}>
