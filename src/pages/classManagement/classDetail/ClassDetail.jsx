@@ -67,9 +67,9 @@ export default function ClassDetail() {
                             <div style={{ display: 'flex' }}>
                                 {transcript.examName}
                                 {transcript.weight ? ` - ${transcript.weight}%` : ""}
-                                {transcript.quizType === "offline"
-                                    && classData?.status?.toLowerCase().includes('progressing')
-                                    && isPast(transcript.doingDate) &&
+                                {transcript.quizType === "offline" 
+                                && classData?.status?.toLowerCase().includes('progressing') 
+                                && isPast(transcript.doingDate) &&
                                     <Button
                                         style={{ color: "white" }}
                                         type="link"
@@ -582,7 +582,7 @@ export default function ClassDetail() {
                                         <Search className={styles.searchBar} placeholder="Tìm kiếm học viên..." onSearch={(value, e) => { console.log(value) }} enterButton />
                                     </div> */}
                                     <Table
-                                        columns={(classData?.status && !classData?.status?.toLowerCase().includes('upcoming') && !classData?.status?.toLowerCase().includes('canceled')) ? studentsColumns : studentsColumnsNotChange}
+                                        columns={(classData?.status && !classData?.status?.toLowerCase().includes('completed')) ? studentsColumns : studentsColumnsNotChange}
                                         rowKey={(record) => record.studentId}
                                         dataSource={students}
                                         pagination={tableParams.pagination}

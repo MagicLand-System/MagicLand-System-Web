@@ -288,15 +288,15 @@ export default function ViewStudentClasses() {
             },
             width: 120,
         },
-        // {
-        //     title: 'Chuyển lớp',
-        //     render: (_, record) => {
-        //         if (status && record.canChangeClass === true) {
-        //             return <Button type='link' onClick={() => navigate(`change-class/${record.classId}`)} icon={<SwapOutlined />} size='large' />
-        //         }
-        //     },
-        //     width: 120,
-        // },
+        {
+            title: 'Chuyển lớp',
+            render: (_, record) => {
+                if (status && record.canChangeClass === true) {
+                    return <Button type='link' onClick={() => navigate(`change-class/${record.classId}`)} icon={<SwapOutlined />} size='large' />
+                }
+            },
+            width: 120,
+        },
     ];
     const columnsComplete = [
         {
