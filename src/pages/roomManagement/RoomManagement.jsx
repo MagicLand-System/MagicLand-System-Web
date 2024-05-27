@@ -404,7 +404,7 @@ export default function RoomManagement() {
 
     return (
         <div className={styles.container}>
-            <h2 className={styles.title}>Quản lý phòng học</h2>
+            <h2 className={styles.title}>Phòng học</h2>
             <ConfigProvider
                 theme={{
                     components: {
