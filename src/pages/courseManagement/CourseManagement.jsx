@@ -86,7 +86,7 @@ export default function CourseManagement() {
             onFilter: (value, record) => record.courseDetail.subject === value,
         },
         {
-            title: 'Mã giáo trình',
+            title: 'Mã chương trình học',
             render: (_, record) => {
                 return `${record.courseDetail.subjectCode}`
             },
