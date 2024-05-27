@@ -494,14 +494,12 @@ export default function AddCourse() {
                             </div>
                         }
                         <div style={{ width: '100%', textAlign: 'center', marginTop: 20 }}>
-                            {id ?
-                                <Button loading={apiLoading} htmlType='submit' className={styles.saveButton}>
-                                    Lưu
-                                </Button>
-                                : <Button loading={apiLoading} htmlType='submit' className={styles.saveButton}>
-                                    Tạo khóa học
-                                </Button>
-                            }
+                            <Button loading={apiLoading} htmlType='submit' className={styles.saveButton}>
+                                Lưu
+                            </Button>
+                            <Button disabled={apiLoading} style={{ marginLeft: 5 }} className={styles.cancelButton} onClick={() => { navigate(-1) }}>
+                                Hủy
+                            </Button>
                         </div>
                     </Col>
                 </Row>
