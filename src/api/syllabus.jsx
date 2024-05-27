@@ -1,8 +1,11 @@
 import api from "./api";
-export const searchSyllabuses = async (keyWord) => {
+export const searchSyllabuses = async (keyWords) => {
+  if (!keyWords) {
+    keyWords = null
+  }
   const response = await api.get("/api/v1/Syllabus/staff/filter", {
     params: {
-      keyWords: keyWord
+      keyWords
     }
   });
   return response.data;
