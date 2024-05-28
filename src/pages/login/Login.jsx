@@ -30,7 +30,7 @@ export default function Login() {
           onLogin()
         },
         'expired-callback': () => {
-          // window.recaptchaVerifier.reset()
+          window.recaptchaVerifier.reset()
         }
       }, auth);
     }

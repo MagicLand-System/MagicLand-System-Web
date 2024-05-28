@@ -82,7 +82,7 @@ export default function ViewProfile() {
                     onChangePassword()
                 },
                 'expired-callback': () => {
-                    // window.recaptchaVerifier.reset()
+                    window.recaptchaVerifier.reset()
                 }
             }, auth);
         }
