@@ -10,7 +10,7 @@ import { useNavigate } from 'react-router-dom';
 import { addClass, getClassCode, getClasses, getLecturer, getLecturerBySchedule, getRooms, getRoomsBySchedule, getSlots, importClass } from '../../api/classesApi';
 import { getCourses } from '../../api/courseApi';
 import { formatDate, handleDownloadExcelFile } from '../../utils/utils';
-import { TEMPLATE_ADD_CLASS_FILE } from '../../constants/constants';
+import { TEMPLATE_ADD_CLASS_FILE } from '../../utils/constants';
 import * as XLSX from 'xlsx';
 import { ScheduleInput } from '../../components/scheduleInput/ScheduleInput';
 

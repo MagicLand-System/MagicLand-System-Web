@@ -14,7 +14,7 @@ import dayjs from 'dayjs'
 import TextArea from 'antd/es/input/TextArea';
 import Swal from 'sweetalert2';
 import { handleDownloadExcelFile, handleImportSyllabus } from '../../../utils/utils';
-import { TEMPLATE_ADD_SYLLABUS_FILE, TEMPLATE_FLASHCARD, TEMPLATE_MULTIPLE_CHOICE } from '../../../constants/constants';
+import { TEMPLATE_ADD_SYLLABUS_FILE, TEMPLATE_FLASHCARD, TEMPLATE_MULTIPLE_CHOICE } from '../../../utils/constants';
 
 export default function SyllabusDetail() {
     const params = useParams();

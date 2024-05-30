@@ -7,7 +7,7 @@ import { searchSyllabuses } from '../../api/syllabus';
 import { getSubjects } from '../../api/courseApi';
 import { EyeOutlined } from '@ant-design/icons';
 import { formatDate, handleDownloadExcelFile, handleImportSyllabus } from '../../utils/utils';
-import { TEMPLATE_ADD_SYLLABUS_FILE, TEMPLATE_FLASHCARD, TEMPLATE_MULTIPLE_CHOICE } from '../../constants/constants';
+import { TEMPLATE_ADD_SYLLABUS_FILE, TEMPLATE_FLASHCARD, TEMPLATE_MULTIPLE_CHOICE } from '../../utils/constants';
 
 const { Search } = Input;
 
