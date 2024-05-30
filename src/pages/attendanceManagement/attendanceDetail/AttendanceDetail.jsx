@@ -104,17 +104,17 @@ export default function AttendanceDetail() {
             render: (_, record) => (
                 <div style={{ display: 'flex', gap: '16px' }}>
                     <Avatar size={64} src={record.student.avatarImage} />
-                    <p style={{ fontWeight: 'bold', fontSize: '1rem' }}>{record.student.fullName}</p>
+                    <p style={{ fontWeight: 'bold', fontSize: '1rem' }}>{record.student?.fullName}</p>
                 </div>
             )
         },
         {
             title: 'Phụ huynh',
-            render: (_, record) => (record.student.user.fullName)
+            render: (_, record) => (record.student.parent?.fullName)
         },
         {
             title: 'Số điện thoại',
-            render: (_, record) => (record.student?.user?.phone && formatPhone(record.student.user.phone))
+            render: (_, record) => (record.student?.parent?.phone && formatPhone(record.student.parent.phone))
         },
         {
             title: 'Có mặt',

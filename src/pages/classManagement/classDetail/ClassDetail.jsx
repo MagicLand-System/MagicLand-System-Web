@@ -8,7 +8,7 @@ import { formatDate, formatDayOfWeek, formatPhone, formatSlot } from '../../../u
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
 import Swal from 'sweetalert2';
-import { compareAsc, isPast } from 'date-fns';
+import { addDays, compareAsc, isAfter, isPast } from 'date-fns';
 
 const { Search } = Input;
 
@@ -67,9 +67,9 @@ export default function ClassDetail() {
                             <div style={{ display: 'flex' }}>
                                 {transcript.examName}
                                 {transcript.weight ? ` - ${transcript.weight}%` : ""}
-                                {transcript.quizType === "offline" 
-                                && classData?.status?.toLowerCase().includes('progressing') 
-                                && isPast(transcript.doingDate) &&
+                                {transcript.quizType === "offline"
+                                    && classData?.status?.toLowerCase().includes('progressing')
+                                    && isPast(transcript.doingDate) &&
                                     <Button
                                         style={{ color: "white" }}
                                         type="link"
@@ -582,7 +582,7 @@ export default function ClassDetail() {
                                         <Search className={styles.searchBar} placeholder="Tìm kiếm học viên..." onSearch={(value, e) => { console.log(value) }} enterButton />
                                     </div> */}
                                     <Table
-                                        columns={(classData?.status && !classData?.status?.toLowerCase().includes('completed')) ? studentsColumns : studentsColumnsNotChange}
+                                        columns={(classData?.status && ((classData?.status?.toLowerCase().includes('upcoming') && isAfter(new Date(classData?.startDate), addDays(new Date(), 3))) || classData?.status?.toLowerCase().includes('canceled'))) ? studentsColumns : studentsColumnsNotChange}
                                         rowKey={(record) => record.studentId}
                                         dataSource={students}
                                         pagination={tableParams.pagination}

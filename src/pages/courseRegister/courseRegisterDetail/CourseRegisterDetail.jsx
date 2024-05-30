@@ -300,7 +300,7 @@ export default function CourseRegisterDetail() {
                     onChange={activeKey => { setTabActive(activeKey) }}
                     items={[
                         {
-                            label: 'Giáo trình',
+                            label: 'Chương trình học',
                             key: 'syllabus',
                             children: (
                                 <Table

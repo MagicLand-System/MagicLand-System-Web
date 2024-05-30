@@ -224,7 +224,7 @@ export default function AddSyllabus() {
                                             Swal.fire({
                                                 position: "center",
                                                 icon: "success",
-                                                title: "Chỉnh sửa chương trình học thành công",
+                                                title: "Cập nhật chương trình học thành công",
                                                 showConfirmButton: false,
                                                 timer: 2000
                                             })
@@ -236,7 +236,7 @@ export default function AddSyllabus() {
                                     Swal.fire({
                                         position: "center",
                                         icon: "error",
-                                        title: "Chỉnh sửa chương trình học thất bại",
+                                        title: "Cập nhật chương trình học thất bại",
                                         text: error.response.data.Error,
                                         showConfirmButton: false
                                     })

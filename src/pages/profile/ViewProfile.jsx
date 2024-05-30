@@ -82,7 +82,7 @@ export default function ViewProfile() {
                     onChangePassword()
                 },
                 'expired-callback': () => {
-                    // window.recaptchaVerifier.reset()
+                    window.recaptchaVerifier.reset()
                 }
             }, auth);
         }
@@ -96,21 +96,22 @@ export default function ViewProfile() {
             if (data) {
                 setApiLoading(false)
                 setErrorMessage("Số điện thoại đã tồn tại")
-            } else {
+            }
+        } catch (error) {
+            if (error.response?.status === 404) {
+                setErrorMessage("");
                 onCaptchVerify()
                 const appVerifier = window.recaptchaVerifier;
+                const formatPhone = '+' + phone;
                 signInWithPhoneNumber(auth, formatPhone, appVerifier)
                     .then((confirmationResult) => {
                         window.confirmationResult = confirmationResult;
                         setApiLoading(false)
-                        setErrorMessage('')
                         setShowOtp(true)
                     }).catch((error) => {
                         console.log(error)
                     })
             }
-        } catch (error) {
-            console.log(error)
         }
     }
     function onOtpVerify() {
@@ -124,7 +125,7 @@ export default function ViewProfile() {
                     Swal.fire({
                         position: "center",
                         icon: "success",
-                        title: "thay đổi số điện thoại thành công",
+                        title: "Thay đổi số điện thoại thành công",
                         showConfirmButton: false,
                         timer: 2000
                     })
@@ -143,6 +144,7 @@ export default function ViewProfile() {
     }
     return (
         <div className={styles.container}>
+            <div id='recaptcha-container'></div>
             <h2 className={styles.title}>Thông tin tài khoản</h2>
             <Row>
                 <Col md={8} className={styles.left}>
@@ -186,7 +188,6 @@ export default function ViewProfile() {
                     classNames={{ header: styles.modalHeader }}
                 >
                     <div>
-                        <div id='recaptcha-container'></div>
                         {!showOtp ? (
                             <Row>
                                 <Col span={8}>
@@ -207,7 +208,7 @@ export default function ViewProfile() {
                             </Row>
                         ) : (
                             <div>
-                                <p>Chúng tôi đã gửi một mã xác thực đến số điện thoại +{phone.substring(0, 6)}*****:</p>
+                                <p>Chúng tôi đã gửi một mã xác thực đến số điện thoại +{phone.substring(0, 4)}***{phone.substring(phone.length - 3)}:</p>
                                 <div style={{ textAlign: 'center', marginLeft: 20 }}>
                                     <OtpInput
                                         value={otp}

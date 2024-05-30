@@ -115,7 +115,7 @@ export default function StudentManagement() {
             <h2 className={styles.title}>Quản lý học viên</h2>
             <div style={{ display: 'flex', marginBottom: '16px' }}>
                 <Button onClick={() => navigate('/student-management/view-reserve')} type='primary' className={styles.importButton} >Học viên bảo lưu</Button>
-                <Button onClick={() => navigate('/student-management/view-make-up')} type='primary' style={{ color: 'black' }} className={styles.addButton} >Học viên cần học bù</Button>
+                <Button onClick={() => navigate('/student-management/view-make-up')} type='primary' style={{ color: 'black' }} className={styles.addButton} >Học viên chưa học bù</Button>
                 <Search className={styles.searchBar} placeholder="Tên học viên" onSearch={(value, e) => { setName(value) }} enterButton />
                 <ConfigProvider
                     theme={{

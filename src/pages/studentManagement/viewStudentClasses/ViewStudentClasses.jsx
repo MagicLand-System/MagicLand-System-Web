@@ -7,6 +7,7 @@ import { getClasses } from '../../../api/classesApi';
 import { formatDate, formatDayOfWeek, formatPhone } from '../../../utils/utils';
 import { getClassOfStudent, getStudent, getStudentClassScore, setReserve } from '../../../api/student';
 import Swal from 'sweetalert2';
+import { addDays, isAfter } from 'date-fns';
 
 const { Search } = Input;
 
@@ -193,7 +194,7 @@ export default function ViewStudentClasses() {
         {
             title: 'Bảo lưu',
             render: (_, record) => {
-                if (status && status !== 'completed' && record.canChangeClass === true) {
+                if (record?.startDate && isAfter(new Date(record?.startDate), addDays(new Date(), 3))) {
                     return <Button disabled={apiLoading} onClick={() => handleReserve(record.classId)} className={styles.cancelButton}>
                         Bảo lưu
                     </Button>
@@ -204,7 +205,7 @@ export default function ViewStudentClasses() {
         {
             title: 'Chuyển lớp',
             render: (_, record) => {
-                if (status && status !== 'completed' && record.canChangeClass === true) {
+                if (status && record.canChangeClass === true && record.startDate && isAfter(new Date(record?.startDate), addDays(new Date(), 3))) {
                     return <Button type='link' onClick={() => navigate(`change-class/${record.classId}`)} icon={<SwapOutlined />} size='large' />
                 }
             },
@@ -245,7 +246,7 @@ export default function ViewStudentClasses() {
         {
             title: 'Chuyển lớp',
             render: (_, record) => {
-                if (status && status !== 'completed' && record.canChangeClass === true) {
+                if (status && record.canChangeClass === true) {
                     return <Button type='link' onClick={() => navigate(`change-class/${record.classId}`)} icon={<SwapOutlined />} size='large' />
                 }
             },
@@ -287,15 +288,6 @@ export default function ViewStudentClasses() {
             title: 'Xem bảng điểm',
             render: (_, record) => {
                 return <Button type='link' onClick={() => handleViewScore(record.classId, studentId)} icon={<EyeOutlined />} size='large' />
-            },
-            width: 120,
-        },
-        {
-            title: 'Chuyển lớp',
-            render: (_, record) => {
-                if (status && status !== 'completed' && record.canChangeClass === true) {
-                    return <Button type='link' onClick={() => navigate(`change-class/${record.classId}`)} icon={<SwapOutlined />} size='large' />
-                }
             },
             width: 120,
         },

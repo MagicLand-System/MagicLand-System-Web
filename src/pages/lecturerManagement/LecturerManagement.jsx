@@ -287,7 +287,7 @@ export default function LecturerManagement() {
 
     return (
         <div className={styles.container}>
-            <h2 className={styles.title}>Quản lý giáo viên</h2>
+            <h2 className={styles.title}>Giáo viên</h2>
             <div style={{ display: 'flex', marginBottom: '16px' }}>
                 <ConfigProvider
                     theme={{

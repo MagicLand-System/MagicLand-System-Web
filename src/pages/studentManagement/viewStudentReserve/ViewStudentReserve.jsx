@@ -86,14 +86,14 @@ export default function ViewStudentReserve() {
                 if (status) {
                     if (status.toLowerCase().includes('saved')) {
                         return <div style={{ backgroundColor: '#E5F2FF', color: '#0066FF', whiteSpace: 'nowrap' }} className={styles.status}>Bảo lưu</div>
-                    } else if (status.toLowerCase().includes('expired')) {
+                    } else if (status.toLowerCase().includes('invalid')) {
                         return <div style={{ backgroundColor: '#FFE5E5', color: '#FF0000', whiteSpace: 'nowrap' }} className={styles.status}>Đã hết hạn</div>
                     }
                 }
             }
         },
         {
-            title: 'Ngày hiệu lực',
+            title: 'Ngày hết hạn',
             dataIndex: 'validDate',
             render: (validDate) => validDate && formatDateTime(validDate)
         },

@@ -127,7 +127,7 @@ export default function ChangeClass() {
                     .then(() => Swal.fire({
                         position: "center",
                         icon: "success",
-                        title: "Thêm học sinh vào lớp thành công",
+                        title: "Thêm học viên vào lớp thành công",
                         showConfirmButton: false,
                         timer: 2000
                     })).then(() => {
@@ -307,7 +307,7 @@ export default function ChangeClass() {
 
     return (
         <div className={styles.container}>
-            <h2 className={styles.title}>{classId ? 'Chuyển lớp' : 'Đăng kí học'}</h2>
+            <h2 className={styles.title}>{classId ? 'Chuyển lớp' : 'Xếp lớp'}</h2>
             {classData && student && (
                 <>
                     <Row>
@@ -544,9 +544,6 @@ export default function ChangeClass() {
                 <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 20 }}>
                     <Button loading={apiLoading} disabled={!newClassId || apiReserveLoading} onClick={handleSaveChangeClass} className={styles.saveButton}>
                         Lưu
-                    </Button>
-                    <Button loading={apiReserveLoading} disabled={apiLoading} onClick={handleReserve} className={styles.saveButton}>
-                        Bảo lưu
                     </Button>
                     <Button disabled={apiLoading} className={styles.cancelButton} onClick={() => { navigate(-1) }}>
                         Hủy

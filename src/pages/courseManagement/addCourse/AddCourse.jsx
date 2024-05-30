@@ -172,7 +172,7 @@ export default function AddCourse() {
                                 Swal.fire({
                                     position: "center",
                                     icon: "success",
-                                    title: "Chỉnh sửa khóa học thành công",
+                                    title: "Cập nhật khóa học thành công",
                                     showConfirmButton: false,
                                     timer: 2000
                                 })
@@ -199,7 +199,7 @@ export default function AddCourse() {
                                             Swal.fire({
                                                 position: "center",
                                                 icon: "success",
-                                                title: "Chỉnh sửa khóa học thành công",
+                                                title: "Cập nhật khóa học thành công",
                                                 showConfirmButton: false,
                                                 timer: 2000
                                             })
@@ -254,7 +254,7 @@ export default function AddCourse() {
 
     return (
         <div className={styles.container}>
-            <h2 className={styles.title}>Tạo khóa học</h2>
+            <h2 className={styles.title}>{id ? "Cập nhật khóa học" : "Tạo khóa học"}</h2>
             <form onSubmit={formik.handleSubmit}>
                 <Row>
                     <Col xs={24} lg={16}>
@@ -494,14 +494,12 @@ export default function AddCourse() {
                             </div>
                         }
                         <div style={{ width: '100%', textAlign: 'center', marginTop: 20 }}>
-                            {id ?
-                                <Button loading={apiLoading} htmlType='submit' className={styles.saveButton}>
-                                    Lưu
-                                </Button>
-                                : <Button loading={apiLoading} htmlType='submit' className={styles.saveButton}>
-                                    Tạo khóa học
-                                </Button>
-                            }
+                            <Button loading={apiLoading} htmlType='submit' className={styles.saveButton}>
+                                Lưu
+                            </Button>
+                            <Button disabled={apiLoading} style={{ marginLeft: 5 }} className={styles.cancelButton} onClick={() => { navigate(-1) }}>
+                                Hủy
+                            </Button>
                         </div>
                     </Col>
                 </Row>
