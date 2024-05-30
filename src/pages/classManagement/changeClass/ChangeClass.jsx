@@ -127,7 +127,7 @@ export default function ChangeClass() {
                     .then(() => Swal.fire({
                         position: "center",
                         icon: "success",
-                        title: "Thêm học sinh vào lớp thành công",
+                        title: "Thêm học viên vào lớp thành công",
                         showConfirmButton: false,
                         timer: 2000
                     })).then(() => {

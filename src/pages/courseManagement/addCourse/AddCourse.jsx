@@ -172,7 +172,7 @@ export default function AddCourse() {
                                 Swal.fire({
                                     position: "center",
                                     icon: "success",
-                                    title: "Chỉnh sửa khóa học thành công",
+                                    title: "Cập nhật khóa học thành công",
                                     showConfirmButton: false,
                                     timer: 2000
                                 })
@@ -199,7 +199,7 @@ export default function AddCourse() {
                                             Swal.fire({
                                                 position: "center",
                                                 icon: "success",
-                                                title: "Chỉnh sửa khóa học thành công",
+                                                title: "Cập nhật khóa học thành công",
                                                 showConfirmButton: false,
                                                 timer: 2000
                                             })
@@ -254,7 +254,7 @@ export default function AddCourse() {
 
     return (
         <div className={styles.container}>
-            <h2 className={styles.title}>{id ? "Chỉnh sửa khóa học" : "Tạo khóa học"}</h2>
+            <h2 className={styles.title}>{id ? "Cập nhật khóa học" : "Tạo khóa học"}</h2>
             <form onSubmit={formik.handleSubmit}>
                 <Row>
                     <Col xs={24} lg={16}>

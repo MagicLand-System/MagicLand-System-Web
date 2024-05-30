@@ -92,7 +92,7 @@ export default function SyllabusDetail() {
                             Swal.fire({
                                 position: "center",
                                 icon: "success",
-                                title: "Cập nhật chương trình học thành công",
+                                title: "Chỉnh sửa chương trình học thành công",
                                 showConfirmButton: false,
                                 timer: 2000
                             })
