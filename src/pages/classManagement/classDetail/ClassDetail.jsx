@@ -8,7 +8,7 @@ import { formatDate, formatDayOfWeek, formatPhone, formatSlot } from '../../../u
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
 import Swal from 'sweetalert2';
-import { addDays, compareAsc, isAfter, isPast } from 'date-fns';
+import { addDays, compareAsc, isAfter, isPast, parseISO } from 'date-fns';
 
 const { Search } = Input;
 
@@ -61,7 +61,7 @@ export default function ClassDetail() {
             const data = await getClassScores(id);
             setStudentsTranscript(data);
             if (data.length > 0 && data[0].examInfors.length > 0) {
-                setTranscripts(data[0]?.examInfors?.map((transcript, index) => (
+                setTranscripts(data[0]?.examInfors?.sort((a, b) => compareAsc(parseISO(a.doingDate), parseISO(b.doingDate))).map((transcript, index) => (
                     {
                         title: (
                             <div style={{ display: 'flex' }}>
