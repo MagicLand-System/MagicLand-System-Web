@@ -7,7 +7,7 @@ import { getClasses } from '../../../api/classesApi';
 import { formatDate, formatDayOfWeek, formatPhone } from '../../../utils/utils';
 import { getClassOfStudent, getStudent, getStudentClassScore, setReserve } from '../../../api/student';
 import Swal from 'sweetalert2';
-import { addDays, isAfter } from 'date-fns';
+import { addDays, compareAsc, isAfter, parseISO } from 'date-fns';
 
 const { Search } = Input;
 
@@ -127,13 +127,13 @@ export default function ViewStudentClasses() {
                     } else {
                         total = null;
                     }
-                    setScores([participation, ...data[0]?.examInfors, {
+                    setScores([participation, ...data[0]?.examInfors?.sort((a, b) => compareAsc(parseISO(a.doingDate), parseISO(b.doingDate))), {
                         quizCategory: "Total Score",
                         examName: "Điểm tổng kết",
                         scoreEarned: total
                     }])
                 } else {
-                    setScores([participation, ...data[0]?.examInfors])
+                    setScores([participation, ...data[0]?.examInfors?.sort((a, b) => compareAsc(parseISO(a.doingDate), parseISO(b.doingDate)))])
                 }
                 setViewScoresModalOpen(true)
             }
