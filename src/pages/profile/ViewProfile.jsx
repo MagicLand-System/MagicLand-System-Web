@@ -17,6 +17,8 @@ import { formatDate, formatPhone } from '../../utils/utils';
 import { fetchUser } from "../../store/features/authSlice";
 import { checkExist } from '../../api/auth';
 
+import emptyAvatar from '../../assets/images/empty_avatar.png';
+
 export default function ViewProfile() {
     const dispatch = useDispatch();
     const navigate = useNavigate()
@@ -148,7 +150,7 @@ export default function ViewProfile() {
             <h2 className={styles.title}>Thông tin tài khoản</h2>
             <Row>
                 <Col md={8} className={styles.left}>
-                    <img className={styles.avatar} alt="children" src={user?.avatarImage ? user?.avatarImage : './src/assets/images/empty_avatar.png'} />
+                    <img className={styles.avatar} alt="children" src={user?.avatarImage ? user?.avatarImage : emptyAvatar} />
                     <Button style={{ width: '220px' }} onClick={() => navigate('/update-profile')} className={styles.button}>
                         Chỉnh sửa thông tin
                     </Button>
