@@ -15,6 +15,9 @@ import dayjs from 'dayjs'
 import { checkExist, register } from '../../api/auth';
 import { usePlacesWidget } from 'react-google-autocomplete';
 
+import kidImage from '../../assets/images/kid2.jpg'
+import logo from '../../assets/images/logo.png';
+
 export default function Register() {
   const navigate = useNavigate()
   const [errorMessage, setErrorMessage] = useState('')
@@ -152,7 +155,7 @@ export default function Register() {
     <div className={styles.container}>
       <div className={styles.left}>
         <div className={styles.logo}>
-          <img src='./src/assets/images/logo.png' alt="logo" />
+          <img src={logo} alt="logo" />
           <p>&ensp;
             <span className={`${styles.m} ${styles.logoSpan}`}>m</span>
             <span className={`${styles.a} ${styles.logoSpan}`}>a</span>
@@ -308,7 +311,7 @@ export default function Register() {
           <Link to={'/login'} className={styles.link}>Đăng nhập</Link>
           <Link className={`${styles.link} ${styles.linkActive}`}>Đăng kí</Link>
         </div>
-        <img className={styles.rightImage} src="./src/assets/images/kid2.jpg" />
+        <img className={styles.rightImage} src={kidImage} />
       </div>
     </div>
   )

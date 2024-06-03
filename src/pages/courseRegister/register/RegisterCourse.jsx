@@ -12,6 +12,8 @@ import { formatDate, formatDateTime, formatDayOfWeek, formatPhone } from '../../
 import debounce from 'lodash/debounce';
 import { getTime } from '../../../api/time';
 import MockDate from "mockdate";
+import successImage from "../../../assets/images/success.png"
+
 export default function RegisterCourse() {
     const navigate = useNavigate()
     const location = useLocation()
@@ -691,7 +693,7 @@ export default function RegisterCourse() {
                         <div style={{ border: '1px solid #d9d9d9', borderRadius: 6, padding: '20px 20px', height: '100%', boxSizing: 'border-box' }}>
                             <Row style={{ marginTop: 20 }}>
                                 <Col span={24} style={{ display: 'flex', justifyContent: 'center' }}>
-                                    <img className={styles.image} alt="image" src={'../../src/assets/images/success.png'} />
+                                    <img className={styles.image} alt="image" src={successImage} />
                                     <h5 style={{ fontSize: '1.5rem', margin: '20px 20px', color: '#20bf55' }}>Đăng kí thành công</h5>
                                 </Col>
                             </Row>

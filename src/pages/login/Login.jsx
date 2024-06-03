@@ -13,6 +13,9 @@ import { authUser, checkExist } from '../../api/auth';
 import { useDispatch } from 'react-redux';
 import { fetchUser } from "../../store/features/authSlice";
 
+import kidImage from '../../assets/images/kid2.jpg'
+import logo from '../../assets/images/logo.png';
+
 export default function Login() {
   const dispatch = useDispatch();
   const navigate = useNavigate()
@@ -101,7 +104,7 @@ export default function Login() {
     <div className={styles.container}>
       <div className={styles.left}>
         <div className={styles.logo}>
-          <img src='./src/assets/images/logo.png' alt="logo" />
+          <img src={logo} alt="logo" />
           <p>&ensp;
             <span className={`${styles.m} ${styles.logoSpan}`}>m</span>
             <span className={`${styles.a} ${styles.logoSpan}`}>a</span>
@@ -165,7 +168,7 @@ export default function Login() {
           <Link className={`${styles.link} ${styles.linkActive}`}>Đăng nhập</Link>
           <Link to={'/register'} className={styles.link}>Đăng ký</Link>
         </div> */}
-        <img className={styles.rightImage} src="./src/assets/images/kid2.jpg" />
+        <img className={styles.rightImage} src={kidImage} />
       </div>
     </div>
   )

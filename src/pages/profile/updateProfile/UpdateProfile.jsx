@@ -15,6 +15,8 @@ import { useNavigate } from 'react-router-dom';
 import { userSelector } from '../../../store/selectors';
 import { updateCurrentUser } from '../../../api/user';
 
+import emptyAvatar from '../../../assets/images/empty_avatar.png';
+
 export default function UpdateProfile() {
     const dispatch = useDispatch()
     const navigate = useNavigate()
@@ -151,7 +153,7 @@ export default function UpdateProfile() {
             <h2 className={styles.title}>Chỉnh sửa thông tin</h2>
             <Row>
                 <Col md={8} className={styles.left}>
-                    <img className={styles.avatar} alt="children" src={image ? imageUrl : './src/assets/images/empty_avatar.png'} />
+                    <img className={styles.avatar} alt="children" src={image ? imageUrl : emptyAvatar} />
                     <input type='file' accept='image/*' ref={fileInputRef} onChange={handleImageChange} style={{ display: 'none' }} />
                     <Button style={{ width: '180px' }} onClick={() => fileInputRef.current.click()} icon={<CloudUploadOutlined />} className={styles.button}>
                         Tải hình lên
