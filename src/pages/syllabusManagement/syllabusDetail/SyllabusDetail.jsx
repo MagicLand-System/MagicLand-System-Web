@@ -197,6 +197,9 @@ export default function SyllabusDetail() {
     }
     async function getQuestion(id) {
         const data = await getSyllabusQuestion(id);
+        if (data.length > 0) {
+            data.sort((a, b) => a.noOfSession - b.noOfSession)
+        }
         setQuestionPackages(data);
         setTableParams({
             ...tableParams,
@@ -640,7 +643,7 @@ export default function SyllabusDetail() {
                                     dataSource={sessions}
                                     pagination={tableParams.pagination}
                                     onChange={handleTableChange}
-                                    sticky={{ offsetHeader: 72}}
+                                    sticky={{ offsetHeader: 72 }}
                                 />
                             )
                         },
@@ -654,7 +657,7 @@ export default function SyllabusDetail() {
                                     dataSource={exams}
                                     pagination={tableParams.pagination}
                                     onChange={handleTableChange}
-                                    sticky={{ offsetHeader: 72}}
+                                    sticky={{ offsetHeader: 72 }}
                                 />
                             )
                         },
@@ -668,7 +671,7 @@ export default function SyllabusDetail() {
                                     dataSource={questionPackages}
                                     pagination={tableParams.pagination}
                                     onChange={handleTableChange}
-                                    sticky={{ offsetHeader: 72}}
+                                    sticky={{ offsetHeader: 72 }}
                                 />
                             )
                         },
@@ -682,7 +685,7 @@ export default function SyllabusDetail() {
                                     dataSource={materials}
                                     pagination={tableParams.pagination}
                                     onChange={handleTableChange}
-                                    sticky={{ offsetHeader: 72}}
+                                    sticky={{ offsetHeader: 72 }}
                                 />
                             )
                         }
