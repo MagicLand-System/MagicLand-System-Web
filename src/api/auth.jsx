@@ -2,7 +2,7 @@ import api from "./apiUnlogin";
 
 export const authUser = async ({ phone }) => {
     const response = await api.post("/api/v1/auth", { phone });
-    //staff: +84971822093
+    //staff: +84971822094
     //admin: +84963246205
     return response.data;
 };
