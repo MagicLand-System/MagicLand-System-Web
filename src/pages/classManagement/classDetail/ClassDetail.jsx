@@ -549,13 +549,13 @@ export default function ClassDetail() {
                             </div>
                         </Col>
                     </Row>
-                    {/* {!classData.status.toLowerCase().includes('canceled') && !classData.status.toLowerCase().includes('completed') && (
+                    {classData.status.toLowerCase().includes('upcoming') && (
                         <div style={{ display: 'flex', marginBottom: '20px' }}>
                             <Button className={styles.cancelButton} onClick={handleCancelClass}>
                                 Hủy lớp học
                             </Button>
                         </div>
-                    )} */}
+                    )}
                 </>
             )}
             <ConfigProvider
