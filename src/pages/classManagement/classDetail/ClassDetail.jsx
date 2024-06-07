@@ -549,7 +549,7 @@ export default function ClassDetail() {
                             </div>
                         </Col>
                     </Row>
-                    {classData.status.toLowerCase().includes('upcoming') && (
+                    {classData.status.toLowerCase().includes('upcoming') && isAfter(new Date(record?.startDate), addDays(new Date(), 3)) (
                         <div style={{ display: 'flex', marginBottom: '20px' }}>
                             <Button className={styles.cancelButton} onClick={handleCancelClass}>
                                 Hủy lớp học
