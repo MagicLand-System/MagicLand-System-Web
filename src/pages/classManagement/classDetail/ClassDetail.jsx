@@ -9,6 +9,7 @@ import { useFormik } from 'formik';
 import * as Yup from 'yup';
 import Swal from 'sweetalert2';
 import { addDays, compareAsc, isAfter, isPast, parseISO } from 'date-fns';
+import { setReserve } from '../../../api/student';
 
 const { Search } = Input;
 
@@ -32,6 +33,7 @@ export default function ClassDetail() {
         },
     });
     const [transcripts, setTranscripts] = useState([])
+    const [apiLoading, setApiLoading] = useState(false)
 
     async function getClassDetail(id) {
         const data = await getClass(id);
@@ -174,7 +176,40 @@ export default function ClassDetail() {
             }
         });
     }
-    const studentsColumns = [
+    const handleReserve = (studentId) => {
+        Swal.fire({
+            title: "Bạn chắc chắn muốn bảo lưu bé?",
+            showCancelButton: true,
+            confirmButtonText: "Lưu",
+            cancelButtonText: "Hủy"
+        }).then(async (result) => {
+            if (result.isConfirmed) {
+                try {
+                    setApiLoading(true)
+                    await setReserve(id, studentId)
+                        .then(() => Swal.fire({
+                            position: "center",
+                            icon: "success",
+                            title: "Bảo lưu học viên thành công",
+                            showConfirmButton: false,
+                            timer: 2000
+                        }))
+                        .then(() => getStudentsList(id))
+                } catch (error) {
+                    Swal.fire({
+                        position: "center",
+                        icon: "error",
+                        title: error.response?.data?.Error,
+                        showConfirmButton: false,
+                        timer: 2000
+                    })
+                } finally {
+                    setApiLoading(false)
+                }
+            }
+        });
+    }
+    const studentsColumnsChange = [
         {
             title: 'Tên học viên',
             dataIndex: 'fullName',
@@ -238,7 +273,82 @@ export default function ClassDetail() {
             width: 120
         },
     ];
-    const studentsColumnsNotChange = [
+    const studentsColumnsReserve = [
+        {
+            title: 'Tên học viên',
+            dataIndex: 'fullName',
+            sorter: (a, b) => a.fullName.toLowerCase().localeCompare(b.fullName.toLowerCase()),
+            render: (_, record) => (
+                <div style={{ display: 'flex', flexDirection: 'row', alignItems: 'center' }}>
+                    <Avatar size={64} src={record.imgAvatar} style={{ marginRight: '10px' }} />
+                    <p>{record.fullName}</p>
+                </div>
+            ),
+            width: 250
+        },
+        {
+            title: 'Tuổi',
+            dataIndex: 'dateOfBirth',
+            render: (_, record) => (record.dateOfBirth && (new Date().getFullYear() - new Date(record.dateOfBirth).getFullYear())),
+            sorter: (a, b) => a.age - b.age,
+        },
+        {
+            title: 'Giới tính',
+            dataIndex: 'gender',
+            render: (gender) => {
+                if (gender === 'Nữ') {
+                    return <div style={{ backgroundColor: '#ffb6c1', color: '#800000', whiteSpace: 'nowrap' }} className={styles.status}>Nữ</div>
+                } else if (gender === 'Nam') {
+                    return <div style={{ backgroundColor: '#87ceeb', color: '#000080', whiteSpace: 'nowrap' }} className={styles.status}>Nam</div>
+                }
+            },
+            filters: [
+                {
+                    text: 'Nữ',
+                    value: 'Nữ',
+                },
+                {
+                    text: 'Nam',
+                    value: 'Nam',
+                },
+            ],
+            filterMode: 'tree',
+            filterSearch: true,
+            onFilter: (value, record) => record.gender === value,
+        },
+        {
+            title: 'Tên phụ huynh',
+            dataIndex: 'parentName'
+        },
+        {
+            title: 'Số điện thoại phụ huynh',
+            dataIndex: 'parentPhoneNumber',
+            render: (parentPhoneNumber) => parentPhoneNumber && formatPhone(parentPhoneNumber)
+        },
+        {
+            title: 'Bảo lưu',
+            render: (_, record) => {
+                if (classData?.startDate && isAfter(new Date(classData?.startDate), addDays(new Date(), 3))) {
+                    return <Button disabled={apiLoading} onClick={() => handleReserve(record.studentId)} className={styles.cancelButton}>
+                        Bảo lưu
+                    </Button>
+                }
+            },
+            width: 120,
+        },
+        {
+            title: 'Chuyển lớp',
+            render: (_, record) => {
+                if (record.canChangeClass && isAfter(new Date(classData?.startDate), addDays(new Date(), 3))) {
+                    return (
+                        <Button type='link' onClick={() => navigate(`/student-management/view-classes/${record.studentId}/change-class/${id}`)} icon={< SwapOutlined />} size='large' />
+                    )
+                }
+            },
+            width: 120
+        },
+    ];
+    const studentsColumns = [
         {
             title: 'Tên học viên',
             dataIndex: 'fullName',
@@ -549,7 +659,7 @@ export default function ClassDetail() {
                             </div>
                         </Col>
                     </Row>
-                    {classData.status.toLowerCase().includes('upcoming') && isAfter(new Date(record?.startDate), addDays(new Date(), 3)) (
+                    {classData?.status && classData.status.toLowerCase().includes('upcoming') && isAfter(new Date(classData?.startDate), addDays(new Date(), 3)) && (
                         <div style={{ display: 'flex', marginBottom: '20px' }}>
                             <Button className={styles.cancelButton} onClick={handleCancelClass}>
                                 Hủy lớp học
@@ -582,7 +692,7 @@ export default function ClassDetail() {
                                         <Search className={styles.searchBar} placeholder="Tìm kiếm học viên..." onSearch={(value, e) => { console.log(value) }} enterButton />
                                     </div> */}
                                     <Table
-                                        columns={(classData?.status && ((classData?.status?.toLowerCase().includes('upcoming') && isAfter(new Date(classData?.startDate), addDays(new Date(), 3))) || classData?.status?.toLowerCase().includes('canceled'))) ? studentsColumns : studentsColumnsNotChange}
+                                        columns={classData?.status && (classData?.status?.toLowerCase().includes('upcoming') && isAfter(new Date(classData?.startDate), addDays(new Date(), 3))) ? studentsColumnsReserve : classData?.status?.toLowerCase().includes('canceled') ? studentsColumnsChange : studentsColumns}
                                         rowKey={(record) => record.studentId}
                                         dataSource={students}
                                         pagination={tableParams.pagination}
