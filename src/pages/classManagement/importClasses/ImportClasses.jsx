@@ -862,6 +862,7 @@ export default function ImportClasses() {
                                         onDelete={handleDeleteSchedule}
                                         slots={slotsOptions}
                                         disabled={apiLoading}
+                                        schedules={scheduleRequests}
                                     />
                                 </Col>
                             </Row>
